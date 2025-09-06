@@ -12,7 +12,7 @@ export default function RootLayout({
   return (
     <div  className="adminMaxWidth overflow-y-auto scrollbar-hide"
       style={{ height: "calc(100vh - 150px)" }}>
-      <div className="py-5 space-y-4 h-full">
+      <div className="py-5 space-y-4  ">
         <div className="flex w-full gap-4 rounded-lg  h-full">
           {/* Sidebar (sticky + internal scroll) */}
           <aside className="hidden md:block w-[380px] shrink-0 sticky top-5 self-start  ">

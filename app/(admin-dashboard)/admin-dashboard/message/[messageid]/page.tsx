@@ -6,6 +6,7 @@ import Dot3Icon from "@/public/nominations/icons/Dot3Icon";
 import Image from "next/image";
 import youImg from "@/public/sender_img.png";
 import { formatDistanceToNow } from "date-fns"; // Import date-fns function
+import SendIcon from "@/public/commonIcons/SendIcon";
 
 // Type definitions for conversation structure
 interface Message {
@@ -89,6 +90,11 @@ export default function ChatPage() {
 
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSend = () => {
     if (newMessage.trim() === "") return;
@@ -177,17 +183,19 @@ export default function ChatPage() {
                         : " justify-start"
                     }`}
                   >
-                    <div className={`${msg.sender==='sender'?'order-2':''}`}>
-
-                    {msg.sender == "sender" ? (
-                      <p className="  text-sm font-semibold text-[#4A4C56]  ">
-                        you
-                      </p>
-                    ) : (
-                      <p className="   text-sm font-semibold text-[#4A4C56]">
-                        {filteredConversation[0]?.customer_name || "Jane Smith"}
-                      </p>
-                    )}
+                    <div
+                      className={`${msg.sender === "sender" ? "order-2" : ""}`}
+                    >
+                      {msg.sender == "sender" ? (
+                        <p className="  text-sm font-semibold text-[#4A4C56]  ">
+                          you
+                        </p>
+                      ) : (
+                        <p className="   text-sm font-semibold text-[#4A4C56]">
+                          {filteredConversation[0]?.customer_name ||
+                            "Jane Smith"}
+                        </p>
+                      )}
                     </div>
                     <p className="text-xs  text-[#A5A5AB]">
                       {formatDistanceToNow(new Date(msg.timestamp), {
@@ -198,7 +206,7 @@ export default function ChatPage() {
                     </p>
                   </div>
                   <p
-                    className={`max-w-[680px] flex flex-wrap p-3   ${
+                    className={`max-w-[680px]   p-3  overflow-wrap  break-words   ${
                       msg.sender === "sender"
                         ? "bg-primary text-white rounded-b-[12px] rounded-tl-[12px]"
                         : "bg-[#E7ECF4] text-black  rounded-b-[12px] rounded-tr-[12px]"
@@ -214,24 +222,24 @@ export default function ChatPage() {
           <div>No messages found.</div>
         )}
         {/* This div acts as a scroll anchor */}
-        <div />
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Box - Always visible, never scrolls */}
-      <div className="p-4 bg-white border-t border-gray-300 flex flex-shrink-0">
+      <div className=" py-5 px-6 flex flex-shrink-0 border-t border-[#E9E9EA]">
         <input
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Type a message..."
-          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1  py-2 px-3 border border-[#E9E9EA] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <button
           onClick={handleSend}
-          className="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          className="ml-2 bg-primary text-white   p-[10px] rounded-[8px] cursor-pointer  hover:bg-blue-700 transition-colors"
         >
-          Send
+         <SendIcon/>
         </button>
       </div>
     </div>
