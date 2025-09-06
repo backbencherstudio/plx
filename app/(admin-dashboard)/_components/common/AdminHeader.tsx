@@ -30,7 +30,7 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
 
   return (
     <>
-      <header className="bg-[#EDF2F7] py-3 pr-8 border-l border-l-[#E9E9EA]">
+      <header className="bg-[#EDF2F7] py-2 pr-8 border-l border-l-[#E9E9EA]">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
             <button

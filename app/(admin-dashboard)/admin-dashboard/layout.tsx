@@ -29,7 +29,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         >
           <AdminHeader onMenuClick={() => setIsSidebarOpen(true)} />
                   
-          <main className="flex-1 overflow-auto  min-w-0 min-h-0 p-4 sm:p-5 md:p-6 bg-[#F5F8FA]">
+          <main className="flex-1 overflow-auto  min-w-0 min-h-0 p-4 bg-[#F5F8FA]">
  
             {children}
           </main>
