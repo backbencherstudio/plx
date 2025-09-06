@@ -21,7 +21,7 @@ const menuItems = [
 ];
 
 const bottomMenuItems = [
-  { title: "Settings", icon: SettingsIcon, href: "#" },
+  { title: "Settings", icon: SettingsIcon, href: "/s-dashboard/ssettings" },
   { title: "Log Out", icon: LogOutIcon, href: "#" },
 ];
 
