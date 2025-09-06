@@ -1,22 +1,33 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-// import { useRouter } from "next/navigation"; // ❌ not needed now
 import { useRouter, usePathname } from "next/navigation";
 import ChatCard from "../_components/ChatCard";
-import { AdminData } from "@/app/lib/admindata";
+import { userData } from "@/app/lib/userdata";
 
-type RawMessage = {
-  user_id: number;
-  customer_name: string;
-  customer_image: string;
-  last_seen: string;
-  last_message: string;
-  isActive?: boolean;
-  isRead?: boolean;
+type Conversation = {
+  id: string;
+  contact: {
+    id: string;
+    name: string;
+    avatar: string;
+    status: string;
+    lastSeen: string | null;
+    isVerified: boolean;
+  };
+  lastMessage: {
+    id: string;
+    content: string;
+    timestamp: string;
+    senderId: string;
+    type: string;
+    status: string;
+  };
+  unreadCount: number;
+  isActive: boolean;
+  lastActivity: string;
 };
 
-type Message = RawMessage & { isRead: boolean };
 type ChatTab = "all" | "unread";
 
 function parseDateFlexible(input: string) {
@@ -27,65 +38,60 @@ function parseDateFlexible(input: string) {
 }
 
 export default function MessagesSidebar2() {
- 
-const router = useRouter();
-const pathname = usePathname();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const { messages: rawMessages = [] } = (AdminData ?? { messages: [] }) as {
-    messages: RawMessage[];
-  };
+  const conversations = userData.messagePage.chatInterface.conversations;
 
   const [tab, setTab] = useState<ChatTab>("all");
-  const [selectedUserId, setSelectedUserId] = useState<number | undefined>();
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
 
-  const data: Message[] = useMemo(() => {
-    const normalized = rawMessages.map((m) => ({
-      ...m,
-      isRead:
-        typeof m.isRead === "boolean"
-          ? m.isRead
-          : typeof m.isActive === "boolean"
-          ? Boolean(m.isActive)
-          : true,
+  // Convert conversations to the format expected by ChatCard
+  const data = useMemo(() => {
+    return conversations.map((conv) => ({
+      user_id: parseInt(conv.contact.id),
+      customer_name: conv.contact.name,
+      customer_image: conv.contact.avatar,
+      last_seen: conv.lastActivity,
+      last_message: conv.lastMessage.content,
+      isRead: conv.unreadCount === 0,
+      isActive: conv.isActive,
     }));
-    return normalized.sort(
-      (a, b) =>
-        parseDateFlexible(b.last_seen).getTime() -
-        parseDateFlexible(a.last_seen).getTime()
-    );
-  }, [rawMessages]);
+  }, [conversations]);
 
   const filteredChats = useMemo(() => {
     return tab === "unread" ? data.filter((c) => !c.isRead) : data;
   }, [data, tab]);
 
+  // Get selected user ID from URL
+  const selectedUserIdFromUrl = useMemo(() => {
+    const matches = pathname.match(/\/smessage\/(\d+)/);
+    return matches ? matches[1] : undefined;
+  }, [pathname]);
+
   // initial select
   useEffect(() => {
-    if (!selectedUserId && filteredChats.length > 0) {
-      setSelectedUserId(filteredChats[0].user_id);
-       router.push(`/admin-dashboard/message/${filteredChats[0].user_id}`);
+    if (!selectedUserIdFromUrl && filteredChats.length > 0) {
+      setSelectedUserId(filteredChats[0].user_id.toString());
+       router.push(`/s-dashboard/smessage/${filteredChats[0].user_id}`);
     }
-  }, [filteredChats, selectedUserId,router]);
+  }, [filteredChats, selectedUserIdFromUrl, router]);
 
   // if current selection not in filtered list, pick first visible
   useEffect(() => {
     if (
-      selectedUserId &&
+      selectedUserIdFromUrl &&
       filteredChats.length > 0 &&
-      !filteredChats.some((c) => c.user_id === selectedUserId)
+      !filteredChats.some((c) => c.user_id.toString() === selectedUserIdFromUrl)
     ) {
-      setSelectedUserId(filteredChats[0].user_id);
-      router.push(`/admin-dashboard/message/${filteredChats[0].user_id}`);
+      setSelectedUserId(filteredChats[0].user_id.toString());
+      router.push(`/s-dashboard/smessage/${filteredChats[0].user_id}`);
     }
-  }, [filteredChats, selectedUserId]);
+  }, [filteredChats, selectedUserIdFromUrl, router]);
 
-
-  
-
- 
   const handleChatClick = (userid: number) => {
-    setSelectedUserId(userid);
-     router.push(`/admin-dashboard/message/${userid}`);
+    setSelectedUserId(userid.toString());
+     router.push(`/s-dashboard/smessage/${userid}`);
    
   };
 
@@ -130,7 +136,7 @@ const pathname = usePathname();
                 key={chat.user_id}
                 data={chat}
                 handleChatClick={handleChatClick}
-                isSelected={selectedUserId === chat.user_id}
+                isSelected={selectedUserIdFromUrl === chat.user_id.toString()}
               />
             ))
           ) : (

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Avatar from "./Avatar";
 
 interface ChatData {
   user_id: number;
@@ -55,17 +56,13 @@ export default function ChatCard({
       }`}
       onClick={() => handleChatClick(data.user_id)}
     >
-      <div className="rounded-full relative">
-        <Image
-          unoptimized
-          src={data.customer_image}
-          alt={`${data.customer_name} avatar`}
-          width={60}
-          height={60}
-          className="w-[60px] h-[60px] object-cover rounded-full"
-        />
-        {/* Active dot removed */}
-      </div>
+      <Avatar
+        src={data.customer_image}
+        alt={`${data.customer_name} avatar`}
+        name={data.customer_name}
+        size={60}
+        className="flex-shrink-0"
+      />
 
       <div className="flex gap-[2px] justify-between w-full flex-1 min-w-0">
         <div className="space-y-[2px] min-w-0">

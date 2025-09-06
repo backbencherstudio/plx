@@ -1000,7 +1000,8 @@
             unreadCount: 0,
             isActive: true,
             lastActivity: "2025-08-25T10:00:00Z"
-          }
+          },
+          
         ],
         currentChat: {
           conversationId: "1",
