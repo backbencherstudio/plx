@@ -136,7 +136,7 @@ export default function SubscriberLogin() {
              <p>Continue with Google</p>
             </div>
           </div>
-          <p className=" text-sm text-[#4A4C56] text-center mt-8">Don't have an Account? <Link href='#' className=" text-primary font-semibold ml-1">Sign Up</Link></p>
+          <p className=" text-sm text-[#4A4C56] text-center mt-8">Don't have an Account? <Link href='/sign-up' className=" text-primary font-semibold ml-1">Sign Up</Link></p>
         </div>
         <div className=" px-6 py-7  ">
           <Image src={sImg} alt="admin img" width={750} height={893} />
