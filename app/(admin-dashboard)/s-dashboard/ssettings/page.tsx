@@ -1,10 +1,10 @@
 import React from 'react'
-import AdminInfo from './_components/AdminInfo'
+import PersonalInfo from './_components/personalInfo'
 
 export default function Settings() {
   return (
     <div>
-      <AdminInfo/>
+      <PersonalInfo/>
     </div>
   )
 }

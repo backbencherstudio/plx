@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import Dot3Icon from "@/public/nominations/icons/Dot3Icon";
 import Image from "next/image";
 import youImg from "@/public/sender_img.png";
-import Avatar from "../_components/Avatar";
 import { formatDistanceToNow } from "date-fns"; // Import date-fns function
 
 // Type definitions for conversation structure
@@ -121,12 +120,13 @@ export default function ChatPage() {
       {/* Header - Always visible, never scrolls */}
       <div className="flex justify-between px-6 pt-5 pb-7 border-b border-[#E9E9EA] flex-shrink-0">
         <div className=" flex items-center gap-3">
-          <Avatar
-            src={filteredConversation[0]?.customer_image}
+          <img
+            src={
+              filteredConversation[0]?.customer_image ||
+              "https://randomuser.me/api/portraits/women/30.jpg"
+            }
             alt="Receiver"
-            name={filteredConversation[0]?.customer_name || "Jane Smith"}
-            size={46}
-            className="mr-3"
+            className="w-[46px] h-[46px] rounded-full mr-3"
           />
           <div>
             <h2 className="text-lg text-[#4A4C56] font-medium">
@@ -155,20 +155,16 @@ export default function ChatPage() {
               <div className={`flex gap-3`}>
                 <div className={`${msg.sender === "sender" && "order-2"}`}>
                   {msg.sender == "sender" ? (
-                    <Avatar
-                      src={youImg}
-                      alt="You"
-                      name="You"
-                      size={40}
-                      className="rounded-full bg-[#E7ECF4]"
-                    />
+                    <div className=" rounded-full   bg-[#E7ECF4]  w-10 h-10 flex justify-center items-center">
+                      <Image src={youImg} className="" alt="customer img" />
+                    </div>
                   ) : (
-                    <Avatar
+                    <Image
                       src={filteredConversation[0]?.customer_image}
-                      alt="Customer"
-                      name={filteredConversation[0]?.customer_name || "Customer"}
-                      size={40}
-                      className="rounded-full"
+                      width={40}
+                      height={40}
+                      className=" rounded-full"
+                      alt="customer img"
                     />
                   )}
                 </div>

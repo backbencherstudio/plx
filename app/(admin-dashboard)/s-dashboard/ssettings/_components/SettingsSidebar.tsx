@@ -15,45 +15,40 @@ interface SidebarItemType {
 
 const sidebarItems: SidebarItemType[] = [
   {
-    name: "Admin Information",
-    href: "/admin-dashboard/settings",
+    name: "Personal Information",
+    href: "/s-dashboard/ssettings",
     icon: AdminInfoIcon
   },
   {
     name: "Notification",
-    href: "/admin-dashboard/settings/notification",
+    href: "/s-dashboard/ssettings/notification",
     icon: NotificationIcon
   },
   {
     name: "Security",
-    href: "/admin-dashboard/settings/security",
+    href: "/s-dashboard/ssettings/security",
     icon: Security
-  },
-  {
-    name: "Integrations",
-    href: "/admin-dashboard/settings/integrations",
-    icon: IntegrationIcon
-  } 
+  }
 ];
 
 export default function SettingsSidebar() {
   const pathname = usePathname();
-  const [activeItem, setActiveItem] = useState<string>("/admin-dashboard/settings");
+  const [activeItem, setActiveItem] = useState<string>("/s-dashboard/ssettings");
 
   useEffect(() => {
     const sortedItems = [...sidebarItems].sort((a, b) => b.href.length - a.href.length);
     
     const currentItem = sortedItems.find(item => {
-      if (item.href === "/admin-dashboard/settings") {
-        return pathname === "/admin-dashboard/settings";
+      if (item.href === "/s-dashboard/ssettings") {
+        return pathname === "/s-dashboard/ssettings";
       }
       return pathname.startsWith(item.href);
     });
 
-    if (!currentItem && pathname.startsWith("/admin-dashboard/settings")) {
-      setActiveItem("/admin-dashboard/settings");
+    if (!currentItem && pathname.startsWith("/s-dashboard/ssettings")) {
+      setActiveItem("/s-dashboard/ssettings");
     } else {
-      setActiveItem(currentItem ? currentItem.href : "/admin-dashboard/settings");
+      setActiveItem(currentItem ? currentItem.href : "/s-dashboard/ssettings");
     }
   }, [pathname]);
 
