@@ -1,7 +1,10 @@
 import Image from "next/image";
+import AdminLogin from "./(auth)/AdminLogin";
 
 export default function Home() {
   return (
-    <h1 className="text-4xl font-bold text-graytext " >Dashboarddd</h1>
+     <div>
+      <AdminLogin/>
+     </div>
   );
 }
