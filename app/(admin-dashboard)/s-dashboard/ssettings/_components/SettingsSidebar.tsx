@@ -67,7 +67,7 @@ export default function SettingsSidebar() {
           <Link
             key={item.name}
             href={item.href}
-            className={`flex items-center gap-4 py-3 px-4 rounded-xl transition-colors duration-200 ${
+            className={`flex items-center gap-4 py-3 px-4 rounded-xl transition-colors duration-200 cursor-pointer ${
               isActiveItem(item.href)
                 ? "bg-[#E7ECF4] border border-[#B6C3DE] text-primary"
                 : "hover:bg-[#E7ECF4] text-[#4A4C56]"

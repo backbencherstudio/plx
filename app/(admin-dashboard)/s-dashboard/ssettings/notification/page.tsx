@@ -1,11 +1,28 @@
+"use client";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 import MessageIcon from "@/public/setting-notification/icons/MessageIcon";
 import MobileIcon from "@/public/setting-notification/icons/MobileIcon";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useSettingsContext } from "../_components/SettingsContext";
 
 export default function Notification() {
+  const { setDirty, registerSubmit } = useSettingsContext();
+  const [emailNotif, setEmailNotif] = useState(true);
+  const [smsNotif, setSmsNotif] = useState(false);
+  const [pushNotif, setPushNotif] = useState(true);
+
+  useEffect(() => {
+    registerSubmit(async () => {
+      // TODO: replace with API call
+      // await saveNotificationSettings({ emailNotif, smsNotif, pushNotif })
+      setDirty(false);
+    });
+  }, [registerSubmit, emailNotif, smsNotif, pushNotif, setDirty]);
+
+  const markDirty = () => setDirty(true);
+
   return (
     <div>
       <div className=" bg-white p-6 rounded-[12px]">
@@ -29,9 +46,10 @@ export default function Notification() {
                 </div>
                     <Switch
                       id="email-notification"
-                      defaultChecked
+                      checked={emailNotif}
+                      onCheckedChange={(v) => { setEmailNotif(!!v); markDirty(); }}
                       className="
-                      h-6 w-[43px] 
+                      h-6 w-[43px] cursor-pointer
                       [&>[data-slot=switch-thumb]]:h-5 
                       [&>[data-slot=switch-thumb]]:w-5 
                       [&>[data-slot=switch-thumb]]:data-[state=checked]:translate-x-[20px]"
@@ -54,10 +72,11 @@ export default function Notification() {
                   </Label>
                 </div>
                    <Switch
-                      id="email-notification"
-                      
+                      id="sms-notifications"
+                      checked={smsNotif}
+                      onCheckedChange={(v) => { setSmsNotif(!!v); markDirty(); }}
                       className="
-                      h-6 w-[43px] 
+                      h-6 w-[43px] cursor-pointer
                       [&>[data-slot=switch-thumb]]:h-5 
                       [&>[data-slot=switch-thumb]]:w-5 
                       [&>[data-slot=switch-thumb]]:data-[state=checked]:translate-x-[20px]"
@@ -78,10 +97,11 @@ export default function Notification() {
                   </Label>
                 </div>
                  <Switch
-                      id="email-notification"
-                      defaultChecked
+                      id="push-notifications"
+                      checked={pushNotif}
+                      onCheckedChange={(v) => { setPushNotif(!!v); markDirty(); }}
                       className="
-                      h-6 w-[43px] 
+                      h-6 w-[43px] cursor-pointer
                       [&>[data-slot=switch-thumb]]:h-5 
                       [&>[data-slot=switch-thumb]]:w-5 
                       [&>[data-slot=switch-thumb]]:data-[state=checked]:translate-x-[20px]"

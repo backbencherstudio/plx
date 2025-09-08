@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -13,13 +13,90 @@ import {
 import { Button } from "@/components/ui/button";
 import MessageIcon from "@/public/security/MessageIcon";
 import Link from "next/link";
+import { useSettingsContext } from "../_components/SettingsContext";
 
 export default function TwoFactorSwitch() {
+  const { setDirty, registerSubmit } = useSettingsContext();
   const [isSwitchOn, setIsSwitchOn] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [showOffConfirmModal, setShowOffConfirmModal] = useState(false);
   const [otp, setOtp] = useState("");
+  const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState<string>("");
+  const [passwordExpiryDays, setPasswordExpiryDays] = useState<string>("");
+
+  const sessionTimerRef = useRef<number | null>(null);
+  const passwordTimerRef = useRef<number | null>(null);
+
+  const STORAGE_KEYS = {
+    sessionDeadline: "security.sessionTimeoutDeadlineMs",
+    passwordDeadline: "security.passwordExpiryDeadlineMs",
+    sessionMinutes: "security.sessionTimeoutMinutes",
+    passwordDays: "security.passwordExpiryDays",
+  } as const;
+
+  const clearAllAppStorage = () => {
+    try {
+      sessionStorage.clear();
+      localStorage.clear();
+    } catch {}
+  };
+
+  const scheduleSessionClear = (minutes: number) => {
+    if (sessionTimerRef.current) window.clearTimeout(sessionTimerRef.current);
+    if (!Number.isFinite(minutes) || minutes <= 0) return;
+    const deadline = Date.now() + minutes * 60 * 1000;
+    try {
+      localStorage.setItem(STORAGE_KEYS.sessionDeadline, String(deadline));
+      localStorage.setItem(STORAGE_KEYS.sessionMinutes, String(minutes));
+    } catch {}
+    sessionTimerRef.current = window.setTimeout(() => {
+      clearAllAppStorage();
+    }, minutes * 60 * 1000);
+  };
+
+  const schedulePasswordExpiry = (days: number) => {
+    if (passwordTimerRef.current) window.clearTimeout(passwordTimerRef.current);
+    if (!Number.isFinite(days) || days <= 0) return;
+    const deadline = Date.now() + days * 24 * 60 * 60 * 1000;
+    try {
+      localStorage.setItem(STORAGE_KEYS.passwordDeadline, String(deadline));
+      localStorage.setItem(STORAGE_KEYS.passwordDays, String(days));
+    } catch {}
+    passwordTimerRef.current = window.setTimeout(() => {
+      clearAllAppStorage();
+    }, days * 24 * 60 * 60 * 1000);
+  };
+
+  // Enforce stored deadlines on load
+  useEffect(() => {
+    try {
+      const sessionDeadline = Number(localStorage.getItem(STORAGE_KEYS.sessionDeadline) || "");
+      if (sessionDeadline && Date.now() >= sessionDeadline) {
+        clearAllAppStorage();
+      } else if (sessionDeadline) {
+        const remainingMs = sessionDeadline - Date.now();
+        sessionTimerRef.current = window.setTimeout(clearAllAppStorage, remainingMs);
+      }
+
+      const passwordDeadline = Number(localStorage.getItem(STORAGE_KEYS.passwordDeadline) || "");
+      if (passwordDeadline && Date.now() >= passwordDeadline) {
+        clearAllAppStorage();
+      } else if (passwordDeadline) {
+        const remainingMs = passwordDeadline - Date.now();
+        passwordTimerRef.current = window.setTimeout(clearAllAppStorage, remainingMs);
+      }
+
+      const savedMinutes = localStorage.getItem(STORAGE_KEYS.sessionMinutes) || "";
+      const savedDays = localStorage.getItem(STORAGE_KEYS.passwordDays) || "";
+      if (savedMinutes) setSessionTimeoutMinutes(savedMinutes);
+      if (savedDays) setPasswordExpiryDays(savedDays);
+    } catch {}
+    return () => {
+      if (sessionTimerRef.current) window.clearTimeout(sessionTimerRef.current);
+      if (passwordTimerRef.current) window.clearTimeout(passwordTimerRef.current);
+    };
+  }, []);
 
   const handleSwitchClick = () => {
     if (!isSwitchOn) {
@@ -41,6 +118,7 @@ export default function TwoFactorSwitch() {
       setIsSwitchOn(true);
       setShowOtpModal(false);
       setOtp("");
+      setDirty(true);
     } else {
       alert("Enter valid OTP");
     }
@@ -49,7 +127,19 @@ export default function TwoFactorSwitch() {
   const handleOffConfirm = () => {
     setIsSwitchOn(false);
     setShowOffConfirmModal(false);
+    setDirty(true);
   };
+
+  // register global save action
+  React.useEffect(() => {
+    registerSubmit(async () => {
+      const minutes = Number(sessionTimeoutMinutes);
+      const days = Number(passwordExpiryDays);
+      if (Number.isFinite(minutes) && minutes > 0) scheduleSessionClear(minutes);
+      if (Number.isFinite(days) && days > 0) schedulePasswordExpiry(days);
+      setDirty(false);
+    });
+  }, [registerSubmit, sessionTimeoutMinutes, passwordExpiryDays, setDirty]);
 
   return (
     <div>
@@ -63,9 +153,11 @@ export default function TwoFactorSwitch() {
               Session Timeout (minutes)
             </label>
             <input
-              type="text"
+              type="number"
               id="session"
               placeholder="30"
+              value={sessionTimeoutMinutes}
+              onChange={(e) => { setSessionTimeoutMinutes(e.target.value); setDirty(true); }}
               className="border border-[#E6E8EA] py-3 px-4 rounded-[10px] placeholder:text-xs placeholder:text-[#4A4C56] placeholder:font-medium mt-1.5"
             />
           </div>
@@ -75,9 +167,11 @@ export default function TwoFactorSwitch() {
               Password Expiry (days)
             </label>
             <input
-              type="text"
+              type="number"
               id="expiry"
               placeholder="500"
+              value={passwordExpiryDays}
+              onChange={(e) => { setPasswordExpiryDays(e.target.value); setDirty(true); }}
               className="border border-[#E6E8EA] py-3 px-4 rounded-[10px] placeholder:text-xs placeholder:text-[#4A4C56] placeholder:font-medium mt-1.5"
             />
           </div>
