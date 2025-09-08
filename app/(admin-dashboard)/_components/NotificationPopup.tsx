@@ -2,42 +2,37 @@ import { X, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface Notification {
-  id: string
-  type: "message" | "update" | "meeting"
+  id: string | number
+  type: string
   title: string
   description?: string
+  message?: string
   timestamp: string
   isRecent?: boolean
+  status?: string
 }
-
-const notifications: Notification[] = [
-  {
-    id: "1",
-    type: "message",
-    title: "New message from Admin",
-    timestamp: "12:58 PM",
-    isRecent: true,
-  },
-  {
-    id: "2",
-    type: "update",
-    title: "Schedule has been updated successfully.",
-    timestamp: "2 hours ago",
-    isRecent: true,
-  },
-  {
-    id: "3",
-    type: "meeting",
-    title: "Your meeting with Admin at 5:00 PM on 12/02/2025 via Calendly, has been approved.",
-    timestamp: "8 hours ago",
-  },
-]
 
 interface NotificationPopupProps {
   onClose: () => void;
+  notifications: Notification[];
 }
 
-export function NotificationPopup({ onClose }: NotificationPopupProps) {
+export function NotificationPopup({ onClose, notifications }: NotificationPopupProps) {
+  // Helper function to determine if notification is recent/unread
+  const isRecentNotification = (notification: Notification) => {
+    // For admin data: check status === "unread"
+    if (notification.status !== undefined) {
+      return notification.status === "unread";
+    }
+    // For user data: check isRecent === true
+    return notification.isRecent === true;
+  };
+
+  // Helper function to get notification content
+  const getNotificationContent = (notification: Notification) => {
+    return notification.description || notification.message || notification.title;
+  };
+
   return (
     <div className="w-[500px] mr-[170px] top-0 bg-white rounded-2xl shadow-[0px_16px_60px_0px_rgba(26,26,26,0.25)] flex flex-col">
       {/* Header */}
@@ -51,15 +46,20 @@ export function NotificationPopup({ onClose }: NotificationPopupProps) {
       {/* Notifications List */}
       <div className="flex flex-col px-2 pb-5">
         <div className="flex flex-col gap-3">
-          {/* Recent notifications with background */}
+          {/* Recent notifications with background (unread/recent notifications) */}
           <div className="bg-slate-50 rounded-xl overflow-hidden">
             {notifications
-              .filter((n) => n.isRecent)
+              .filter((n) => isRecentNotification(n))
               .map((notification) => (
                 <div key={notification.id} className="px-4 py-3 flex items-start gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-4">
-                      <p className="text-base font-medium text-neutral-600 leading-tight">{notification.title}</p>
+                      <div className="flex-1">
+                        <p className="text-base font-medium text-neutral-600 leading-tight">{notification.title}</p>
+                        {getNotificationContent(notification) !== notification.title && (
+                          <p className="text-sm text-neutral-500 mt-1 leading-relaxed">{getNotificationContent(notification)}</p>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <Clock className="w-4 h-4 text-zinc-500" />
                         <span className="text-xs text-zinc-500 leading-none">{notification.timestamp}</span>
@@ -70,14 +70,19 @@ export function NotificationPopup({ onClose }: NotificationPopupProps) {
               ))}
           </div>
 
-          {/* Other notifications */}
+          {/* Other notifications (read/old notifications) */}
           {notifications
-            .filter((n) => !n.isRecent)
+            .filter((n) => !isRecentNotification(n))
             .map((notification) => (
               <div key={notification.id} className="px-4 py-3 flex items-start gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start gap-4">
-                    <p className="text-base font-medium text-neutral-600 leading-relaxed">{notification.title}</p>
+                    <div className="flex-1">
+                      <p className="text-base font-medium text-neutral-600 leading-relaxed">{notification.title}</p>
+                      {getNotificationContent(notification) !== notification.title && (
+                        <p className="text-sm text-neutral-500 mt-1 leading-relaxed">{getNotificationContent(notification)}</p>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <Clock className="w-4 h-4 text-zinc-500" />
                       <span className="text-xs text-zinc-500 leading-none">{notification.timestamp}</span>

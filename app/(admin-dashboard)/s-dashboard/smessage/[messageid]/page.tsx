@@ -1,28 +1,46 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { AdminData } from "../../../../lib/admindata";
+import { userData } from "../../../../lib/userdata";
 import { usePathname } from "next/navigation";
 import Dot3Icon from "@/public/nominations/icons/Dot3Icon";
 import Image from "next/image";
 import youImg from "@/public/sender_img.png";
 import { formatDistanceToNow } from "date-fns"; // Import date-fns function
-import SendIcon from "@/public/commonIcons/SendIcon";
 
 // Type definitions for conversation structure
 interface Message {
-  message_id: number;
-  sender: string;
+  id: string;
+  content: string;
   timestamp: string;
-  message: string;
+  senderId: string;
+  senderName: string;
+  type: string;
+  status: string;
+  isFromUser: boolean;
+  timeAgo: string;
 }
 
 interface Conversation {
-  user_id: number;
-  customer_name: string;
-  customer_image: string;
+  id: string;
+  contact: {
+    id: string;
+    name: string;
+    avatar: string;
+    status: string;
+    lastSeen: string | null;
+    isVerified: boolean;
+  };
+  lastMessage: {
+    id: string;
+    content: string;
+    timestamp: string;
+    senderId: string;
+    type: string;
+    status: string;
+  };
+  unreadCount: number;
   isActive: boolean;
-  last_seen: string;
-  conversation: Message[];
+  lastActivity: string;
 }
 
 const generateRandomMessage = (): string => {
@@ -37,77 +55,70 @@ const generateRandomMessage = (): string => {
 };
 
 export default function ChatPage() {
-  // Get the list of conversations
-  const { conversations } = AdminData;
+  // Get the list of conversations from userData
+  const conversations = userData.messagePage.chatInterface.conversations;
   const pathname = usePathname();
 
   // Extract the dynamic user_id from the pathname
   const userId = pathname.split("/").pop(); // Assuming the user_id is at the end of the pathname
   console.log("Extracted userId from pathname:", userId);
 
-  // Ensure the userId is a valid number
-  const userIdNumber = userId ? parseInt(userId) : NaN;
-  console.log("Parsed userIdNumber:", userIdNumber);
+  // Ensure the userId is a valid string
+  const userIdString = userId || "";
+  console.log("Parsed userIdString:", userIdString);
 
   // Filter the conversation based on the user_id
   const filteredConversation = conversations.filter(
-    (conversation: Conversation) => conversation.user_id === userIdNumber
+    (conversation: Conversation) => conversation.contact.id === userIdString
   );
 
   // Log the filtered conversation to inspect it
   console.log("Filtered Conversation: ", filteredConversation);
 
-  // If there is no matching conversation, set an empty array to avoid errors
-  const initialMessages =
-    filteredConversation.length > 0 ? filteredConversation[0].conversation : [];
+  // Get messages from the current chat in userData
+  const currentChat = userData.messagePage.chatInterface.currentChat;
+  const initialMessages = currentChat.messages || [];
   console.log("Initial messages:", initialMessages);
 
-  // Function to insert random sender message at random positions
-  const insertRandomSenderMessages = (messages: Message[]): Message[] => {
-    const updatedMessages = [...messages];
-    const numberOfRandomMessages = Math.floor(Math.random() * 3) + 1; // Random number between 1 and 3
-
-    for (let i = 0; i < numberOfRandomMessages; i++) {
-      const randomMessage = {
-        message_id: updatedMessages.length + 1,
-        sender: "sender",
-        timestamp: new Date().toISOString(),
-        message: generateRandomMessage(),
-      };
-
-      // Insert the random message at a random position in the array
-      const randomIndex = Math.floor(Math.random() * updatedMessages.length);
-      updatedMessages.splice(randomIndex, 0, randomMessage);
-    }
-
-    return updatedMessages;
+  // Convert userData messages to the format expected by the component
+  const convertMessages = (userDataMessages: any[]): Message[] => {
+    return userDataMessages.map((msg, index) => ({
+      id: msg.id || index.toString(),
+      content: msg.content,
+      timestamp: msg.timestamp,
+      senderId: msg.senderId,
+      senderName: msg.senderName,
+      type: msg.type,
+      status: msg.status,
+      isFromUser: msg.isFromUser,
+      timeAgo: msg.timeAgo,
+    }));
   };
 
-  // Set the initial messages state dynamically and insert random messages
+  // Set the initial messages state
   const [messages, setMessages] = useState<Message[]>(
-    insertRandomSenderMessages(initialMessages)
+    convertMessages(initialMessages)
   );
 
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const handleSend = () => {
     if (newMessage.trim() === "") return;
 
-    setMessages([
-      ...messages,
-      {
-        message_id: messages.length + 1,
-        sender: "sender",
-        timestamp: new Date().toISOString(),
-        message: newMessage,
-      },
-    ]);
+    const newMsg: Message = {
+      id: (messages.length + 1).toString(),
+      content: newMessage,
+      timestamp: new Date().toISOString(),
+      senderId: "user",
+      senderName: "You",
+      type: "text",
+      status: "sent",
+      isFromUser: true,
+      timeAgo: "now",
+    };
+
+    setMessages([...messages, newMsg]);
     setNewMessage("");
   };
 
@@ -128,7 +139,8 @@ export default function ChatPage() {
         <div className=" flex items-center gap-3">
           <img
             src={
-              filteredConversation[0]?.customer_image ||
+              filteredConversation[0]?.contact.avatar ||
+              currentChat.contact.avatar ||
               "https://randomuser.me/api/portraits/women/30.jpg"
             }
             alt="Receiver"
@@ -136,10 +148,10 @@ export default function ChatPage() {
           />
           <div>
             <h2 className="text-lg text-[#4A4C56] font-medium">
-              {filteredConversation[0]?.customer_name || "Jane Smith"}
+              {filteredConversation[0]?.contact.name || currentChat.contact.name || "PLX Support Team"}
             </h2>
             <p className=" text-xs text-[#A5A5AB]">
-              Lorem ipsum dolor sit amet
+              {filteredConversation[0]?.contact.status === "online" ? "Active now" : "Last seen recently"}
             </p>
           </div>
         </div>
@@ -153,20 +165,20 @@ export default function ChatPage() {
         {messages.length > 0 ? (
           messages.map((msg) => (
             <div
-              key={msg.message_id}
+              key={msg.id}
               className={`flex ${
-                msg.sender === "sender" ? "justify-end" : "justify-start"
+                msg.isFromUser ? "justify-end" : "justify-start"
               }`}
             >
               <div className={`flex gap-3`}>
-                <div className={`${msg.sender === "sender" && "order-2"}`}>
-                  {msg.sender == "sender" ? (
+                <div className={`${msg.isFromUser && "order-2"}`}>
+                  {msg.isFromUser ? (
                     <div className=" rounded-full   bg-[#E7ECF4]  w-10 h-10 flex justify-center items-center">
                       <Image src={youImg} className="" alt="customer img" />
                     </div>
                   ) : (
                     <Image
-                      src={filteredConversation[0]?.customer_image}
+                      src={filteredConversation[0]?.contact.avatar || currentChat.contact.avatar}
                       width={40}
                       height={40}
                       className=" rounded-full"
@@ -178,27 +190,25 @@ export default function ChatPage() {
                 <div>
                   <div
                     className={` flex items-center gap-4 mb-2${
-                      msg.sender === "sender"
+                      msg.isFromUser
                         ? " justify-end"
                         : " justify-start"
                     }`}
                   >
-                    <div
-                      className={`${msg.sender === "sender" ? "order-2" : ""}`}
-                    >
-                      {msg.sender == "sender" ? (
-                        <p className="  text-sm font-semibold text-[#4A4C56]  ">
-                          you
-                        </p>
-                      ) : (
-                        <p className="   text-sm font-semibold text-[#4A4C56]">
-                          {filteredConversation[0]?.customer_name ||
-                            "Jane Smith"}
-                        </p>
-                      )}
+                    <div className={`${msg.isFromUser?'order-2':''}`}>
+
+                    {msg.isFromUser ? (
+                      <p className="  text-sm font-semibold text-[#4A4C56]  ">
+                        {msg.senderName}
+                      </p>
+                    ) : (
+                      <p className="   text-sm font-semibold text-[#4A4C56]">
+                        {filteredConversation[0]?.contact.name || currentChat.contact.name || "PLX Support Team"}
+                      </p>
+                    )}
                     </div>
                     <p className="text-xs  text-[#A5A5AB]">
-                      {formatDistanceToNow(new Date(msg.timestamp), {
+                      {msg.timeAgo || formatDistanceToNow(new Date(msg.timestamp), {
                         addSuffix: true,
                       })
                         .replace(/^about /, "")
@@ -206,13 +216,13 @@ export default function ChatPage() {
                     </p>
                   </div>
                   <p
-                    className={`max-w-[680px]   p-3  overflow-wrap  break-words   ${
-                      msg.sender === "sender"
+                    className={`max-w-[680px] flex flex-wrap p-3   ${
+                      msg.isFromUser
                         ? "bg-primary text-white rounded-b-[12px] rounded-tl-[12px]"
                         : "bg-[#E7ECF4] text-black  rounded-b-[12px] rounded-tr-[12px]"
                     }`}
                   >
-                    {msg.message}
+                    {msg.content}
                   </p>
                 </div>
               </div>
@@ -222,24 +232,24 @@ export default function ChatPage() {
           <div>No messages found.</div>
         )}
         {/* This div acts as a scroll anchor */}
-        <div ref={messagesEndRef} />
+        <div />
       </div>
 
       {/* Input Box - Always visible, never scrolls */}
-      <div className=" py-5 px-6 flex flex-shrink-0 border-t border-[#E9E9EA]">
+      <div className="p-4 bg-white border-t border-gray-300 flex flex-shrink-0">
         <input
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Type a message..."
-          className="flex-1  py-2 px-3 border border-[#E9E9EA] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
           onClick={handleSend}
-          className="ml-2 bg-primary text-white   p-[10px] rounded-[8px] cursor-pointer  hover:bg-blue-700 transition-colors"
+          className="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
-         <SendIcon/>
+          Send
         </button>
       </div>
     </div>

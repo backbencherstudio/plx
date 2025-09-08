@@ -2,7 +2,7 @@
 import React, { useState } from "react";
  import { Urbanist } from "next/font/google";
 import Sidebar from "./components/common/usersidebar";
-import Header from "../_components/Header";
+import SubscriberHeader from "../_components/common/SubscriberHeader";
  
  
  
@@ -36,7 +36,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       flex-1 flex flex-col h-full min-h-0 min-w-0 transition-all duration-300 ease-in-out
       ${isSidebarOpen ? 'md:ml-0' : 'md:ml-0'}
     `}>
-        <Header onMenuClick={() => setIsSidebarOpen(true)} />
+        <SubscriberHeader onMenuClick={() => setIsSidebarOpen(true)} />
 
         <main className="flex-1 overflow-auto  min-w-0 min-h-0 p-4 sm:p-5 md:p-6 bg-[#F5F8FA]">
           {children}

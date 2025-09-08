@@ -7,6 +7,7 @@ import NotificationIcon from "@/public/header/Icons/NotificationIcon";
 import ProfileIcon from "@/public/header/Icons/ProfileIcon";
 import { NotificationPopup } from "./NotificationPopup";
 import { useState } from "react";
+import { userData } from "@/app/lib/userdata";
 // import { HiMenuAlt3 } from "react-icons/hi";
 // import { useAuth } from "@/app/context/AuthContext"; // Import useAuth
 
@@ -16,6 +17,20 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  // Use user data for notifications (fallback component)
+  const notificationData = userData.notifications.data;
+  const userInfo = userData.user;
+
+  // Helper function to check if notifications have unread status
+  const hasUnreadNotifications = () => {
+    return userData.notifications.hasUnread;
+  };
+
+  // Helper function to get unread count
+  const getUnreadCount = () => {
+    return userData.notifications.count;
+  };
 
 //   const { role, logout } = useAuth(); // Get the role and logout from the context
 
@@ -45,8 +60,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </div>
 
           <div className=" flex items-center gap-3">
-            <div className=" p-2 cursor-pointer" onClick={() => setIsNotificationOpen(!isNotificationOpen)}>
+            <div className=" p-2 cursor-pointer relative" onClick={() => setIsNotificationOpen(!isNotificationOpen)}>
                 <NotificationIcon/>
+                {/* Notification badge */}
+                {hasUnreadNotifications() && (
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-white font-semibold">{getUnreadCount()}</span>
+                  </div>
+                )}
             </div>
 
             <div className=" flex items-center gap-4 cursor-pointer">
@@ -55,8 +76,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
               <ProfileIcon/>
               </div>
               <div>
-                <h3 className=" text-sm text-graytext font-semibold">Miguel Trevino</h3>
-                <p className=" text-[#777980] text-sm">Admin</p>
+                <h3 className=" text-sm text-graytext font-semibold">{userInfo.name}</h3>
+                <p className=" text-[#777980] text-sm">{userInfo.company}</p>
               </div>
             </div>
 
@@ -71,7 +92,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           onClick={() => setIsNotificationOpen(false)}
         >
           <div className="fixed top-20 right-8" onClick={(e) => e.stopPropagation()}>
-            <NotificationPopup onClose={() => setIsNotificationOpen(false)} />
+            <NotificationPopup onClose={() => setIsNotificationOpen(false)} notifications={notificationData} />
           </div>
         </div>
       )}

@@ -155,7 +155,49 @@
     
     notifications: {
       hasUnread: true,
-      count: 1
+      count: 3,
+      data: [
+        {
+          id: "1",
+          type: "message",
+          title: "New message from Admin",
+          description: "You have received a new message regarding your recent nomination request.",
+          timestamp: "12:58 PM",
+          isRecent: true,
+        },
+        {
+          id: "2",
+          type: "update",
+          title: "Schedule has been updated successfully.",
+          description: "Your transportation schedule for the upcoming week has been updated.",
+          timestamp: "2 hours ago",
+          isRecent: true,
+        },
+        {
+          id: "3",
+          type: "meeting",
+          title: "Your meeting with Admin at 5:00 PM on 12/02/2025 via Calendly, has been approved.",
+          description: "Your scheduled meeting has been confirmed. Please prepare your questions in advance.",
+          timestamp: "8 hours ago",
+          isRecent: false,
+        },
+        {
+          id: "4",
+          type: "nomination",
+          title: "Nomination #487598 has been approved",
+          description: "Your nomination request for Natural Gas transportation has been approved and is ready for scheduling.",
+          timestamp: "1 day ago",
+          isRecent: false,
+        },
+        {
+          id: "5",
+          type: "schedule",
+          title: "Schedule maintenance scheduled for tomorrow",
+          description: "Pipeline maintenance is scheduled for tomorrow from 2:00 AM to 6:00 AM. Please plan accordingly.",
+          timestamp: "2 days ago",
+          isRecent: false,
+        }
+      ]
     },
   
     // Nominations Page Data - API Ready Structure
