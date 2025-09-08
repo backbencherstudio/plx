@@ -21,10 +21,7 @@ const menuItems = [
   { title: "Message", icon: MessageIcon, href: "/admin-dashboard/message" },
 ];
 
-const bottomMenuItems = [
-  { title: "Settings", icon: <SettingsIcon />, href: "#" },
-  { title: "Log Out", icon: <LogOutIcon />, href: "#" },
-];
+ 
 
 interface SidebarProps {
   isOpen: boolean;
@@ -35,6 +32,17 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false); // collapse works only on md+
+
+
+  const isMenuItemActive = (itemHref: string) => {
+    if (itemHref === "/admin-dashboard") {
+      // For dashboard, only match exact path or with trailing slash
+      return pathname === "/admin-dashboard" || pathname === "/admin-dashboard/";
+    } else {
+      // For other items, match if pathname starts with the href
+      return pathname.startsWith(itemHref);
+    }
+  };
 
   return (
     <aside
@@ -89,7 +97,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       <nav className="flex-grow overflow-y-auto">
         <div className="px-4 space-y-2">
             {menuItems.map((item, index) =>  {
-            const isActive = pathname === item.href;
+              const isActive = isMenuItemActive(item.href); 
             return (
 
              <Link
