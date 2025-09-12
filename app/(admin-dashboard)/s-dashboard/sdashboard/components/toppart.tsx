@@ -3,10 +3,8 @@ import { BarChart3, FileText, Calendar, MessageCircle } from "lucide-react";
 
 export default function TopPart() {
   return (
-    <div className="p-8">
-      <div className="max-w-[1274px] mx-auto">
-        <QuickActions />
-      </div>
+    <div className="w-full">
+      <QuickActions />
     </div>
   );
 }
@@ -44,28 +42,28 @@ function QuickActions() {
   ];
 
   return (
+    <div className="w-full">
+      <div className="text-center mb-8">
+        <h1 className="text-2xl md:text-3xl font-semibold font-['Manrope'] text-neutral-800 mb-2">
+          Welcome Jenny From Binford Ltd.!
+        </h1>
+        <p className="text-base font-normal font-['Manrope'] text-neutral-600">
+          Here's what's happening with your logistics operations today.
+        </p>
+      </div>
 
-<div className="w-full mx-auto">
+      <div className="space-y-6">
+        <h2 className="text-lg font-medium text-neutral-800 font-sans">
+          Quick Actions
+        </h2>
 
-<div className="self-stretch justify-center text-neutral-800 text-3xl font-semibold font-['Manrope'] leading-10">Welcome Jenny From Binford Ltd.!</div>
-<div className="self-stretch justify-center text-neutral-600 text-base font-normal font-['Manrope'] leading-7">Here's what's happening with your logistics operations today.</div>
-
-    <div className="flex flex-col gap-6 mt-10">
-
-      <h2 className="text-lg font-medium text-neutral-800 font-sans">
-        Quick Actions
-      </h2>
-
-      <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {actions.map((action, index) => (
             <ActionCard key={index} {...action} />
           ))}
         </div>
       </div>
     </div>
-
-</div>
   );
 }
 
@@ -81,26 +79,23 @@ function ActionCard({
   gradient: string;
 }) {
   return (
-
-<>
-    <div className="flex-1 px-6 py-8 bg-white rounded-xl border border-slate-100 hover:border-slate-200 transition-colors cursor-pointer">
-      <div className="flex items-start gap-6">
+    <div className="w-full px-4 sm:px-6 py-6 sm:py-8 bg-white rounded-xl border border-slate-100 hover:border-slate-200 transition-colors cursor-pointer">
+      <div className="flex items-start gap-4 sm:gap-6">
         <div
           className={`w-10 h-10 bg-gradient-to-br ${gradient} rounded-lg flex items-center justify-center flex-shrink-0`}
         >
           <Icon className="w-5 h-5 text-white" />
         </div>
 
-        <div className="flex flex-col gap-2 min-w-0">
-          <h3 className="text-lg font-medium text-neutral-800 font-sans leading-relaxed">
+        <div className="flex flex-col gap-2 min-w-0 flex-1">
+          <h3 className="text-base sm:text-lg font-medium text-neutral-800 font-sans leading-relaxed">
             {title}
           </h3>
-          <p className="text-base text-neutral-600 font-sans leading-snug">
+          <p className="text-sm sm:text-base text-neutral-600 font-sans leading-snug">
             {description}
           </p>
         </div>
       </div>
     </div>
-</>
   );
 }

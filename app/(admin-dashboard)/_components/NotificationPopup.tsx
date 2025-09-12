@@ -34,7 +34,7 @@ export function NotificationPopup({ onClose, notifications }: NotificationPopupP
   };
 
   return (
-    <div className="w-[500px] mr-[170px] top-0 bg-white rounded-2xl shadow-[0px_16px_60px_0px_rgba(26,26,26,0.25)] flex flex-col">
+    <div className="w-[90vw] max-w-[500px] min-w-[300px] bg-white rounded-2xl shadow-[0px_16px_60px_0px_rgba(26,26,26,0.25)] flex flex-col">
       {/* Header */}
       <div className="flex justify-between items-center px-6 py-5">
         <h2 className="text-lg font-normal text-neutral-600">Recent Notifications</h2>

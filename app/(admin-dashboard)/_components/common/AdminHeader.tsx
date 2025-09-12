@@ -72,7 +72,7 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
           className="fixed inset-0 z-50" 
           onClick={() => setIsNotificationOpen(false)}
         >
-          <div className="fixed top-20 right-8" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed top-20 right-4 sm:right-8 flex justify-end" onClick={(e) => e.stopPropagation()}>
             <NotificationPopup onClose={() => setIsNotificationOpen(false)} notifications={notificationData} />
           </div>
         </div>
