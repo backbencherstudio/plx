@@ -17,14 +17,15 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import DoubleAvatar from "@/public/admin-dashboard/icons/DoubleAvatar";
 
 export const description = "A donut chart with text";
 
 // Updated chart data with user statistics and different color hex codes
 const chartData = [
-  { category: "Visitors", count: 275, fill: "#123F93" }, // Green for Visitors
-  { category: "Subscribers", count: 287, fill: "#FF692E" }, // Blue for Subscribers
-  { category: "Users", count: 200, fill: "#22CAAD" }, // Orange for Users
+  { category: "Visitors", count: 575, fill: "#123F93" }, // Green for Visitors
+  { category: "Subscribers", count: 487, fill: "#FF692E" }, // Blue for Subscribers
+  { category: "Users", count: 500, fill: "#22CAAD" }, // Orange for Users
 ];
 
 // Configuration for the chart
@@ -51,7 +52,10 @@ export function ChartPieDonutText() {
   return (
     <Card className="flex flex-col h-[500px] border-none shadow-none bg-transparent">
       <CardHeader className="items-center pb-0">
-        <CardTitle>
+        <CardTitle className=" flex items-center gap-4">
+          <div  className="border border-[#E6E8EA] p-1.5 rounded-md">
+            <DoubleAvatar/>
+          </div>
           <h2 className=" ">User Statistics on Your Website</h2>
         </CardTitle>
       </CardHeader>
@@ -130,6 +134,13 @@ export function ChartPieDonutText() {
                           textAnchor="middle"
                           dominantBaseline="middle"
                         >
+                            <tspan
+                            x={viewBox.cx}
+                            y={(viewBox.cy || 0) + 24}
+                            className="fill-muted-foreground"
+                          >
+                            Total
+                          </tspan>
                           <tspan
                             x={viewBox.cx}
                             y={viewBox.cy}
@@ -137,13 +148,7 @@ export function ChartPieDonutText() {
                           >
                             {totalCount.toLocaleString()}
                           </tspan>
-                          <tspan
-                            x={viewBox.cx}
-                            y={(viewBox.cy || 0) + 24}
-                            className="fill-muted-foreground"
-                          >
-                            Total
-                          </tspan>
+                        
                         </text>
                       </g>
                     );
