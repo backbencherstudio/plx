@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronLeft, ChevronRight, Calendar, List } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import EventDetailModal from "./event-detail-modal"
 import DynamicTable from "@/app/(admin-dashboard)/_components/reusable/DynamicTable"
 import { UpcomingMeetingColumn } from "@/app/(admin-dashboard)/_components/columns/UpcomingMettingColumn"
@@ -102,6 +102,46 @@ export default function EventDashboard() {
     if (color === "slate") return "bg-slate-200 text-sky-900 border-slate-300"
     return "bg-purple-100 text-violet-700 border-violet-700"
   }
+
+
+   // ========= date ==============================================
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
+    // Refs for date inputs
+    const fromDateRef = useRef<HTMLInputElement>(null);
+    const toDateRef = useRef<HTMLInputElement>(null);
+  
+    // Handle calendar icon clicks
+    const handleFromCalendarClick = () => {
+      fromDateRef.current?.showPicker();
+    };
+  
+    const handleToCalendarClick = () => {
+      toDateRef.current?.showPicker();
+    };
+  
+    // Filter data based on date range
+    const filteredData = useMemo(() => {
+      let filtered =  AdminData.meetings;
+  
+      if (fromDate) {
+        filtered = filtered.filter((item) => {
+          const itemDate = new Date(item.requestDate);
+          const fromDateObj = new Date(fromDate);
+          return itemDate >= fromDateObj;
+        });
+      }
+  
+      if (toDate) {
+        filtered = filtered.filter((item) => {
+          const itemDate = new Date(item.requestDate);
+          const toDateObj = new Date(toDate);
+          return itemDate <= toDateObj;
+        });
+      }
+  
+      return filtered;
+    }, [fromDate, toDate]);
 
   const [selectedEvent, setSelectedEvent] = useState<null | {
     id: string
@@ -233,6 +273,47 @@ export default function EventDashboard() {
           <div className="w-full">
             <div className="px-6 py-5 flex items-center justify-between bg-white rounded-t-2xl border-b border-[#E7ECF4]">
               <h2 className="text-lg font-semibold text-graytext">Upcoming Meetings</h2>
+
+             <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4 sm:gap-6 w-full sm:w-auto">
+                        <div className="flex justify-start items-center gap-2">
+                          <div className="justify-start text-Text-Secondary text-xs font-medium font-['Roboto'] leading-none">
+                            From
+                          </div>
+                          <div className="h-8 px-4 py-1.5 bg-slate-50 rounded-[10px] outline-1 outline-slate-200 flex justify-start items-center gap-6">
+                            <input
+                              type="date"
+                              value={fromDate}
+                              onChange={(e) => setFromDate(e.target.value)}
+                              className="justify-start text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none [&::-webkit-calendar-picker-indicator]:hidden"
+                              placeholder="mm/dd/yyyy"
+                              ref={fromDateRef}
+                            />
+                            <Calendar
+                              className="w-4 h-4 text-zinc-500 cursor-pointer"
+                              onClick={handleFromCalendarClick}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-start items-center gap-2">
+                          <div className="justify-start text-Text-Secondary text-xs font-medium font-['Roboto'] leading-none">
+                            To
+                          </div>
+                          <div className="h-8 px-4 py-1.5 bg-slate-50 rounded-[10px] outline-1 outline-slate-200 flex justify-start items-center gap-6">
+                            <input
+                              type="date"
+                              value={toDate}
+                              onChange={(e) => setToDate(e.target.value)}
+                              className="justify-start text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none [&::-webkit-calendar-picker-indicator]:hidden"
+                              placeholder="mm/dd/yyyy"
+                              ref={toDateRef}
+                            />
+                            <Calendar
+                              className="w-4 h-4 text-zinc-500 cursor-pointer"
+                              onClick={handleToCalendarClick}
+                            />
+                          </div>
+                        </div>
+                      </div>
             </div>
             <DynamicTable
               columns={UpcomingMeetingColumn}

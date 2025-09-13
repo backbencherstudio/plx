@@ -15,6 +15,7 @@ import Footer from "../../_components/footer";
 import NominationModal from "../../_components/reusable/CustomModal";
 import { ChartAreaDefault } from "./_components/ChartAreaDefault";
 import { ChartPieDonutText } from "./_components/ChartPieDonutText";
+import Link from "next/link";
 
 const iconComponents: { [key: string]: React.JSX.Element } = {
   SubmitIcon: <SubmitIcon />,
@@ -87,9 +88,9 @@ export default function Dashboard() {
       <div>
         <div className="px-6 py-5 flex items-center justify-between bg-white rounded-t-2xl border-x border-[#E7ECF4]">
           <h2 className="text-lg font-semibold text-graytext">Nominations</h2>
-          <button className="text-sm font-semibold text-primary border border-[#E7ECF4] py-2 px-6 rounded-lg cursor-pointer btn_box_shadow">
+          <Link href='/admin-dashboard/nomination' className="text-sm font-semibold text-primary border border-[#E7ECF4] py-2 px-6 rounded-lg cursor-pointer btn_box_shadow">
             View All
-          </button>
+          </Link>
         </div>
 
         <DynamicTable
@@ -114,9 +115,9 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-graytext">
             Upcoming Meetings
           </h2>
-          <button className="text-sm font-semibold text-primary border border-[#E7ECF4] py-2 px-6 rounded-lg cursor-pointer btn_box_shadow">
+          <Link href='/admin-dashboard/meetings' className="text-sm font-semibold text-primary border border-[#E7ECF4] py-2 px-6 rounded-lg cursor-pointer btn_box_shadow">
             View All
-          </button>
+          </Link>
         </div>
         <DynamicTable
           columns={UpcomingMeetingColumn}
