@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "lucide-react";
+import Footer from "@/app/(admin-dashboard)/_components/footer";
 
 type Nomination = (typeof AdminData.nominations)[number];
 
@@ -200,6 +201,7 @@ export default function NominationBottom() {
         </div>
       </div>
       {/* ============================================ nomination pagination end ======================================= */}
+      <Footer/>
 
       {openModal && (
         <NominationModal open={openModal} onClose={handleCloseModal} />
