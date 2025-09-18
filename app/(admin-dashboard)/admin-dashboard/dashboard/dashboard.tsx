@@ -42,17 +42,17 @@ export default function Dashboard() {
       <div className="flex justify-between items-center  ">
         <div>
           <h1 className="text-[#1D1F2C] text-3xl font-semibold">
-            Welcome Admin !
+            Welcome Jenny Wilson !
           </h1>
           <p className="text-graytext text-lg">
             Here's what's happening today.
           </p>
         </div>
 
-        <button className="flex items-center bg-primary text-white py-2 px-4 rounded-lg gap-2 cursor-pointer border border-transparent hover:bg-transparent hover:border-primary hover:text-primary transition-all duration-300">
+        <Link href='/admin-dashboard/nomination' className="flex items-center bg-primary text-white py-2 px-4 rounded-lg gap-2 cursor-pointer border border-transparent hover:bg-transparent hover:border-primary hover:text-primary transition-all duration-300">
           <PlusIcon />
           Create New Nomination
-        </button>
+        </Link>
       </div>
 
 
