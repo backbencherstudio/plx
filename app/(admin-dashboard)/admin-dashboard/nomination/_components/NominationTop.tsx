@@ -79,11 +79,11 @@ export default function NominationTop() {
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Fruits</SelectLabel>
-                      <SelectItem value="apple">Apple</SelectItem>
-                      <SelectItem value="banana">Banana</SelectItem>
-                      <SelectItem value="blueberry">Blueberry</SelectItem>
-                      <SelectItem value="grapes">Grapes</SelectItem>
-                      <SelectItem value="pineapple">Pineapple</SelectItem>
+                      <SelectItem value="sararh chen">Sarah Chen</SelectItem>
+                      <SelectItem value="esther howard">Esther Howard</SelectItem>
+                      <SelectItem value="brooklyn simmons">Brooklyn Simmons</SelectItem>
+                      <SelectItem value="leslie alexander">Leslie Alexander</SelectItem>
+                      <SelectItem value="jenny wilson">Jenny Wilson</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -116,11 +116,11 @@ export default function NominationTop() {
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>Select commodity type</SelectLabel>
-                          <SelectItem value="apple">type A</SelectItem>
-                          <SelectItem value="banana">type B</SelectItem>
-                          <SelectItem value="blueberry">type C</SelectItem>
-                          <SelectItem value="grapes">type D</SelectItem>
-                          <SelectItem value="pineapple">type E</SelectItem>
+                          <SelectItem value="ngls">NGLs</SelectItem>
+                          <SelectItem value="refined products">Refined Products</SelectItem>
+                          <SelectItem value="natural gas">Natural Gas</SelectItem>
+                          <SelectItem value="petrochemicals">Petrochemicals</SelectItem>
+                          <SelectItem value="crude oil">Crude Oil</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -145,11 +145,11 @@ export default function NominationTop() {
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>bbls</SelectLabel>
-                          <SelectItem value="apple">type A</SelectItem>
-                          <SelectItem value="banana">type B</SelectItem>
-                          <SelectItem value="blueberry">type C</SelectItem>
-                          <SelectItem value="grapes">type D</SelectItem>
-                          <SelectItem value="pineapple">type E</SelectItem>
+                          <SelectItem value="gallons">gallons</SelectItem>
+                          <SelectItem value="mcf">MCF</SelectItem>
+                          <SelectItem value="tons">tons</SelectItem>
+                          {/* <SelectItem value="grapes">type D</SelectItem>
+                          <SelectItem value="pineapple">type E</SelectItem> */}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -196,11 +196,11 @@ export default function NominationTop() {
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>Select transport mode</SelectLabel>
-                          <SelectItem value="apple">type A</SelectItem>
-                          <SelectItem value="banana">type B</SelectItem>
-                          <SelectItem value="blueberry">type C</SelectItem>
-                          <SelectItem value="grapes">type D</SelectItem>
-                          <SelectItem value="pineapple">type E</SelectItem>
+                          <SelectItem value="apple">Pipeline</SelectItem>
+                          <SelectItem value="banana">Trucking</SelectItem>
+                          <SelectItem value="blueberry">Railcar</SelectItem>
+                          <SelectItem value="grapes">Marine</SelectItem>
+                          {/* <SelectItem value="pineapple">type E</SelectItem> */}
                         </SelectGroup>
                       </SelectContent>
                     </Select>

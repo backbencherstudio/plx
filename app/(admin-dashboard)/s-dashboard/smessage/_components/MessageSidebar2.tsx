@@ -46,7 +46,7 @@ export default function MessagesSidebar2() {
   const [tab, setTab] = useState<ChatTab>("all");
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
 
-  // Convert conversations to the format expected by ChatCard
+  // Convert conversationss to the format expected by ChatCard
   const data = useMemo(() => {
     return conversations.map((conv) => ({
       user_id: parseInt(conv.contact.id),

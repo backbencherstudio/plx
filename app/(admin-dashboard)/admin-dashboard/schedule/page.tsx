@@ -65,11 +65,11 @@ export default function Schedule() {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Fruits</SelectLabel>
-                <SelectItem value="apple">Apple</SelectItem>
-                <SelectItem value="banana">Banana</SelectItem>
-                <SelectItem value="blueberry">Blueberry</SelectItem>
-                <SelectItem value="grapes">Grapes</SelectItem>
-                <SelectItem value="pineapple">Pineapple</SelectItem>
+                <SelectItem value="sarah chen">Sarah Chen</SelectItem>
+                <SelectItem value="esther howard">Esther Howard</SelectItem>
+                <SelectItem value="brooklyn simmons">Brooklyn Simmons</SelectItem>
+                <SelectItem value="leslie alexander">Leslie Alexander</SelectItem>
+                <SelectItem value="jenny wilson">Jenny Wilson</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>

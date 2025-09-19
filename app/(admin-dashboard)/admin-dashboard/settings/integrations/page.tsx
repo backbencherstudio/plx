@@ -33,7 +33,7 @@ export default function Integrations() {
         </div>
         <div className=" p-4 bg-[#F9F9FB] flex justify-between items-center rounded-[12px] mt-8">
           <div>
-            <h4 className=" text-base text-[#1D1F2C] font-semibold mb-2">DataPark</h4>
+            <h4 className=" text-base text-[#1D1F2C] font-semibold mb-2">DataParc</h4>
             <p className=" text-sm text-[#4A4C56]">Track with real-time appointment bookings and reminders.</p>
             
           </div>
