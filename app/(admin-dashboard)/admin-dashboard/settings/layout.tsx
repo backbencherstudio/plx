@@ -1,5 +1,4 @@
 "use client";
-
 import SettingsSidebar from "./_components/SettingsSidebar";
 
 interface SettingsLayoutProps {
@@ -8,7 +7,7 @@ interface SettingsLayoutProps {
 
 export default function SettingsLayout({ children }: SettingsLayoutProps) {
   return (
-    <div>
+    <div  >
       <div className=" mb-8 flex justify-between items-center">
         <div>
           <h1 className=" text-[32px] text-[#1D1F2C] font-semibold">
@@ -28,6 +27,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
         </div>
         <div className=" flex-1">{children}</div>
       </div>
+      
     </div>
   );
 }

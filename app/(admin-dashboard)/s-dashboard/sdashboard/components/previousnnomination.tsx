@@ -126,19 +126,19 @@ export default function Previousnnomination() {
   
   return (
     <>
-      <div className="table w-full max-w-[1274px] mx-auto">
-        <div className="w-full bg-white rounded-2xl border border-zinc-100 shadow-sm">
+      <div className="w-full max-w-[1274px] mx-auto">
+        <div className="w-full bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden">
           {/* Header with filters */}
-          <div className="px-6 py-4 flex justify-between items-center border-b border-zinc-200">
+          <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-200">
             <h2 className="text-neutral-900 text-base font-semibold font-['Manrope']">
               Your Previous Nominations
             </h2>
-            <div className="flex justify-start items-center gap-6">
+            <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4 sm:gap-6 w-full sm:w-auto">
               <div className="flex justify-start items-center gap-2">
                 <div className="justify-start text-Text-Secondary text-xs font-medium font-['Roboto'] leading-none">
                   From
                 </div>
-                <div className="h-8 px-4 py-1.5 bg-slate-50 rounded-[10px] outline outline-1 outline-offset-[-1px] outline-slate-200 flex justify-start items-center gap-6">
+                <div className="h-8 px-4 py-1.5 bg-slate-50 rounded-[10px] outline-1 outline-slate-200 flex justify-start items-center gap-6">
                   <input
                     type="date"
                     value={fromDate}
@@ -154,7 +154,7 @@ export default function Previousnnomination() {
                 <div className="justify-start text-Text-Secondary text-xs font-medium font-['Roboto'] leading-none">
                   To
                 </div>
-                <div className="h-8 px-4 py-1.5 bg-slate-50 rounded-[10px] outline outline-1 outline-offset-[-1px] outline-slate-200 flex justify-start items-center gap-6">
+                <div className="h-8 px-4 py-1.5 bg-slate-50 rounded-[10px] outline-1 outline-slate-200 flex justify-start items-center gap-6">
                   <input
                     type="date"
                     value={toDate}
@@ -171,38 +171,39 @@ export default function Previousnnomination() {
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full">
-              {/* Table Headeer */}
+            <div className="min-w-[800px]">
+              <table className="w-full">
+              {/* Table Header */}
               <thead>
                 <tr className="bg-gray-50 border-b border-zinc-200">
-                  <th className="px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
                     ID
                   </th>
-                  <th className="px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
                     File
                   </th>
-                  <th className="px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[11%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[11%]">
                     Requested Date
                   </th>
-                  <th className="px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
                     Commodity
                   </th>
-                  <th className="px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
                     Volume
                   </th>
-                  <th className="px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
                     Route
                   </th>
-                  <th className="px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
                     Transport
                   </th>
-                  <th className="px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[11%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[11%]">
                     Beginning Date
                   </th>
-                  <th className="px-6 py-3 text-left whitespace-nowrap text-zinc-700 text-xs font-medium font-['Manrope'] w-[11%]">
+                  <th className="px-3 sm:px-6 py-3 text-left whitespace-nowrap text-zinc-700 text-xs font-medium font-['Manrope'] w-[11%]">
                     End Date
                   </th>
-                  <th className="px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[3%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[3%]">
                     Action
                   </th>
                 </tr>
@@ -217,10 +218,10 @@ export default function Previousnnomination() {
                       index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                     }`}
                   >
-                    <td className="px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
                       {item.id}
                     </td>
-                    <td className="px-6 py-3">
+                    <td className="px-3 sm:px-6 py-3">
                       <div className="flex items-center gap-2">
                         <span className="text-neutral-600 text-sm font-normal font-['Roboto'] whitespace-nowrap">
                           {item.file.name}
@@ -228,16 +229,16 @@ export default function Previousnnomination() {
                         <Download className="w-4 h-4 text-blue-900" />
                       </div>
                     </td>
-                    <td className="px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
                       {item.requestedDate}
                     </td>
-                    <td className="px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
                       {item.commodity}
                     </td>
-                    <td className="px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
                       {item.volume}
                     </td>
-                    <td className="px-6 py-3">
+                    <td className="px-3 sm:px-6 py-3">
                       <div className="flex flex-col gap-1">
                         <span className="text-neutral-600 text-sm font-medium font-['Roboto'] whitespace-nowrap">
                           {item.route.from}
@@ -250,7 +251,7 @@ export default function Previousnnomination() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-3">
+                    <td className="px-3 sm:px-6 py-3">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium font-['Roboto'] whitespace-nowrap ${
                         item.transport.color === 'blue' ? 'bg-blue-100 text-blue-900' : 
                         item.transport.color === 'green' ? 'bg-green-100 text-green-800' : 
@@ -259,13 +260,13 @@ export default function Previousnnomination() {
                         {item.transport.type}
                       </span>
                     </td>
-                    <td className="px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
                       {item.beginningDate}
                     </td>
-                    <td className="px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
                       {item.endDate}
                     </td>
-                    <td className="px-6 py-3">
+                    <td className="px-3 sm:px-6 py-3">
                       <button 
                         onClick={() => handleViewNomination(item)}
                         className="p-1 hover:bg-gray-100 rounded transition-colors whitespace-nowrap"
@@ -276,17 +277,18 @@ export default function Previousnnomination() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
 
           {/* Pagination Footer */}
-          <div className="px-6 py-4 flex justify-between items-center border-t border-zinc-200">
-            <div className="flex justify-start items-start gap-6">
+          <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-t border-zinc-200">
+            <div className="flex justify-start items-start gap-4 sm:gap-6">
               {/* Previous Button */}
               <button
                 onClick={handlePreviousPage}
                 disabled={currentPage === 1}
-                className={`w-8 h-8 p-2.5 rounded-lg outline outline-1 outline-offset-[-1px] outline-gray-100 flex justify-center items-center gap-2.5 overflow-hidden ${
+                className={`w-8 h-8 p-2.5 rounded-lg outline-1 outline-gray-100 flex justify-center items-center gap-2.5 overflow-hidden ${
                   currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
                 }`}
               >
@@ -302,7 +304,7 @@ export default function Previousnnomination() {
                     disabled={typeof page !== 'number'}
                     className={`w-8 h-8 px-3.5 py-[5px] inline-flex flex-col justify-center items-center gap-2.5 overflow-hidden ${
                       page === currentPage
-                        ? 'bg-stone-50 rounded-[10px] outline outline-1 outline-offset-[-1px]'
+                        ? 'bg-stone-50 rounded-[10px] outline-1'
                         : typeof page === 'number'
                         ? 'hover:bg-gray-50 rounded-[10px]'
                         : ''
@@ -319,7 +321,7 @@ export default function Previousnnomination() {
               <button
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
-                className={`w-8 h-8 p-2.5 rounded-lg outline outline-1 outline-offset-[-1px] outline-gray-100 flex justify-center items-center gap-2.5 overflow-hidden ${
+                className={`w-8 h-8 p-2.5 rounded-lg outline-1 outline-gray-100 flex justify-center items-center gap-2.5 overflow-hidden ${
                   currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
                 }`}
               >
