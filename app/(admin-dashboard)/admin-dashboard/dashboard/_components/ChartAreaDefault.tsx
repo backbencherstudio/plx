@@ -29,18 +29,18 @@ import {
 export const description = "A line chart";
 
 const chartData = [
-  { month: "January", desktop: 100 },
-  { month: "February", desktop: 1000 },
-  { month: "March", desktop: 1500 },
-  { month: "April", desktop: 900 },
-  { month: "May", desktop: 500 },
-  { month: "June", desktop: 1100 },
-  { month: "July", desktop: 450 },
-  { month: "August", desktop: 1000 },
-  { month: "September", desktop: 500 },
-  { month: "October", desktop: 300 },
-  { month: "November", desktop: 1150 },
-  { month: "December", desktop: 2000 },
+  { y:0,month: "January", desktop: 100 },
+  { y:10,month: "February", desktop: 1000 },
+  { y:20,month: "March", desktop: 1500 },
+  { y:30,month: "April", desktop: 900 },
+  { y:40,month: "May", desktop: 500 },
+  { y:50,month: "June", desktop: 1100 },
+  { y:60,month: "July", desktop: 450 },
+  { y:70,month: "August", desktop: 1000 },
+  { y:80,month: "September", desktop: 500 },
+  { y:90,month: "October", desktop: 300 },
+  { y:100,month: "November", desktop: 1150 },
+  { y:110,month: "December", desktop: 2000 },
 ];
 
 const chartConfig = {
@@ -105,11 +105,11 @@ export function ChartAreaDefault() {
               stroke="#A5A5AB"
             />
             <XAxis
-              dataKey="month"
+              dataKey="y"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
+              // tickFormatter={(value) => value.slice(0, 3)}
             />
             <YAxis
               domain={[0, "dataMax"]} // Dynamic Y-axis scaling
