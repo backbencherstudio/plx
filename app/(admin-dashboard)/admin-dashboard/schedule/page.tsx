@@ -7,6 +7,7 @@ import { AdminData } from "../../../lib/admindata";
  
 import TransportPagination from "../../_components/reusable/TransportPagination";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Footer from "../../_components/footer";
 
 type Schedule = typeof AdminData.schedules[number];
 
@@ -170,6 +171,7 @@ export default function Schedule() {
         </div>
       </div>
       {/* ============================================ pagination end ======================================= */}
+      <Footer/>
     </div>
   );
 }

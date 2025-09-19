@@ -65,7 +65,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           }
         `}
         >
+          <Link href='/admin-dashboard'>
           <Image src={logo} alt="logo" width={150} priority />
+          </Link>
         </div>
 
         {/* Right controls */}

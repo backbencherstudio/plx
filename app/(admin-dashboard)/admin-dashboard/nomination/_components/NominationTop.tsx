@@ -16,7 +16,7 @@ import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import React, { useState } from "react";
 
 export default function NominationTop() {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
