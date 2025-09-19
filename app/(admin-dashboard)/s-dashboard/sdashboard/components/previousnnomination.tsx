@@ -172,7 +172,7 @@ export default function Previousnnomination() {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              {/* Table Header */}
+              {/* Table Headeer */}
               <thead>
                 <tr className="bg-gray-50 border-b border-zinc-200">
                   <th className="px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
