@@ -79,11 +79,11 @@ export default function NominationTop() {
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Fruits</SelectLabel>
-                      <SelectItem value="apple">Apple</SelectItem>
-                      <SelectItem value="banana">Banana</SelectItem>
-                      <SelectItem value="blueberry">Blueberry</SelectItem>
-                      <SelectItem value="grapes">Grapes</SelectItem>
-                      <SelectItem value="pineapple">Pineapple</SelectItem>
+                      <SelectItem value="apple">Sarah Chen</SelectItem>
+                      <SelectItem value="banana">Esther Howard</SelectItem>
+                      <SelectItem value="blueberry">Brooklyn Simmons</SelectItem>
+                      <SelectItem value="grapes">Leslie Alexander</SelectItem>
+                      <SelectItem value="pineapple">Jenny Wilson</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
