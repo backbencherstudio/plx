@@ -6,6 +6,7 @@ import ProfileIcon from "@/public/header/Icons/ProfileIcon";
 import { NotificationPopup } from "../NotificationPopup";
 import { useState } from "react";
 import { userData } from "@/app/lib/userdata";
+import { usePathname } from "next/navigation"; // ✅ Correct import for App Router
 
 interface SubscriberHeaderProps {
   onMenuClick: () => void;
@@ -13,6 +14,30 @@ interface SubscriberHeaderProps {
 
 export default function SubscriberHeader({ onMenuClick }: SubscriberHeaderProps) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  // ✅ Get current route in App Router
+  const currentRoute = usePathname();
+
+  // Extract the base route without dynamic segments (e.g., /s-dashboard/smessage/10005 -> /s-dashboard/smessage)
+  const baseRoute = currentRoute.split('/').slice(0, 3).join('/'); // This strips out any dynamic segments
+
+  // Mapping of routes to dynamic titles
+  const routeToTitle: { [key: string]: string } = {
+    "/s-dashboard": "Dashboard",
+    "/s-dashboard/sdashboard": "Dashboard",
+    "/s-dashboard/sschedule": "Schedule",
+    "/s-dashboard/snomination": "Nomination",
+    "/s-dashboard/smessage": "Message",
+    "/s-dashboard/ssettings": "Settings",
+  };
+
+  // Dynamically change the title based on the base route
+  const pageTitle: string = routeToTitle[baseRoute] || "Dashboard"; // Default to "Dashboard"
+  
+  // Debug logging (remove in production)
+  console.log("Current route:", currentRoute);
+  console.log("Base route:", baseRoute);
+  console.log("Page title:", pageTitle);
 
   // Use user data for notifications
   const notificationData = userData.notifications.data;
@@ -39,7 +64,9 @@ export default function SubscriberHeader({ onMenuClick }: SubscriberHeaderProps)
             >
               <Menu />
             </button>
-            <h2 className="text-[#1D1F2C] text-lg font-semibold cursor-pointer">Dashboard</h2>
+            <h2 className="text-[#1D1F2C] text-lg font-semibold cursor-pointer">
+              {pageTitle}
+            </h2>
           </div>
 
           <div className="flex items-center gap-3">

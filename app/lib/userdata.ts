@@ -17,8 +17,8 @@
   // Main user data object
   export const userData = {
     user: {
-      name: "Jenny Wilson",
-      company: "Binford Ltd.",
+      name: "Shurov Δ",
+      company: "Mad Studio",
       avatar: "/user-avatar.png"
     },
     
@@ -259,12 +259,19 @@
             ],
             validation: { required: true, message: "Transport mode is required" }
           },
-          requestedDate: {
+          startDate: {
             value: "",
             placeholder: "mm/dd/yyyy",
             minDate: new Date().toISOString().split('T')[0],
             maxDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            validation: { required: true, message: "Requested date is required" }
+            validation: { required: true, message: "Start date is required" }
+          },
+          endDate: {
+            value: "",
+            placeholder: "mm/dd/yyyy",
+            minDate: new Date().toISOString().split('T')[0],
+            maxDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            validation: { required: true, message: "End date is required" }
           },
           notes: {
             value: "",
@@ -503,7 +510,8 @@
         origin: { required: true, message: "Please enter origin location" },
         destination: { required: true, message: "Please enter destination location" },
         transportMode: { required: true, message: "Please select a transport mode" },
-        requestedDate: { required: true, message: "Please select a requested date" }
+        startDate: { required: true, message: "Please select a start date" },
+        endDate: { required: true, message: "Please select an end date" }
       },
   
       errorHandling: {

@@ -35,7 +35,7 @@ export default function ChatHeader({ conversation }: ChatHeaderProps) {
           <div className="relative">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200">
               <Image
-                src={conversation.customer_image}
+                src={conversation.customer_name === "PLX Support Team" ? "/sidebar/images/logo.png" : conversation.customer_image}
                 alt={conversation.customer_name}
                 width={40}
                 height={40}

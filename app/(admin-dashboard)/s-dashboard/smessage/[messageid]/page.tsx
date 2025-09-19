@@ -137,15 +137,15 @@ export default function ChatPage() {
       {/* Header - Always visible, never scrolls */}
       <div className="flex justify-between px-6 pt-5 pb-7 border-b border-[#E9E9EA] flex-shrink-0">
         <div className=" flex items-center gap-3">
-          <img
-            src={
-              filteredConversation[0]?.contact.avatar ||
-              currentChat.contact.avatar ||
-              "https://randomuser.me/api/portraits/women/30.jpg"
-            }
-            alt="Receiver"
-            className="w-[46px] h-[46px] rounded-full mr-3"
-          />
+          <div>
+            <Image
+              src="/sidebar/images/logo.png"
+              width={40}
+              height={40}
+              className="rounded-full"
+              alt="PLX Support Team"
+            />
+          </div>
           <div>
             <h2 className="text-lg text-[#4A4C56] font-medium">
               {filteredConversation[0]?.contact.name || currentChat.contact.name || "PLX Support Team"}
@@ -173,16 +173,18 @@ export default function ChatPage() {
               <div className={`flex gap-3`}>
                 <div className={`${msg.isFromUser && "order-2"}`}>
                   {msg.isFromUser ? (
-                    <div className=" rounded-full   bg-[#E7ECF4]  w-10 h-10 flex justify-center items-center">
-                      <Image src={youImg} className="" alt="customer img" />
+                    <div className="rounded-full bg-[#E7ECF4] w-10 h-10 flex justify-center items-center">
+                      <span className="text-sm font-semibold text-[#4A4C56]">
+                        {userData.user.name.substring(0, 2).toUpperCase()}
+                      </span>
                     </div>
                   ) : (
                     <Image
-                      src={filteredConversation[0]?.contact.avatar || currentChat.contact.avatar}
+                      src="/sidebar/images/logo.png"
                       width={40}
                       height={40}
-                      className=" rounded-full"
-                      alt="customer img"
+                      className="rounded-full"
+                      alt="PLX Support Team"
                     />
                   )}
                 </div>

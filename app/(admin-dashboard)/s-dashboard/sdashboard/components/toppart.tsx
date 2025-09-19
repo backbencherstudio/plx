@@ -1,5 +1,7 @@
+"use client"
 import type React from "react";
 import { BarChart3, FileText, Calendar, MessageCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function TopPart() {
   return (
@@ -10,20 +12,23 @@ export default function TopPart() {
 }
 
 function QuickActions() {
+  const router = useRouter();
+  
   const actions = [
-    {
-      title: "Live Schematic",
-      description:
-        "View real-time operations across Pipeline, Trucking, Rail, and Marine logistics",
-      icon: BarChart3,
-      gradient: "from-blue-500 to-blue-600",
-    },
+    // {
+    //   title: "Live Schematic",
+    //   description:
+    //     "View real-time operations across Pipeline, Trucking, Rail, and Marine logistics",
+    //   icon: BarChart3,
+    //   gradient: "from-blue-500 to-blue-600",
+    // },
     {
       title: "Request Nomination",
       description:
         "Submit a new nomination request with commodity details and transport preferences",
       icon: FileText,
       gradient: "from-green-500 to-green-600",
+      onClick: () => router.push("/s-dashboard/snomination"),
     },
     {
       title: "Book A Meeting",
@@ -31,6 +36,7 @@ function QuickActions() {
         "Schedule a consultation with our logistics team for your specific needs",
       icon: Calendar,
       gradient: "from-purple-500 to-purple-600",
+      onClick: () => router.push("/s-dashboard/sschedule"),
     },
     {
       title: "Direct Message",
@@ -38,6 +44,7 @@ function QuickActions() {
         "Send a message to your dedicated admin team for immediate assistance",
       icon: MessageCircle,
       gradient: "from-orange-500 to-orange-600",
+      onClick: () => router.push("/s-dashboard/smessage"),
     },
   ];
 
@@ -45,7 +52,7 @@ function QuickActions() {
     <div className="w-full">
       <div className="text-center mb-8">
         <h1 className="text-2xl md:text-3xl font-semibold font-['Manrope'] text-neutral-800 mb-2">
-          Welcome Jenny From Binford Ltd.!
+          Welcome Shurov From Binford Ltd.!
         </h1>
         <p className="text-base font-normal font-['Manrope'] text-neutral-600">
           Here's what's happening with your logistics operations today.
@@ -57,7 +64,7 @@ function QuickActions() {
           Quick Actions
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {actions.map((action, index) => (
             <ActionCard key={index} {...action} />
           ))}
@@ -72,14 +79,19 @@ function ActionCard({
   description,
   icon: Icon,
   gradient,
+  onClick,
 }: {
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   gradient: string;
+  onClick: () => void;
 }) {
   return (
-    <div className="w-full px-4 sm:px-6 py-6 sm:py-8 bg-white rounded-xl border border-slate-100 hover:border-slate-200 transition-colors cursor-pointer">
+    <div 
+      className="w-full px-4 sm:px-6 py-6 sm:py-8 bg-white rounded-xl border border-slate-100 hover:border-slate-200 transition-colors cursor-pointer"
+      onClick={onClick}
+    >
       <div className="flex items-start gap-4 sm:gap-6">
         <div
           className={`w-10 h-10 bg-gradient-to-br ${gradient} rounded-lg flex items-center justify-center flex-shrink-0`}
