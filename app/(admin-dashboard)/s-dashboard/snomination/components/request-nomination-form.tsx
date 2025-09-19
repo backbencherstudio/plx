@@ -12,7 +12,8 @@ interface FormData {
   origin: string
   destination: string
   transportMode: string
-  requestedDate: string
+  startDate: string
+  endDate: string
   notes: string
 }
 
@@ -38,7 +39,8 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
       origin: "",
       destination: "",
       transportMode: "Select transport mode",
-      requestedDate: "",
+      startDate: "",
+      endDate: "",
       notes: ""
     }
   })
@@ -71,11 +73,13 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
       origin: data.origin,
       destination: data.destination,
       transportMode: data.transportMode,
-      requestedDate: data.requestedDate,
+      startDate: data.startDate,
+      endDate: data.endDate,
       notes: data.notes
     })
 
     // Create new nomination object following userdata.ts structure
+    const requestedDate = new Date().toISOString().split('T')[0] // Auto-generated submission date
     const newNomination = {
       id: `#${Math.floor(Math.random() * 900000) + 100000}`, // Generate random ID
       file: {
@@ -84,7 +88,7 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
         fileType: "pdf",
         fileSize: "2.4 MB"
       },
-      requestedDate: data.requestedDate,
+      requestedDate: requestedDate, // Auto-generated submission date
       commodity: { 
         name: data.commodityType, 
         code: data.commodityType.toUpperCase().replace(/\s+/g, '_'), 
@@ -105,8 +109,8 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
         color: "blue", 
         capacity: "high" 
       },
-      beginningDate: data.requestedDate,
-      endDate: data.requestedDate,
+      beginningDate: data.startDate,
+      endDate: data.endDate,
       status: { 
         name: "Submitted", 
         code: "SUBMITTED", 
@@ -161,7 +165,8 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
       origin: "",
       destination: "",
       transportMode: "Select transport mode",
-      requestedDate: "",
+      startDate: "",
+      endDate: "",
       notes: ""
     })
     
@@ -352,11 +357,19 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
               <div className="flex flex-col gap-6">
                 <div className="flex gap-6">
                   <div className="flex-1 flex flex-col gap-1">
-                    <label className="text-xs text-neutral-600 font-['roboto']">Requested Date</label>
+                    <label className="text-xs text-neutral-600 font-['roboto']">Start Date</label>
                     <input
                       type="date"
                       className="h-12 px-5 py-4 rounded-[10px] border border-gray-200 text-sm font-medium text-neutral-600 font-['roboto']"
-                      {...register("requestedDate")}
+                      {...register("startDate")}
+                    />
+                  </div>
+                  <div className="flex-1 flex flex-col gap-1">
+                    <label className="text-xs text-neutral-600 font-['roboto']">End Date</label>
+                    <input
+                      type="date"
+                      className="h-12 px-5 py-4 rounded-[10px] border border-gray-200 text-sm font-medium text-neutral-600 font-['roboto']"
+                      {...register("endDate")}
                     />
                   </div>
                 </div>
