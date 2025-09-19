@@ -1,8 +1,96 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState } from "react";
 import Image from "next/image";
 import rightArrow from "@/public/nominations/Frame.svg";
 import EyeIcon from "@/public/nominations/icons/EyeIcon";
 import Dot3Icon from "@/public/nominations/icons/Dot3Icon";
+
+// Dropdown component for the action menu
+const ActionDropdown = ({ rowId }: { rowId: any }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleAction = (action: string) => {
+    console.log(`Action: ${action} on row: ${rowId}`);
+    setIsOpen(false);
+    // Handle your actions here
+  };
+
+  return (
+    <div className="relative">
+      <button
+        className="cursor-pointer"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <Dot3Icon />
+      </button>
+      
+      {isOpen && (
+        <>
+          {/* Backdrop to close dropdown when clicking outside */}
+          <div
+            className="fixed inset-0 z-[9998]"
+            onClick={() => setIsOpen(false)}
+          />
+          
+          {/* Dropdown menu with responsive positioning */}
+          <div className="fixed z-[9999] w-36 sm:w-40 bg-white border border-gray-200 rounded-md shadow-lg"
+               style={{
+                 top: (() => {
+                   const button = document.activeElement as HTMLElement;
+                   if (button) {
+                     const rect = button.getBoundingClientRect();
+                     const dropdownHeight = 120; // Approximate height
+                     const viewportHeight = window.innerHeight;
+                     
+                     // If dropdown would go below viewport, show it above the button
+                     if (rect.bottom + dropdownHeight > viewportHeight) {
+                       return `${rect.top - dropdownHeight - 4}px`;
+                     }
+                     return `${rect.bottom + 4}px`;
+                   }
+                   return '0px';
+                 })(),
+                 left: (() => {
+                   const button = document.activeElement as HTMLElement;
+                   if (button) {
+                     const rect = button.getBoundingClientRect();
+                     const dropdownWidth = window.innerWidth < 640 ? 144 : 160; // 36*4 or 40*4 in px
+                     const viewportWidth = window.innerWidth;
+                     
+                     // If dropdown would go beyond right edge, align it to the right
+                     if (rect.right - dropdownWidth < 0) {
+                       return `${rect.left}px`;
+                     }
+                     return `${rect.right - dropdownWidth}px`;
+                   }
+                   return '0px';
+                 })()
+               }}>
+            <div className="py-1">
+              <button
+                className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150"
+                onClick={() => handleAction('edit')}
+              >
+                Complete
+              </button>
+              <button
+                className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150"
+                onClick={() => handleAction('duplicate')}
+              >
+                Withdraw
+              </button>
+              <button
+                className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150"
+                onClick={() => handleAction('delete')}
+              >
+                Edit
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export const nominationColumn = (handleOpenModal: () => void) => [
   {
@@ -108,7 +196,7 @@ export const nominationColumn = (handleOpenModal: () => void) => [
     label: "Action",
     accessor: "id",
     width: "120px",
-    formatter: (item: ReactNode) => (
+    formatter: (item: ReactNode, row: any) => (
       <div className="flex items-center gap-10">
         <button
           className="cursor-pointer"
@@ -116,9 +204,7 @@ export const nominationColumn = (handleOpenModal: () => void) => [
         >
           <EyeIcon />
         </button>
-        <button className="cursor-pointer">
-          <Dot3Icon />
-        </button>
+        <ActionDropdown rowId={row.id || item} />
       </div>
     ),
   },
