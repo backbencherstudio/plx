@@ -58,7 +58,7 @@ export default function ChatCard({
       <div className="rounded-full relative">
         <Image
           unoptimized
-          src={data.customer_image}
+          src={data.customer_name === "PLX Support Team" ? "/sidebar/images/logo.png" : data.customer_image}
           alt={`${data.customer_name} avatar`}
           width={60}
           height={60}

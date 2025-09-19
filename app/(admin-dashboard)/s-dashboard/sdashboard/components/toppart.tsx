@@ -52,7 +52,7 @@ function QuickActions() {
     <div className="w-full">
       <div className="text-center mb-8">
         <h1 className="text-2xl md:text-3xl font-semibold font-['Manrope'] text-neutral-800 mb-2">
-          Welcome Jenny From Binford Ltd.!
+          Welcome Shurov From Binford Ltd.!
         </h1>
         <p className="text-base font-normal font-['Manrope'] text-neutral-600">
           Here's what's happening with your logistics operations today.

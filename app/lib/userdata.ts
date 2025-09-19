@@ -17,8 +17,8 @@
   // Main user data object
   export const userData = {
     user: {
-      name: "Jenny Wilson",
-      company: "Binford Ltd.",
+      name: "Shurov Δ",
+      company: "Mad Studio",
       avatar: "/user-avatar.png"
     },
     
