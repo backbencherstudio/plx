@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useMemo, useRef } from 'react'
-import { Download, Eye, ArrowRight, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
+import { Eye, ArrowRight, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import { userData } from '@/app/lib/userdata'
 import { NominationDetailsModal } from './nomination-details-modal'
 
@@ -176,31 +176,28 @@ export default function Previousnnomination() {
               {/* Table Header */}
               <thead>
                 <tr className="bg-gray-50 border-b border-zinc-200">
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
                     ID
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
-                    File
-                  </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[11%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[13%]">
                     Requested Date
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
                     Commodity
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
                     Volume
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[14%]">
                     Route
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[14%]">
                     Transport
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[11%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[13%]">
                     Beginning Date
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left whitespace-nowrap text-zinc-700 text-xs font-medium font-['Manrope'] w-[11%]">
+                  <th className="px-3 sm:px-6 py-3 text-left whitespace-nowrap text-zinc-700 text-xs font-medium font-['Manrope'] w-[13%]">
                     End Date
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[3%]">
@@ -220,14 +217,6 @@ export default function Previousnnomination() {
                   >
                     <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
                       {item.id}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-neutral-600 text-sm font-normal font-['Roboto'] whitespace-nowrap">
-                          {item.file.name}
-                        </span>
-                        <Download className="w-4 h-4 text-blue-900" />
-                      </div>
                     </td>
                     <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
                       {item.requestedDate}
