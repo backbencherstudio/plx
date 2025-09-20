@@ -65,7 +65,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           }
         `}
         >
-          <Link href='/admin-dashboard'>
+          <Link href='https://energytransportx.com/' className=" cursor-pointer">
           <Image src={logo} alt="logo" width={150} priority />
           </Link>
         </div>

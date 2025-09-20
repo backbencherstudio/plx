@@ -42,7 +42,7 @@ export default function Dashboard() {
       <div className="flex justify-between items-center  ">
         <div>
           <h1 className="text-[#1D1F2C] text-3xl font-semibold">
-            Welcome Jenny Wilson !
+           Welcome Miguel Trevino!
           </h1>
           <p className="text-graytext text-lg">
             Here's what's happening today.
