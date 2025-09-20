@@ -24,6 +24,7 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
     "/admin-dashboard": "Dashboard",
     "/admin-dashboard/schedule": "Schedule",
     "/admin-dashboard/nomination": "Nomination",
+    '/admin-dashboard/meetings':"Meetings",
     "/admin-dashboard/message": "Message",
     "/admin-dashboard/settings": "Settings",
   };
@@ -87,9 +88,9 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
               </div>
               <div>
                 <h3 className="text-sm text-graytext font-semibold">
-                  {userInfo.name}
+                 Miguel Trevino
                 </h3>
-                <p className="text-[#777980] text-sm">{userInfo.company}</p>
+                <p className="text-[#777980] text-sm">Admin</p>
               </div>
             </div>
           </div>
