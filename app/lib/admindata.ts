@@ -424,6 +424,7 @@ export const AdminData = {
     {
       id: "3583475",
       subscriber: "Sarah Chen",
+      company: "Energy Solutions Inc.",
       subscriberId: 1,
       email: "debbie.baker@example.com",
       requestedDate: "2025-08-25",
@@ -453,6 +454,7 @@ export const AdminData = {
     {
       id: "3583476",
       subscriber: "Esther Howard",
+      company:'Caterpillar Inc.',
       subscriberId: 2,
       email: "michael.mitc@example.com",
       requestedDate: "2025-08-25",
@@ -482,6 +484,7 @@ export const AdminData = {
     {
       id: "3583477",
       subscriber: "Brooklyn Simmons",
+      company:' Chevron Corporation',
       subscriberId: 3,
       email: "deanna.curtis@example.com",
       requestedDate: "2025-08-25",
@@ -511,6 +514,7 @@ export const AdminData = {
     {
       id: "3583478",
       subscriber: "Leslie Alexander",
+      company:' ConocoPhillips',
       subscriberId: 4,
       email: "michael.mitc@example.com",
       requestedDate: "2025-08-25",
@@ -540,6 +544,7 @@ export const AdminData = {
     {
       id: "3583479",
       subscriber: "Jenny Wilson",
+      company:' Shell Oil Company',
       subscriberId: 5,
       email: "tim.jennings@example.com",
       requestedDate: "2025-08-25",
@@ -569,6 +574,7 @@ export const AdminData = {
     {
       id: "3583480",
       subscriber: "Jenny Wilson",
+      company:'FedEx Corporation',
       subscriberId: 5,
       email: "tim.jennings@example.com",
       requestedDate: "2025-08-25",
@@ -598,6 +604,7 @@ export const AdminData = {
     {
       id: "3583481",
       subscriber: "Jenny Wilson",
+      company:'Binford Ltd',
       subscriberId: 5,
       email: "tim.jennings@example.com",
       requestedDate: "2025-08-25",

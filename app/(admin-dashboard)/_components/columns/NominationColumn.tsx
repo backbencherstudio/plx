@@ -96,14 +96,18 @@ export const nominationColumn = (handleOpenModal: () => void) => [
   {
     label: "Subscriber",
     accessor: "subscriber",
-    width: "200px",
+    width: "20%",
     formatter: (item: string, row: any) => (
       <div className="flex items-center gap-2">
         <div className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-200 text-sm font-semibold">
           {row.subscriber?.charAt(0)}
         </div>
         <div>
+          <div className=" flex items-center gap-1">
           <h3 className="text-sm  text-graytext font-medium">{row.subscriber}</h3>
+          <p>- {row.company}</p>
+
+          </div>
           <p className="text-xs text-[#777980]">{row.email}</p>
         </div>
       </div>
@@ -112,7 +116,7 @@ export const nominationColumn = (handleOpenModal: () => void) => [
   {
     label: "Requested Date",
     accessor: "requestedDate",
-    width: "140px",
+    width: "8.88%",
     formatter: (item: string) => (
       <p className="text-sm  text-graytext font-medium">{item}</p>
     ),
@@ -120,7 +124,7 @@ export const nominationColumn = (handleOpenModal: () => void) => [
   {
     label: "Commodity",
     accessor: "commodity",
-    width: "140px",
+    width: "8.88%",
     formatter: (item: string) => (
       <p className="text-sm  text-graytext font-medium">{item}</p>
     ),
@@ -128,7 +132,7 @@ export const nominationColumn = (handleOpenModal: () => void) => [
   {
     label: "Route",
     accessor: "origin",
-    width: "220px",
+    width: "8.88%",
     formatter: (_: any, row: any) => (
       <div>
         <h4 className="text-sm text-graytext font-semibold">{row.origin}</h4>
@@ -140,9 +144,19 @@ export const nominationColumn = (handleOpenModal: () => void) => [
     ),
   },
   {
+    label: "Connection",
+    accessor: "origin",
+    width: "8.88%",
+    formatter: (_: any, row: any) => (
+      <div>
+       <p className=" text-sm text-[#4A4C56] font-medium">Remarks</p>
+      </div>
+    ),
+  },
+  {
     label: "Transport",
     accessor: "transport",
-    width: "140px",
+    width: "8.88%",
     formatter: (item: string) => (
       <div
         className={`${
@@ -160,7 +174,7 @@ export const nominationColumn = (handleOpenModal: () => void) => [
   {
     label: "Beginning Date",
     accessor: "beginDate",
-    width: "120px",
+    width: "8.88%",
     formatter: (item: string) => (
       <p className="text-sm  text-graytext font-medium">{item}</p>
     ),
@@ -168,7 +182,7 @@ export const nominationColumn = (handleOpenModal: () => void) => [
   {
     label: "End Date",
     accessor: "endDate",
-    width: "120px",
+    width: "8.88%",
     formatter: (item: string) => (
       <p className="text-sm  text-graytext font-medium">{item}</p>
     ),
@@ -176,7 +190,7 @@ export const nominationColumn = (handleOpenModal: () => void) => [
   {
     label: "Status",
     accessor: "status",
-    width: "140px",
+    width: "8.88%",
     formatter: (item: string, row: any) => {
       const bg =
         row.statusCode === "SUBMITTED"
@@ -195,7 +209,7 @@ export const nominationColumn = (handleOpenModal: () => void) => [
   {
     label: "Action",
     accessor: "id",
-    width: "120px",
+    width: "8.88%",
     formatter: (item: ReactNode, row: any) => (
       <div className="flex items-center gap-10">
         <button
