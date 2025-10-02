@@ -101,6 +101,18 @@ export default function NominationTop() {
                   </h3>
                 </div>
                 <div className=" space-y-6">
+
+                <div>
+                    <p className="  text-xs text-graytext mb-2">Asset Group</p>
+                    <input
+                      type="text"
+                      name=""
+                      id=""
+                      placeholder="Enter Asset Group"
+                      className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
+                    />
+                  </div>
+
                   <div>
                     <p className=" text-xs text-graytext mb-2">
                       Commodity Type
@@ -125,6 +137,8 @@ export default function NominationTop() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  
 
                   <div>
                     <p className="  text-xs text-graytext mb-2">Volume</p>
@@ -205,6 +219,18 @@ export default function NominationTop() {
                       </SelectContent>
                     </Select>
                   </div>
+
+ <div>
+                    <p className="  text-xs text-graytext mb-2">Connection</p>
+                    <input
+                      type="text"
+                      name=""
+                      id=""
+                      placeholder="Remarks"
+                      className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
+                    />
+                  </div>
+
                 </div>
               </div>
             </div>
