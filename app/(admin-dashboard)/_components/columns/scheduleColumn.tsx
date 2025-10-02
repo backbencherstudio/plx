@@ -27,7 +27,7 @@ export const scheduleColumn = [
      accessor:"assetGrouup",
      width:"10%",
       formatter: (item: string ) => (
-       <p>{item}</p>
+       <p className=" text-[#4A4C56] text-sm font-medium">{item}</p>
     ),  
 
   },
@@ -36,7 +36,7 @@ export const scheduleColumn = [
      accessor:"commodityType",
      width:"10%",
       formatter: (item: string ) => (
-       <p>{item}</p>
+       <p className=" text-[#4A4C56] text-sm font-medium">{item}</p>
     ),  
 
   },
@@ -46,7 +46,7 @@ export const scheduleColumn = [
     width: "10%",
     formatter: (item: string) => (
     
-      <p className="text-sm  text-graytext   ">
+      <p className=" text-[#4A4C56] text-sm font-medium">
         {item}
       </p>
     
@@ -59,7 +59,7 @@ export const scheduleColumn = [
     width: "11%",
     formatter: (item: string) => (
     
-      <p className="text-sm  text-graytext   ">
+      <p className={`text-sm font-medium py-1.5 inline-block px-3.5 rounded-full text-center ${item==='Pipeline'?'text-[#123F93] bg-[#E7ECF4]': item==='Trucking'?" text-[#116557] bg-[#E9FAF7]": item==='Railcar'?'text-[#6E00FF] bg-[#F1E6FF]':''}`}>
         {item}
       </p>
     
