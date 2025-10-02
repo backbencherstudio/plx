@@ -15,17 +15,48 @@ export const scheduleColumn = [
         <div className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-200 text-sm font-semibold">
           {row.assignedUser?.charAt(0)}
         </div>
-       <div>
-        <h3 className=" text-sm text-graytext  font-medium">{row.assignedUser}</h3>
-        {/* <p className=" text-xs text-[#777980]">{row.email}</p> */}
+       <div >
+        <h3 className=" text-sm text-graytext  font-medium">{row.assignedUser} - {row.companyName}</h3>
+        <p className=" text-xs text-[#777980]">{row.email}</p>
        </div>
       </div>
     ),  
   },
   {
-    label: "Email",
-    accessor: "email",
-    width: "20%",
+     label:"Asset Group",
+     accessor:"assetGrouup",
+     width:"10%",
+      formatter: (item: string ) => (
+       <p>{item}</p>
+    ),  
+
+  },
+  {
+     label:"Commodity Type",
+     accessor:"commodityType",
+     width:"10%",
+      formatter: (item: string ) => (
+       <p>{item}</p>
+    ),  
+
+  },
+  {
+    label: "Schedule Month",
+    accessor: "month",
+    width: "10%",
+    formatter: (item: string) => (
+    
+      <p className="text-sm  text-graytext   ">
+        {item}
+      </p>
+    
+ 
+    ),
+  },
+  {
+    label: "Transportation Mode",
+    accessor: "transportationMode",
+    width: "11%",
     formatter: (item: string) => (
     
       <p className="text-sm  text-graytext   ">
@@ -38,7 +69,7 @@ export const scheduleColumn = [
   {
     label: "File",
     accessor: "fileName",
-    width: "20%",
+    width: "13%",
     formatter: (item: string, row: any) => (
       <div className="flex items-center gap-2">
       <p className="text-sm  text-graytext font-medium  ">
@@ -52,20 +83,21 @@ export const scheduleColumn = [
       </div>
     ),
   },
-  {
+   {
     label: "Date Uploaded",
     accessor: "dateUploaded",
-    width: "20%",
+    width: "14%",
     formatter: (item: string, row: any) => (
-      <p className="text-sm  text-graytext font-medium">
-        {item}  
-      </p>
-    ),
+      <div className=" flex items-center">
+        <p>{row.dateUploaded} - {row.timeUploaded}</p>
+        
+      </div>
+    ),  
   },
   {
     label: "Actions",
     accessor: "timeZone",
-    width: "20%",
+    width: "11%",
     formatter: (item: string, row: any) => (
       <div className=" flex items-center gap-14">
         <button className=" cursor-pointer">

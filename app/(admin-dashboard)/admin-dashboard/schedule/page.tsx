@@ -159,9 +159,9 @@ export default function Schedule() {
           <h2 className="text-lg font-semibold text-graytext">
             Upload Details
           </h2>
-          <button className="text-sm font-semibold text-primary border border-[#E7ECF4] py-2 px-6 rounded-lg cursor-pointer btn_box_shadow">
+          {/* <button className="text-sm font-semibold text-primary border border-[#E7ECF4] py-2 px-6 rounded-lg cursor-pointer btn_box_shadow">
             View All
-          </button>
+          </button> */}
         </div>
 
         <DynamicTable

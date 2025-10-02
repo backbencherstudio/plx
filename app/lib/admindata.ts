@@ -1,3 +1,5 @@
+import { tr } from "date-fns/locale";
+
 // Main application data object for PLX Energy Transportation Expertise
 export const AdminData = {
   // ===== Dashboard: Top Stat Cards (3 total on UI) =====
@@ -2560,6 +2562,10 @@ messages: [
     {
       id: 1,
       assignedUser: "Sarah Chen",
+      companyName: "Chen Logistics",
+      assetGrouup:'Upstream',
+      commodityType:"Natural Gas",
+      transportationMode:"pipeline",
       assignedUserId: 1,
       email: "debra.holt@example.com",
       fileName: "Schedule_Jan.xlsx",
@@ -2589,6 +2595,10 @@ messages: [
     {
       id: 2,
       assignedUser: "Esther Howard",
+      companyName: "Howard Transport",
+      assetGrouup:'Midstream',
+      commodityType:"Electricity",
+      transportationMode:"Trucking",
       assignedUserId: 2,
       email: "willie.jennings@example.com",
       fileName: "Schedule_Jan.xlsx",
@@ -2618,6 +2628,10 @@ messages: [
     {
       id: 3,
       assignedUser: "Brooklyn Simmons",
+      companyName: "Simmons Freight",
+      commodityType:"Natural Gas",
+      transportationMode:"Railcar",
+      assetGrouup:'Downstream',
       assignedUserId: 3,
       email: "michelle.rivera@example.com",
       fileName: "Schedule_Jan.xlsx",
@@ -2647,6 +2661,10 @@ messages: [
     {
       id: 4,
       assignedUser: "Leslie Alexander",
+      companyName: "Alexander Transport",
+      assetGrouup:'Renewable Energy',
+      commodityType:"Electricity",
+      transportationMode:"pipeline",
       assignedUserId: 4,
       email: "bill.sanders@example.com",
       fileName: "Schedule_Jan.xlsx",
@@ -2676,6 +2694,10 @@ messages: [
     {
       id: 5,
       assignedUser: "Jenny Wilson",
+      companyName: "Wilson Logistics",
+      assetGrouup:'Energy Infrastructure',
+      commodityType:"Natural Gas",
+      transportationMode:"pipline",
       assignedUserId: 5,
       email: "deanna.curtis@example.com",
       fileName: "Schedule_Jan.xlsx",
@@ -2705,6 +2727,10 @@ messages: [
     {
       id: 6,
       assignedUser: "Jenny Wilson",
+      companyName: "Wilson Logistics",
+      assetGrouup:'Upstream',
+      commodityType:"Electricity",
+      transportationMode:"Trucking",
       assignedUserId: 5,
       email: "deanna.curtis@example.com",
       fileName: "Schedule_Jan.xlsx",
