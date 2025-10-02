@@ -638,6 +638,7 @@ export const AdminData = {
     {
       id: 1,
       user: "Sarah Chen",
+      companyName:"Caterpillar Inc.",
       userId: 1,
       email: "debbie.baker@example.com",
       requestDate: "2025-08-21",
@@ -669,6 +670,7 @@ export const AdminData = {
     {
       id: 2,
       user: "Esther Howard",
+      companyName:'Chevron Corporation',
       userId: 2,
       email: "michael.mitc@example.com",
       requestDate: "2025-08-23",
@@ -700,6 +702,7 @@ export const AdminData = {
     {
       id: 3,
       user: "Brooklyn Simmons",
+      companyName:'ConocoPhillips',
       userId: 3,
       email: "deanna.curtis@example.com",
       requestDate: "2025-08-24",
@@ -731,6 +734,7 @@ export const AdminData = {
     {
       id: 4,
       user: "Leslie Alexander",
+      companyName:' Shell Oil Company',
       userId: 4,
       email: "michael.mitc@example.com",
       requestDate: "2025-08-25",
@@ -762,6 +766,7 @@ export const AdminData = {
     {
       id: 5,
       user: "Jenny Wilson",
+      companyName:'Binford Ltd',
       userId: 5,
       email: "tim.jennings@example.com",
       requestDate: "2025-08-26",
@@ -793,6 +798,7 @@ export const AdminData = {
     {
       id: 6,
       user: "Jane Cooper",
+      companyName:'FedEx Corporation',
       userId: 7,
       email: "jane.cooper@example.com",
       requestDate: "2025-08-01",
@@ -855,6 +861,7 @@ export const AdminData = {
     {
       id: 8,
       user: "Robert Fox",
+      companyName:'PLX Energy',
       userId: 9,
       email: "robert.fox@example.com",
       requestDate: "2025-08-07",
