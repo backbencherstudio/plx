@@ -42,7 +42,7 @@ export default function SubscriberLogin() {
     setEmail("");
     setPassword("");
     setConfirmPassword("");
-    setOtp(["", "", "", "", "", ""]);
+    setOtp(["", "", "", ""]);
   };
 
   const handleOtpChange = (index: number, value: string) => {

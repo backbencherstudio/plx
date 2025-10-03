@@ -1,6 +1,8 @@
 'use client'
 import Image from "next/image";
 import React, { useState } from "react";
+import { adminLogin } from "../../services/authService";
+import {useRouter} from "next/navigation";
 import logo from "@/public/sidebar/images/logo.png";
 import adminImg from "@/public/Admin-Login.png";
 import EmailIcon from "@/public/commonIcons/EmailIcon";
@@ -16,6 +18,19 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const router = useRouter();
+
+  const handleAdminLogin = async () => {
+    try {
+      const res = await adminLogin({email, password});
+      console.log("Logged in admin", res.user);
+
+      // redirect after login
+      router.push("/admin-dashboard");
+    } catch (err: any) {
+      console.error("Login failed", err.response?.data || err.message);
+    };
+  };
 
   const handleForgotPassword = () => {
     setShowForgotModal(true);
@@ -87,6 +102,8 @@ export default function AdminLogin() {
                 type="email"
                 id="email"
                 placeholder="Enter Your Email "
+                value={email}
+                onChange={ (e) => setEmail(e.target.value) }
               />
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                 <EmailIcon />
@@ -104,6 +121,8 @@ export default function AdminLogin() {
                 type="password"
                 id="password"
                 placeholder="Enter Your Password"
+                value={password}
+                onChange={ (e) => setPassword(e.target.value) }
               />
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                 <LockIcon/>
@@ -116,11 +135,11 @@ export default function AdminLogin() {
           >
             Forgot Password?
           </p>
-          <Link href='/admin-dashboard'>
-          <button  className=" hover:scale-105 active:scale-95 transition-all ease-in-out duration-300 w-full py-4 px-6 text-center bg-primary text-white mt-12 rounded-[8px] text-lg font-bold cursor-pointer">
+          
+          <button onClick={handleAdminLogin} className=" hover:scale-105 active:scale-95 transition-all ease-in-out duration-300 w-full py-4 px-6 text-center bg-primary text-white mt-12 rounded-[8px] text-lg font-bold cursor-pointer">
             Login
           </button>
-          </Link>
+          
         </div>
         <div className=" px-6 py-7  ">
           <Image src={adminImg} alt="admin img" width={750} height={893} />
