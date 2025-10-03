@@ -12,7 +12,10 @@ export const UpcomingMeetingColumn = [
           {row.user?.charAt(0)}
         </div>
        <div>
-        <h3 className=" text-sm text-graytext  font-medium">{row.user}</h3>
+        <div>
+        <h3 className=" text-sm text-graytext  font-medium">{row.user} - {row.companyName}</h3>
+
+        </div>
         <p className=" text-xs text-[#777980]">{row.email}</p>
        </div>
       </div>

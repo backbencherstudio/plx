@@ -67,13 +67,64 @@ export default function Schedule() {
                 <SelectLabel>Fruits</SelectLabel>
                 <SelectItem value="sarah chen">Sarah Chen</SelectItem>
                 <SelectItem value="esther howard">Esther Howard</SelectItem>
-                <SelectItem value="brooklyn simmons">Brooklyn Simmons</SelectItem>
-                <SelectItem value="leslie alexander">Leslie Alexander</SelectItem>
+                <SelectItem value="brooklyn simmons">
+                  Brooklyn Simmons
+                </SelectItem>
+                <SelectItem value="leslie alexander">
+                  Leslie Alexander
+                </SelectItem>
                 <SelectItem value="jenny wilson">Jenny Wilson</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>
         </div>
+   
+             {/*  3 more input */}
+        <div className=" flex flex-col lg:flex-row lg:items-center gap-6 mb-5">
+          {/* no. 1....... */}
+          <div className=" flex flex-col w-full">
+            <label htmlFor="asset" className=" text-[#4A4C56] text-sm mb-1.5">Asset Group</label>
+            <input type="text" name="" id="asset" className=" border border-[#E6E6E6] py-3 pr-4 pl-5 rounded-[10px]" placeholder="Enter the name of business area" />
+          </div>
+            {/* no. 2....... */}
+         <div className=" flex flex-col w-full">
+          <label htmlFor="commodity" className=" text-[#4A4C56] text-sm mb-1.5">Commodity Type</label>
+          <input type="text" name="" id="commodity" className=" border border-[#E6E6E6] py-3 pr-4 pl-5 rounded-[10px]" placeholder="Enter the commodity type" />
+
+         </div>
+         {/* no. 3......... */}
+         <div className=" w-full">
+          <p className="text-[#4A4C56] text-sm mb-1.5">Schedule Month</p>
+
+        <Select >
+          <SelectTrigger className="w-full py-[23px] shadow-none">
+            <SelectValue
+              placeholder="Select schedule month"
+              className=" text-graytext text-sm"
+            />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Select schedule month</SelectLabel>
+              <SelectItem value="january">January</SelectItem>
+              <SelectItem value="february">February</SelectItem>
+              <SelectItem value="march">March</SelectItem>
+              <SelectItem value="april">April</SelectItem>
+              <SelectItem value="may">May</SelectItem>
+              <SelectItem value="june">June</SelectItem>
+              <SelectItem value="july">July</SelectItem>
+              <SelectItem value="august">August</SelectItem>
+              <SelectItem value="september">September</SelectItem>
+              <SelectItem value="october">October</SelectItem>
+              <SelectItem value="november">November</SelectItem>
+              <SelectItem value="december">December</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+         </div>
+
+        </div>
+     
 
         {/* Upload Schedule */}
         <div>
@@ -108,9 +159,9 @@ export default function Schedule() {
           <h2 className="text-lg font-semibold text-graytext">
             Upload Details
           </h2>
-          <button className="text-sm font-semibold text-primary border border-[#E7ECF4] py-2 px-6 rounded-lg cursor-pointer btn_box_shadow">
+          {/* <button className="text-sm font-semibold text-primary border border-[#E7ECF4] py-2 px-6 rounded-lg cursor-pointer btn_box_shadow">
             View All
-          </button>
+          </button> */}
         </div>
 
         <DynamicTable
@@ -171,7 +222,7 @@ export default function Schedule() {
         </div>
       </div>
       {/* ============================================ pagination end ======================================= */}
-      <Footer/>
+      <Footer />
     </div>
   );
 }

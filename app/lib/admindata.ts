@@ -1,3 +1,5 @@
+import { tr } from "date-fns/locale";
+
 // Main application data object for PLX Energy Transportation Expertise
 export const AdminData = {
   // ===== Dashboard: Top Stat Cards (3 total on UI) =====
@@ -424,6 +426,7 @@ export const AdminData = {
     {
       id: "3583475",
       subscriber: "Sarah Chen",
+      company: "Energy Solutions Inc.",
       subscriberId: 1,
       email: "debbie.baker@example.com",
       requestedDate: "2025-08-25",
@@ -453,6 +456,7 @@ export const AdminData = {
     {
       id: "3583476",
       subscriber: "Esther Howard",
+      company:'Caterpillar Inc.',
       subscriberId: 2,
       email: "michael.mitc@example.com",
       requestedDate: "2025-08-25",
@@ -482,6 +486,7 @@ export const AdminData = {
     {
       id: "3583477",
       subscriber: "Brooklyn Simmons",
+      company:' Chevron Corporation',
       subscriberId: 3,
       email: "deanna.curtis@example.com",
       requestedDate: "2025-08-25",
@@ -511,6 +516,7 @@ export const AdminData = {
     {
       id: "3583478",
       subscriber: "Leslie Alexander",
+      company:' ConocoPhillips',
       subscriberId: 4,
       email: "michael.mitc@example.com",
       requestedDate: "2025-08-25",
@@ -540,6 +546,7 @@ export const AdminData = {
     {
       id: "3583479",
       subscriber: "Jenny Wilson",
+      company:' Shell Oil Company',
       subscriberId: 5,
       email: "tim.jennings@example.com",
       requestedDate: "2025-08-25",
@@ -569,6 +576,7 @@ export const AdminData = {
     {
       id: "3583480",
       subscriber: "Jenny Wilson",
+      company:'FedEx Corporation',
       subscriberId: 5,
       email: "tim.jennings@example.com",
       requestedDate: "2025-08-25",
@@ -598,6 +606,7 @@ export const AdminData = {
     {
       id: "3583481",
       subscriber: "Jenny Wilson",
+      company:'Binford Ltd',
       subscriberId: 5,
       email: "tim.jennings@example.com",
       requestedDate: "2025-08-25",
@@ -631,6 +640,7 @@ export const AdminData = {
     {
       id: 1,
       user: "Sarah Chen",
+      companyName:"Caterpillar Inc.",
       userId: 1,
       email: "debbie.baker@example.com",
       requestDate: "2025-08-21",
@@ -662,6 +672,7 @@ export const AdminData = {
     {
       id: 2,
       user: "Esther Howard",
+      companyName:'Chevron Corporation',
       userId: 2,
       email: "michael.mitc@example.com",
       requestDate: "2025-08-23",
@@ -693,6 +704,7 @@ export const AdminData = {
     {
       id: 3,
       user: "Brooklyn Simmons",
+      companyName:'ConocoPhillips',
       userId: 3,
       email: "deanna.curtis@example.com",
       requestDate: "2025-08-24",
@@ -724,6 +736,7 @@ export const AdminData = {
     {
       id: 4,
       user: "Leslie Alexander",
+      companyName:' Shell Oil Company',
       userId: 4,
       email: "michael.mitc@example.com",
       requestDate: "2025-08-25",
@@ -755,6 +768,7 @@ export const AdminData = {
     {
       id: 5,
       user: "Jenny Wilson",
+      companyName:'Binford Ltd',
       userId: 5,
       email: "tim.jennings@example.com",
       requestDate: "2025-08-26",
@@ -786,6 +800,7 @@ export const AdminData = {
     {
       id: 6,
       user: "Jane Cooper",
+      companyName:'FedEx Corporation',
       userId: 7,
       email: "jane.cooper@example.com",
       requestDate: "2025-08-01",
@@ -848,6 +863,7 @@ export const AdminData = {
     {
       id: 8,
       user: "Robert Fox",
+      companyName:'PLX Energy',
       userId: 9,
       email: "robert.fox@example.com",
       requestDate: "2025-08-07",
@@ -2546,6 +2562,10 @@ messages: [
     {
       id: 1,
       assignedUser: "Sarah Chen",
+      companyName: "Chen Logistics",
+      assetGrouup:'Upstream',
+      commodityType:"Natural Gas",
+      transportationMode:"Pipeline",
       assignedUserId: 1,
       email: "debra.holt@example.com",
       fileName: "Schedule_Jan.xlsx",
@@ -2575,6 +2595,10 @@ messages: [
     {
       id: 2,
       assignedUser: "Esther Howard",
+      companyName: "Howard Transport",
+      assetGrouup:'Midstream',
+      commodityType:"Electricity",
+      transportationMode:"Trucking",
       assignedUserId: 2,
       email: "willie.jennings@example.com",
       fileName: "Schedule_Jan.xlsx",
@@ -2604,6 +2628,10 @@ messages: [
     {
       id: 3,
       assignedUser: "Brooklyn Simmons",
+      companyName: "Simmons Freight",
+      commodityType:"Natural Gas",
+      transportationMode:"Railcar",
+      assetGrouup:'Downstream',
       assignedUserId: 3,
       email: "michelle.rivera@example.com",
       fileName: "Schedule_Jan.xlsx",
@@ -2633,6 +2661,10 @@ messages: [
     {
       id: 4,
       assignedUser: "Leslie Alexander",
+      companyName: "Alexander Transport",
+      assetGrouup:'Renewable Energy',
+      commodityType:"Electricity",
+      transportationMode:"Pipeline",
       assignedUserId: 4,
       email: "bill.sanders@example.com",
       fileName: "Schedule_Jan.xlsx",
@@ -2662,6 +2694,10 @@ messages: [
     {
       id: 5,
       assignedUser: "Jenny Wilson",
+      companyName: "Wilson Logistics",
+      assetGrouup:'Energy Infrastructure',
+      commodityType:"Natural Gas",
+      transportationMode:"Pipeline",
       assignedUserId: 5,
       email: "deanna.curtis@example.com",
       fileName: "Schedule_Jan.xlsx",
@@ -2691,6 +2727,10 @@ messages: [
     {
       id: 6,
       assignedUser: "Jenny Wilson",
+      companyName: "Wilson Logistics",
+      assetGrouup:'Upstream',
+      commodityType:"Electricity",
+      transportationMode:"Trucking",
       assignedUserId: 5,
       email: "deanna.curtis@example.com",
       fileName: "Schedule_Jan.xlsx",
