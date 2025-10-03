@@ -1,12 +1,11 @@
 "use client";
-
 import { ChevronLeft, ChevronRight, Calendar, List } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import EventDetailModal from "./event-detail-modal";
 import DynamicTable from "@/app/(admin-dashboard)/_components/reusable/DynamicTable";
 import { UpcomingMeetingColumn } from "@/app/(admin-dashboard)/_components/columns/UpcomingMettingColumn";
 import { AdminData } from "@/app/lib/admindata";
-import Footer from "@/app/(admin-dashboard)/_components/footer";
+
 
 type EventItem = {
   id: string;
