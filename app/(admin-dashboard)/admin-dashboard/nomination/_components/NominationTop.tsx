@@ -235,7 +235,7 @@ export default function NominationTop() {
               </div>
             </div>
 
-            {/* flex form second */}
+            {/* flex form seconnd */}
             <div className=" mb-6">
                 <div className=" flex items-center gap-3 mb-8">
                   <CalenderIcon/>
