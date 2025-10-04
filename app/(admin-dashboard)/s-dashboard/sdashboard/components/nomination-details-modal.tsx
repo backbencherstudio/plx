@@ -13,6 +13,7 @@ interface NominationDetailsModalProps {
     volume: string;
     origin: string;
     destination: string;
+    connection: string;
     transportMode: string;
     requestedDate: string;
     beginningDate: string;
@@ -64,110 +65,124 @@ export function NominationDetailsModal({
         <div className="self-stretch h-0 outline outline-1 outline-offset-[-0.50px] outline-gray-200"></div>
 
         {/* Content */}
-        <div className="w-full px-6 md:px-14 pt-4 md:pt-6 pb-6 md:pb-14 flex flex-col justify-center items-start gap-4 md:gap-6">
-          {/* First row */}
-          <div className="w-full flex flex-col md:flex-row justify-between items-start gap-4 md:gap-8">
-            <div className="w-full md:w-32 flex flex-col justify-start items-start md:items-end gap-4 md:gap-6">
-              <div className="flex flex-col justify-start items-start gap-2">
-                <div className="justify-start text-zinc-500 text-base font-normal font-['Roboto'] leading-tight">
+        <div className="w-full px-6 md:px-10 pt-6 pb-8">
+          {/* Main content grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            {/* Left Column */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
                   NOM ID
                 </div>
-                <div className="justify-start text-neutral-800 text-lg font-medium font-['Roboto'] leading-normal">
+                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
                   {nomination.id}
                 </div>
               </div>
-              <div className="flex flex-col justify-start items-start gap-2">
-                <div className="justify-start text-zinc-500 text-base font-normal font-['Roboto'] leading-tight">
+              
+              <div className="space-y-2">
+                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
                   Commodity Type
                 </div>
-                <div className="justify-start text-neutral-800 text-lg font-medium font-['Roboto'] leading-normal">
+                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
                   {nomination.commodity}
                 </div>
               </div>
-              <div className="flex flex-col justify-start items-start gap-2">
-                <div className="justify-start text-zinc-500 text-base font-normal font-['Roboto'] leading-tight">
+              
+              <div className="space-y-2">
+                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
                   Origin
                 </div>
-                <div className="justify-start text-neutral-800 text-lg font-medium font-['Roboto'] leading-normal">
+                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
                   {nomination.origin}
                 </div>
               </div>
-            </div>
-            <div className="w-full md:w-28 flex flex-col justify-start items-start gap-4 md:gap-6">
-              <div className="flex flex-col justify-start items-start gap-2">
-                <div className="justify-start text-zinc-500 text-base font-normal font-['Roboto'] leading-tight">
-                  Status
+              
+              <div className="space-y-2">
+                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
+                  Transport Mode
                 </div>
-                <div className="w-24 h-8 p-1 bg-emerald-50 rounded-[999px] inline-flex justify-center items-center">
-                  <div className="justify-start text-teal-800 text-sm font-medium font-['Roboto'] leading-tight">
-                    {nomination.status}
-                  </div>
+                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
+                  {nomination.transportMode}
                 </div>
               </div>
-              <div className="flex flex-col justify-start items-start gap-2">
-                <div className="justify-start text-zinc-500 text-base font-normal font-['Roboto'] leading-tight">
+              
+              <div className="space-y-2">
+                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
+                  Beginning Date
+                </div>
+                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
+                  {nomination.beginningDate}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
+                  Status
+                </div>
+                <div className="inline-flex">
+                  <span className="px-3 py-1 bg-emerald-50 text-teal-800 text-sm font-medium font-['Roboto'] rounded-full">
+                    {nomination.status}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
                   Volume
                 </div>
-                <div className="justify-start text-neutral-800 text-lg font-medium font-['Roboto'] leading-normal">
+                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
                   {nomination.volume}
                 </div>
               </div>
-              <div className="flex flex-col justify-start items-start gap-2">
-                <div className="justify-start text-zinc-500 text-base font-normal font-['Roboto'] leading-tight">
+              
+              <div className="space-y-2">
+                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
                   Destination
                 </div>
-                <div className="justify-start text-neutral-800 text-lg font-medium font-['Roboto'] leading-normal">
+                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
                   {nomination.destination}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
+                  Connection
+                </div>
+                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
+                  {nomination.connection}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
+                  Requested Date
+                </div>
+                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
+                  {nomination.requestedDate}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
+                  End Date
+                </div>
+                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
+                  {nomination.endDate}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Second section */}
-          <div className="w-full flex flex-col justify-between items-start gap-4 md:gap-6">
-            <div className="w-full flex flex-col md:flex-row justify-between items-start gap-4 md:gap-8">
-              <div className="w-full md:w-28 flex flex-col justify-start items-start gap-4 md:gap-6">
-                <div className="flex flex-col justify-start items-start gap-2">
-                  <div className="justify-start text-zinc-500 text-base font-normal font-['Roboto'] leading-tight">
-                    Transport Mode
-                  </div>
-                  <div className="justify-start text-neutral-800 text-lg font-medium font-['Roboto'] leading-normal">
-                    {nomination.transportMode}
-                  </div>
-                </div>
-                <div className="flex flex-col justify-start items-start gap-2">
-                  <div className="justify-start text-zinc-500 text-base font-normal font-['Roboto'] leading-tight">
-                    Beginning Date
-                  </div>
-                  <div className="justify-start text-neutral-800 text-lg font-medium font-['Roboto'] leading-normal">
-                    {nomination.beginningDate}
-                  </div>
-                </div>
-              </div>
-              <div className="w-full md:w-28 flex flex-col justify-start items-start gap-4 md:gap-6">
-                <div className="flex flex-col justify-start items-start gap-2">
-                  <div className="justify-start text-zinc-500 text-base font-normal font-['Roboto'] leading-tight">
-                    Requested Date
-                  </div>
-                  <div className="justify-start text-neutral-800 text-lg font-medium font-['Roboto'] leading-normal">
-                    {nomination.requestedDate}
-                  </div>
-                </div>
-                <div className="flex flex-col justify-start items-start gap-2">
-                  <div className="justify-start text-zinc-500 text-base font-normal font-['Roboto'] leading-tight">
-                    End Date
-                  </div>
-                  <div className="justify-start text-neutral-800 text-lg font-medium font-['Roboto'] leading-normal">
-                    {nomination.endDate}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="w-full flex flex-col justify-start items-start gap-2">
-              <div className="justify-start text-zinc-500 text-base font-normal font-['Roboto'] leading-tight">
+          {/* Notes Section */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="space-y-2">
+              <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
                 Notes
               </div>
-              <div className="justify-start text-neutral-800 text-lg font-medium font-['Roboto'] leading-normal">
+              <div className="text-neutral-800 text-base font-medium font-['Roboto'] leading-relaxed">
                 {nomination.notes}
               </div>
             </div>

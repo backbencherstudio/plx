@@ -176,28 +176,31 @@ export default function Previousnnomination() {
               {/* Table Header */}
               <thead>
                 <tr className="bg-gray-50 border-b border-zinc-200">
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
                     ID
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[13%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[11%]">
                     Requested Date
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
                     Commodity
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
                     Volume
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[14%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
                     Route
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[14%]">
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[10%]">
+                    Connection
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[12%]">
                     Transport
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[13%]">
-                    Beginning Date
+                  <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] whitespace-nowrap w-[11%]">
+                    Start Date
                   </th>
-                  <th className="px-3 sm:px-6 py-3 text-left whitespace-nowrap text-zinc-700 text-xs font-medium font-['Manrope'] w-[13%]">
+                  <th className="px-3 sm:px-6 py-3 text-left whitespace-nowrap text-zinc-700 text-xs font-medium font-['Manrope'] w-[11%]">
                     End Date
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-zinc-700 text-xs font-medium font-['Manrope'] w-[3%]">
@@ -239,6 +242,9 @@ export default function Previousnnomination() {
                           </span>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                      {item.connection}
                     </td>
                     <td className="px-3 sm:px-6 py-3">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium font-['Roboto'] whitespace-nowrap ${
@@ -341,6 +347,7 @@ export default function Previousnnomination() {
             volume: selectedNomination.volume,
             origin: selectedNomination.route.from,
             destination: selectedNomination.route.to,
+            connection: selectedNomination.connection,
             transportMode: selectedNomination.transport.type,
             requestedDate: selectedNomination.requestedDate,
             beginningDate: selectedNomination.beginningDate,

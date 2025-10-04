@@ -122,6 +122,7 @@
           from: "Houston, TX",
           to: "Dallas, TX"
         },
+        connection: "Remarks",
         transport: {
           type: "Pipeline",
           color: "blue"
@@ -143,6 +144,7 @@
           from: "San Antonio, TX",
           to: "Dallas, TX"
         },
+        connection: "Remarks",
         transport: {
           type: "Trucking",
           color: "green"
@@ -351,6 +353,7 @@
           { id: "commodity", key: "commodity", label: "Commodity", sortable: true, filterable: true, width: "120px", align: "left", renderType: "text" },
           { id: "volume", key: "volume", label: "Volume", sortable: true, filterable: false, width: "120px", align: "right", renderType: "volume" },
           { id: "route", key: "route", label: "Route", sortable: false, filterable: false, width: "200px", align: "left", renderType: "route" },
+          { id: "connection", key: "connection", label: "Connection", sortable: true, filterable: true, width: "120px", align: "left", renderType: "text" },
           { id: "transport", key: "transport", label: "Transport", sortable: true, filterable: true, width: "120px", align: "center", renderType: "badge" },
           { id: "beginningDate", key: "beginningDate", label: "Beginning Date", sortable: true, filterable: true, width: "130px", align: "center", renderType: "date" },
           { id: "endDate", key: "endDate", label: "End Date", sortable: true, filterable: true, width: "130px", align: "center", renderType: "date" },
@@ -370,6 +373,7 @@
             commodity: { name: "Natural Gas", code: "NATURAL_GAS", category: "gas" },
             volume: { value: "15,000", unit: "BBLs" },
             route: { from: "Houston, TX", to: "Dallas, TX", distance: "240 miles" },
+            connection: "Remarks",
             transport: { type: "Pipeline", code: "PIPELINE", color: "blue", capacity: "high" },
             beginningDate: "2025-08-25",
             endDate: "2025-08-25",
@@ -398,6 +402,7 @@
             commodity: { name: "Crude Oil", code: "CRUDE_OIL_WTI", category: "oil" },
             volume: { value: "25,000", unit: "MWh" },
             route: { from: "San Antonio, TX", to: "Dallas, TX", distance: "280 miles" },
+            connection: "Remarks",
             transport: { type: "Trucking", code: "TRUCKING", color: "green", capacity: "medium" },
             beginningDate: "2025-08-25",
             endDate: "2025-08-25",
