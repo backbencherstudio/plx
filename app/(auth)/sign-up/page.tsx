@@ -11,17 +11,20 @@ import { EyeOff, Eye } from "lucide-react";
 import Link from "next/link";
 import { signup } from "@/services/authService";
 import { useRouter } from "next/navigation";
+import OtpModal from "./comopnents/OtpModal";
+import { set } from "date-fns";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
+   const [showOtpModal, setShowOtpModal] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
-    conformPassword: "", // ✅ keep this spelling for backend
+    conformPassword: "",
   });
 
   const router = useRouter();
@@ -32,37 +35,27 @@ export default function SignUp() {
   };
 
   const handleRegister = async () => {
-    // ✅ basic client-side validation
-    if (
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.email ||
-      !formData.password ||
-      !formData.conformPassword
-    ) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-
-    if (formData.password !== formData.conformPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-
-    console.log("Signup payload:", formData);
-
+    // console.log("Signup payload:", formData);
+   
     try {
       const res = await signup(formData);
+
+      if (formData.email) {
+      localStorage.setItem("user_email", formData.email);
+    }
+
       console.log("Signup success:", res);
-      alert("Signup successful!");
-      router.push("/subscriber-login");
+      setShowOtpModal(true);
+  
+      // router.push("/subscriber-login");
     } catch (err: any) {
-      console.error("Signup failed:", err.response?.data || err.message);
+    
+      console.log("Signup failed:", err.response?.data || err.message);
       alert(
         err.response?.data?.message ||
           "Signup failed. Please check your input and try again."
       );
-    }
+    } 
   };
 
   return (
@@ -188,7 +181,6 @@ export default function SignUp() {
                 id="conformPassword"
                 placeholder="Re-enter your password"
                 onChange={handleChange}
-                //  value={formData.conformPassword}
               />
               <button
                 type="button"
@@ -238,6 +230,11 @@ export default function SignUp() {
             Sign In
           </Link>
         </p>
+
+         <OtpModal
+        isOpen={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
+      />
       </div>
 
       <div className="px-6 py-7">
