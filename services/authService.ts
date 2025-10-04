@@ -8,9 +8,11 @@ export interface LoginPayload {
 }
 
 export interface SignupPayload {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     password: string;
+    conformPassword: string;
 }
 
 export interface AuthResponse {
@@ -55,7 +57,9 @@ export const adminLogin = async (payload: LoginPayload) => {
 // *** Signup Subscriber ***
 
 export const signup = async (payload: SignupPayload) => {
-    const res = await axiosClient.post("/auth/signup", payload)
+    const res = await axiosClient.post("/api/v1/auth/register/sendotp", payload)
+    console.log(res.data);
+    
     return res.data
 }
 
