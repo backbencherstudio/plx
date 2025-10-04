@@ -66,16 +66,31 @@ export function NominationDetailsModal({
 
         {/* Content */}
         <div className="w-full px-6 md:px-10 pt-6 pb-8">
-          {/* Main content grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+          {/* Nominee Information Section */}
+          <div className="flex items-center gap-4 mb-8">
+            {/* <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Package className="w-6 h-6 text-blue-600" />
+            </div> */}
+            <div className="flex-1">
+              <div className="text-neutral-800 text-xl font-bold font-['Roboto'] leading-tight">
+                Jenny Wilson - FedEx Corporation
+              </div>
+              <div className="text-neutral-600 text-base font-normal font-['Roboto'] leading-tight mt-1">
+                NOM ID {nomination.id}
+              </div>
+            </div>
+          </div>
+
+          {/* Main Details Section - Two Columns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {/* Left Column */}
             <div className="space-y-6">
               <div className="space-y-2">
                 <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
-                  NOM ID
+                  Asset Group
                 </div>
                 <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
-                  {nomination.id}
+                  Upstream
                 </div>
               </div>
               
@@ -108,7 +123,7 @@ export function NominationDetailsModal({
               
               <div className="space-y-2">
                 <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
-                  Beginning Date
+                  Start Date
                 </div>
                 <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
                   {nomination.beginningDate}
@@ -120,12 +135,10 @@ export function NominationDetailsModal({
             <div className="space-y-6">
               <div className="space-y-2">
                 <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
-                  Status
+                  Requested Date
                 </div>
-                <div className="inline-flex">
-                  <span className="px-3 py-1 bg-emerald-50 text-teal-800 text-sm font-medium font-['Roboto'] rounded-full">
-                    {nomination.status}
-                  </span>
+                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
+                  {nomination.requestedDate}
                 </div>
               </div>
               
@@ -158,15 +171,6 @@ export function NominationDetailsModal({
               
               <div className="space-y-2">
                 <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
-                  Requested Date
-                </div>
-                <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
-                  {nomination.requestedDate}
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
                   End Date
                 </div>
                 <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
@@ -177,12 +181,12 @@ export function NominationDetailsModal({
           </div>
 
           {/* Notes Section */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className="pt-6 border-t border-gray-200">
             <div className="space-y-2">
               <div className="text-zinc-500 text-sm font-medium font-['Roboto']">
                 Notes
               </div>
-              <div className="text-neutral-800 text-base font-medium font-['Roboto'] leading-relaxed">
+              <div className="text-neutral-800 text-lg font-semibold font-['Roboto']">
                 {nomination.notes}
               </div>
             </div>
