@@ -87,14 +87,7 @@ export const verifyOtp = async (payload: VerifyOtp) => {
 
 export const subscriberLogin = async (payload: SubscriberLoginPayload) => {
   const res = await axiosClient.post("/api/v1/auth/user/login", payload);
-
-  // ✅ তোমার দেওয়া response অনুযায়ী
-  // {
-  //   success: true,
-  //   message: "Login successful",
-  //   data: { ...userInfo },
-  //   token: "jwt_token"
-  // }
+ 
 
   const { success, message, data, token } = res.data;
 
