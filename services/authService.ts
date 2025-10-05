@@ -70,30 +70,41 @@ export const adminLogin = async (payload: LoginPayload) => {
 export const signup = async (payload: SignupPayload) => {
     const res = await axiosClient.post("/api/v1/auth/register/sendotp", payload)
     console.log(res.data);
-    
     return res.data
+    
 }
 // *** Signup Subscriber otp verification ***
 
 export const verifyOtp = async (payload: VerifyOtp) => {
     const res = await axiosClient.post("/api/v1/auth/register/verifyotp", payload)
     console.log(res.data);
-    
     return res.data
+    
 }
 
 // *** Subscriber login ***
 
+
 export const subscriberLogin = async (payload: SubscriberLoginPayload) => {
-    // Backend responds with: { success, message, data: { token, user } }
-    const res = await axiosClient.post(
-        "/api/v1/auth/admin/login",
-        payload
-    );
-    const { token, user } = res.data.data;
-    localStorage.setItem("token", res?.data?.token);
-    return { token, user };
-}
+  const res = await axiosClient.post("/api/v1/auth/user/login", payload);
+
+  // ✅ তোমার দেওয়া response অনুযায়ী
+  // {
+  //   success: true,
+  //   message: "Login successful",
+  //   data: { ...userInfo },
+  //   token: "jwt_token"
+  // }
+
+  const { success, message, data, token } = res.data;
+
+  if (success && token) {
+    localStorage.setItem("token", token);
+    return { success, message, user: data, token };
+  } else {
+    throw new Error(message || "Login failed");
+  }
+};
 
 // *** Logout ***
 export const logout = () => {
