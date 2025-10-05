@@ -213,17 +213,34 @@
         ]
       },
   
-      newNominationForm: {
+        newNominationForm: {
         isExpanded: true,
         formData: {
+          assetGroup: {
+            value: "",
+            placeholder: "Enter Asset Group",
+            validation: { required: true, message: "Asset Group is required" }
+          },
           commodityType: {
             value: "",
             options: [
-              { id: "1", name: "Natural Gas", code: "NATURAL_GAS", category: "gas", unit: "MMBtu", isAvailable: true },
-              { id: "2", name: "Crude Oil - WTI", code: "CRUDE_OIL_WTI", category: "oil", unit: "bbls", isAvailable: true },
-              { id: "3", name: "Electricity", code: "ELECTRICITY", category: "power", unit: "MWh", isAvailable: true },
-              { id: "4", name: "LNG", code: "LNG", category: "gas", unit: "MMBtu", isAvailable: true },
-              { id: "5", name: "Petrochemicals", code: "PETROCHEMICALS", category: "chemical", unit: "tons", isAvailable: true }
+              { 
+                id: "1", 
+                name: "Crude Oil", 
+                code: "CRUDE_OIL", 
+                category: "oil", 
+                unit: "bbls", 
+                isAvailable: true,
+                subOptions: [
+                  { id: "1-1", name: "Light Sweet Crude", code: "LIGHT_SWEET_CRUDE", category: "oil" },
+                  { id: "1-2", name: "Medium Crude", code: "MEDIUM_CRUDE", category: "oil" },
+                  { id: "1-3", name: "Heavy Crude", code: "HEAVY_CRUDE", category: "oil" },
+                  { id: "1-4", name: "Crude Oil", code: "CRUDE_OIL", category: "oil" }
+                ]
+              },
+              { id: "2", name: "Refined Products", code: "REFINED_PRODUCTS", category: "oil", unit: "bbls", isAvailable: true },
+              { id: "3", name: "Natural Gas", code: "NATURAL_GAS", category: "gas", unit: "MMBtu", isAvailable: true },
+              { id: "4", name: "Petrochemicals", code: "PETROCHEMICALS", category: "chemical", unit: "tons", isAvailable: true }
             ],
             validation: { required: true, message: "Commodity type is required" }
           },
@@ -260,6 +277,11 @@
               { id: "4", name: "Marine", code: "MARINE", color: "yellow", capacity: "very_high", cost: "low", isAvailable: true }
             ],
             validation: { required: true, message: "Transport mode is required" }
+          },
+          connection: {
+            value: "",
+            placeholder: "Remarks",
+            validation: { required: false, message: "" }
           },
           startDate: {
             value: "",
@@ -596,7 +618,9 @@
   
         columns: [
           { id: "file", key: "file", label: "File", sortable: false, filterable: false, width: "300px", align: "left", renderType: "file" },
+          { id: "assetGroup", key: "assetGroup", label: "Asset Group", sortable: true, filterable: true, width: "150px", align: "left", renderType: "text" },
           { id: "commodity", key: "commodity", label: "Commodity", sortable: true, filterable: true, width: "150px", align: "left", renderType: "text" },
+          { id: "scheduleMonth", key: "scheduleMonth", label: "Schedule Month", sortable: true, filterable: true, width: "150px", align: "left", renderType: "text" },
           { id: "uploadDate", key: "uploadDate", label: "Upload Date", sortable: true, filterable: true, width: "130px", align: "center", renderType: "date" },
           { id: "transportationMode", key: "transportationMode", label: "Transportation Mode", sortable: true, filterable: true, width: "180px", align: "center", renderType: "badge" },
           { id: "actions", key: "actions", label: "Actions", sortable: false, filterable: false, width: "120px", align: "center", renderType: "actions" }
@@ -614,10 +638,20 @@
               fileSizeBytes: 2516582,
               icon: "document-pdf"
             },
+            assetGroup: {
+              name: "Upstream",
+              code: "UPSTREAM",
+              category: "production"
+            },
             commodity: {
               name: "Crude Oil",
               code: "CRUDE_OIL",
               category: "oil"
+            },
+            scheduleMonth: {
+              name: "January",
+              code: "JANUARY",
+              month: 1
             },
             uploadDate: "2025-08-25",
             transportationMode: {
@@ -648,10 +682,20 @@
               fileSizeBytes: 1887436,
               icon: "document-pdf"
             },
+            assetGroup: {
+              name: "Midstream",
+              code: "MIDSTREAM",
+              category: "processing"
+            },
             commodity: {
               name: "Natural Gas",
               code: "NATURAL_GAS",
               category: "gas"
+            },
+            scheduleMonth: {
+              name: "March",
+              code: "MARCH",
+              month: 3
             },
             uploadDate: "2025-08-25",
             transportationMode: {
@@ -682,10 +726,20 @@
               fileSizeBytes: 2202009,
               icon: "document-pdf"
             },
+            assetGroup: {
+              name: "Downstream",
+              code: "DOWNSTREAM",
+              category: "distribution"
+            },
             commodity: {
               name: "NGLs",
               code: "NGL",
               category: "gas"
+            },
+            scheduleMonth: {
+              name: "April",
+              code: "APRIL",
+              month: 4
             },
             uploadDate: "2025-08-25",
             transportationMode: {
@@ -716,10 +770,20 @@
               fileSizeBytes: 3355443,
               icon: "document-pdf"
             },
+            assetGroup: {
+              name: "Renewable Energy",
+              code: "RENEWABLE_ENERGY",
+              category: "sustainable"
+            },
             commodity: {
               name: "Refined Products",
               code: "REFINED_PRODUCTS",
               category: "oil"
+            },
+            scheduleMonth: {
+              name: "June",
+              code: "JUNE",
+              month: 6
             },
             uploadDate: "2025-08-25",
             transportationMode: {
@@ -750,10 +814,20 @@
               fileSizeBytes: 2936012,
               icon: "document-pdf"
             },
+            assetGroup: {
+              name: "Energy Infrastructure",
+              code: "ENERGY_INFRASTRUCTURE",
+              category: "infrastructure"
+            },
             commodity: {
               name: "Petrochemicals",
               code: "PETROCHEMICALS",
               category: "chemical"
+            },
+            scheduleMonth: {
+              name: "July",
+              code: "JULY",
+              month: 7
             },
             uploadDate: "2025-08-25",
             transportationMode: {
