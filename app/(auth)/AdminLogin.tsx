@@ -8,6 +8,8 @@ import adminImg from "@/public/Admin-Login.png";
 import EmailIcon from "@/public/commonIcons/EmailIcon";
 import LockIcon from "@/public/commonIcons/LockIcon";
 import Link from "next/link";
+ 
+import { EyeOff,Eye } from 'lucide-react';
 
 export default function AdminLogin() {
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -18,7 +20,12 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+
+  // handleShowPassword = () => {
+  //   setShowPassword(!showPassword);
+  // }
 
   const handleAdminLogin = async () => {
     try {
@@ -118,15 +125,23 @@ export default function AdminLogin() {
             <div className="relative">
               <input
                 className="py-4 px-5 pl-12 placeholder:ml-3 w-full rounded-[10px] border border-[#E6E8EA]"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 placeholder="Enter Your Password"
                 value={password}
                 onChange={ (e) => setPassword(e.target.value) }
               />
+              <button className=" absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
+              {
+                showPassword ? <EyeOff color="#afafb5" strokeWidth={1.75} /> : <Eye color="#afafb5" strokeWidth={1.75} />
+              }
+           
+
+              </button>
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                 <LockIcon/>
               </div>
+              
             </div>
           </div>
           <p 
