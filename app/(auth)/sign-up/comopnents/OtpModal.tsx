@@ -57,7 +57,7 @@ export default function OtpModal({ isOpen, onClose }: OtpModalProps) {
 
       if (res.success) {
         setShowSuccessModal(true);
-        // success এর পর 5 সেকেন্ড পরে modalll বন্ধ করে parent onClose call করছি
+        // success এর পর 5 সেকেন্ড পরে modal বন্ধ করে parent onClose call করছি
         setTimeout(() => {
           setShowSuccessModal(false);
           onClose();
