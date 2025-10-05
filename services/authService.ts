@@ -21,6 +21,11 @@ export interface VerifyOtp {
     otp: string;                
 }
 
+export interface SubscriberLoginPayload {
+    email: string;
+    password: string;
+}
+
 export interface AuthResponse {
     token: string;
     user: {
@@ -79,7 +84,7 @@ export const verifyOtp = async (payload: VerifyOtp) => {
 
 // *** Subscriber login ***
 
-export const subscriberLogin = async (payload: LoginPayload) => {
+export const subscriberLogin = async (payload: SubscriberLoginPayload) => {
     // Backend responds with: { success, message, data: { token, user } }
     const res = await axiosClient.post(
         "/api/v1/auth/admin/login",
