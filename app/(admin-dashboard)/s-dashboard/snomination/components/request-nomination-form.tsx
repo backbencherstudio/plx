@@ -6,12 +6,14 @@ import { ChevronDown, Package, MapPin, Calendar, Plus } from "lucide-react"
 import { userData } from "../../../../lib/userdata"
 
 interface FormData {
+  assetGroup: string
   commodityType: string
   volume: string
   unit: string
   origin: string
   destination: string
   transportMode: string
+  connection: string
   startDate: string
   endDate: string
   notes: string
@@ -27,18 +29,22 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
   
   // Dropdown states
   const [commodityTypeOpen, setCommodityTypeOpen] = useState(false)
+  const [commoditySubMenuOpen, setCommoditySubMenuOpen] = useState(false)
+  const [selectedCommodity, setSelectedCommodity] = useState<any>(null)
   const [unitOpen, setUnitOpen] = useState(false)
   const [transportModeOpen, setTransportModeOpen] = useState(false)
   
   // React Hook Form
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
+      assetGroup: "",
       commodityType: "Select commodity type",
       volume: "",
       unit: "bbls",
       origin: "",
       destination: "",
       transportMode: "Select transport mode",
+      connection: "",
       startDate: "",
       endDate: "",
       notes: ""
@@ -59,7 +65,7 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
   }, [isOpen])
 
   // Get dropdown options from userdata.ts
-  const commodityTypes = userData.nominationsPage.newNominationForm.formData.commodityType.options.map(option => option.name)
+  const commodityTypes = userData.nominationsPage.newNominationForm.formData.commodityType.options
   const units = userData.nominationsPage.newNominationForm.formData.unit.options.map(option => option.symbol)
   const transportModes = userData.nominationsPage.newNominationForm.formData.transportMode.options.map(option => option.name)
 
@@ -67,12 +73,14 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
   const onSubmit = (data: FormData) => {
     console.log("Form Data:", data)
     console.log("All form values:", {
+      assetGroup: data.assetGroup,
       commodityType: data.commodityType,
       volume: data.volume,
       unit: data.unit,
       origin: data.origin,
       destination: data.destination,
       transportMode: data.transportMode,
+      connection: data.connection,
       startDate: data.startDate,
       endDate: data.endDate,
       notes: data.notes
@@ -159,12 +167,14 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
     
     // Reset form to default values after successful submission
     reset({
+      assetGroup: "",
       commodityType: "Select commodity type",
       volume: "",
       unit: "bbls",
       origin: "",
       destination: "",
       transportMode: "Select transport mode",
+      connection: "",
       startDate: "",
       endDate: "",
       notes: ""
@@ -172,6 +182,8 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
     
     // Close all dropdowns
     setCommodityTypeOpen(false)
+    setCommoditySubMenuOpen(false)
+    setSelectedCommodity(null)
     setUnitOpen(false)
     setTransportModeOpen(false)
   }
@@ -215,6 +227,15 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
                   <h2 className="text-lg font-medium text-neutral-800 font-['Roboto']">Commodity Details</h2>
                 </div>
                 <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-neutral-600 font-['roboto']">Asset Group</label>
+                    <input
+                      type="text"
+                      placeholder="Enter Asset Group"
+                      className="h-12 px-5 py-4 rounded-[10px] border border-gray-200 text-sm font-medium text-neutral-600 font-['roboto'] placeholder:text-neutral-600"
+                      {...register("assetGroup")}
+                    />
+                  </div>
                   <div className="flex flex-col gap-1 relative">
                     <label className="text-xs text-neutral-600 font-['roboto']">Commodity Type</label>
                     <div 
@@ -224,7 +245,7 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
                       <span className="text-sm font-medium text-neutral-600 font-['roboto']">{watch("commodityType")}</span>
                       <ChevronDown className="w-4 h-4 text-neutral-600" />
                     </div>
-                    {/* Commodity Type Dropdown */}
+                    {/* Commodity Type Dropdown with Submenu */}
                     {commodityTypeOpen && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-[0px_10px_30px_0px_rgba(0,0,0,0.10)] z-10 border border-gray-200 overflow-hidden">
                         <div className="px-4 py-2 bg-primary">
@@ -233,13 +254,40 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
                         {commodityTypes.map((type, index) => (
                           <div 
                             key={index}
-                            className="px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                            className="px-4 py-2 hover:bg-gray-50 cursor-pointer relative"
                             onClick={() => {
-                              setValue("commodityType", type)
-                              setCommodityTypeOpen(false)
+                              if (type.subOptions) {
+                                setSelectedCommodity(type)
+                                setCommoditySubMenuOpen(true)
+                                setCommodityTypeOpen(false)
+                              } else {
+                                setValue("commodityType", type.name)
+                                setCommodityTypeOpen(false)
+                              }
                             }}
                           >
-                            <div className="text-sm font-normal text-neutral-600 font-['Manrope']">{type}</div>
+                            <div className="text-sm font-normal text-neutral-600 font-['Manrope']">{type.name}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Commodity Submenu */}
+                    {commoditySubMenuOpen && selectedCommodity && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-[0px_10px_30px_0px_rgba(0,0,0,0.10)] z-20 border border-gray-200 overflow-hidden">
+                        <div className="px-4 py-2 bg-primary">
+                          <div className="text-sm font-semibold text-white font-['Manrope']">Commodity List for Nominations {selectedCommodity.name}</div>
+                        </div>
+                        {selectedCommodity.subOptions?.map((subOption: any, index: number) => (
+                          <div 
+                            key={index}
+                            className="px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                            onClick={() => {
+                              setValue("commodityType", subOption.name)
+                              setCommoditySubMenuOpen(false)
+                              setSelectedCommodity(null)
+                            }}
+                          >
+                            <div className="text-sm font-normal text-neutral-600 font-['Manrope']">{subOption.name}</div>
                           </div>
                         ))}
                       </div>
@@ -341,6 +389,15 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
                         ))}
                       </div>
                     )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-neutral-600 font-['roboto']">Connection</label>
+                    <input
+                      type="text"
+                      placeholder="Remarks"
+                      className="h-12 px-5 py-4 rounded-[10px] border border-gray-200 text-sm font-medium text-neutral-600 font-['roboto'] placeholder:text-neutral-600"
+                      {...register("connection")}
+                    />
                   </div>
                 </div>
               </div>

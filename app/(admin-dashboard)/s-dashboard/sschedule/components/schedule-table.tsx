@@ -14,11 +14,11 @@ interface SchedulesTableProps {
 
 export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
   const [commodityFilter, setCommodityFilter] = useState<string>("")
+  const [scheduleMonthFilter, setScheduleMonthFilter] = useState<string>("")
   const [transportModeFilter, setTransportModeFilter] = useState<string>("")
-  const [timeFilter, setTimeFilter] = useState<string>("all")
   const [showCommodityDropdown, setShowCommodityDropdown] = useState(false)
+  const [showScheduleMonthDropdown, setShowScheduleMonthDropdown] = useState(false)
   const [showTransportDropdown, setShowTransportDropdown] = useState(false)
-  const [showTimeDropdown, setShowTimeDropdown] = useState(false)
 
   // Function to get transportation mode colors
   const getTransportationModeColor = (mode: string) => {
@@ -36,29 +36,13 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
     }
   }
 
-  // Function to check if date matches time filter
-  const isDateInTimeRange = (uploadDate: string, timeFilter: string) => {
-    if (timeFilter === "all") return true
-    
-    const itemDate = new Date(uploadDate)
-    const now = new Date()
-    
-    if (timeFilter === "week") {
-      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-      return itemDate >= weekAgo
-    }
-    
-    if (timeFilter === "month") {
-      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-      return itemDate >= monthAgo
-    }
-    
-    return true
-  }
-
   // Get unique values for dropdowns
   const uniqueCommodities = useMemo(() => {
     return Array.from(new Set(scheduleData.map(item => item.commodity.name)))
+  }, [])
+
+  const uniqueScheduleMonths = useMemo(() => {
+    return Array.from(new Set(scheduleData.map(item => item.scheduleMonth.name)))
   }, [])
 
   const uniqueTransportModes = useMemo(() => {
@@ -69,25 +53,25 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
   const filteredData = useMemo(() => {
     return scheduleData.filter(item => {
       const commodityMatch = !commodityFilter || item.commodity.name === commodityFilter
+      const scheduleMonthMatch = !scheduleMonthFilter || item.scheduleMonth.name === scheduleMonthFilter
       const transportMatch = !transportModeFilter || item.transportationMode.name === transportModeFilter
-      const timeMatch = isDateInTimeRange(item.uploadDate, timeFilter)
-      return commodityMatch && transportMatch && timeMatch
+      return commodityMatch && scheduleMonthMatch && transportMatch
     })
-  }, [commodityFilter, transportModeFilter, timeFilter])
+  }, [commodityFilter, scheduleMonthFilter, transportModeFilter])
 
   const handleCommoditySelect = (commodity: string) => {
     setCommodityFilter(commodity === commodityFilter ? "" : commodity)
     setShowCommodityDropdown(false)
   }
 
+  const handleScheduleMonthSelect = (scheduleMonth: string) => {
+    setScheduleMonthFilter(scheduleMonth === scheduleMonthFilter ? "" : scheduleMonth)
+    setShowScheduleMonthDropdown(false)
+  }
+
   const handleTransportSelect = (transport: string) => {
     setTransportModeFilter(transport === transportModeFilter ? "" : transport)
     setShowTransportDropdown(false)
-  }
-
-  const handleTimeSelect = (time: string) => {
-    setTimeFilter(time)
-    setShowTimeDropdown(false)
   }
 
   return (
@@ -98,55 +82,6 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
           <h1 className="text-neutral-600 text-lg font-medium font-sans">Schedules</h1>
         </div>
         <div className="flex items-center gap-6">
-          {/* Time Filter */}
-          <div className="relative">
-            <Button
-              variant="outline"
-              className={`h-9 px-4 py-1.5 bg-slate-50 rounded-[10px] border border-slate-200 text-xs font-normal ${
-                timeFilter !== "all" ? 'text-blue-600 border-blue-300' : 'text-muted-foreground'
-              }`}
-              onClick={() => {
-                setShowTimeDropdown(!showTimeDropdown)
-                setShowCommodityDropdown(false)
-                setShowTransportDropdown(false)
-              }}
-            >
-              {timeFilter === "all" ? "All Time" : timeFilter === "week" ? "This Week" : "This Month"}
-              <ChevronDown className={`w-4 h-4 ml-6 transition-transform ${showTimeDropdown ? 'rotate-180' : ''}`} />
-            </Button>
-            
-            {showTimeDropdown && (
-              <div className="fixed top-auto left-auto mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50" style={{ top: '120px', left: 'calc(100% - 600px)' }}>
-                <div className="py-1">
-                  <button
-                    className={`w-full px-4 py-2 text-left text-xs hover:bg-slate-50 ${
-                      timeFilter === "all" ? 'bg-blue-50 text-blue-600' : 'text-neutral-600'
-                    }`}
-                    onClick={() => handleTimeSelect("all")}
-                  >
-                    All Time
-                  </button>
-                  <button
-                    className={`w-full px-4 py-2 text-left text-xs hover:bg-slate-50 ${
-                      timeFilter === "week" ? 'bg-blue-50 text-blue-600' : 'text-neutral-600'
-                    }`}
-                    onClick={() => handleTimeSelect("week")}
-                  >
-                    This Week
-                  </button>
-                  <button
-                    className={`w-full px-4 py-2 text-left text-xs hover:bg-slate-50 ${
-                      timeFilter === "month" ? 'bg-blue-50 text-blue-600' : 'text-neutral-600'
-                    }`}
-                    onClick={() => handleTimeSelect("month")}
-                  >
-                    This Month
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Commodity Filter */}
           <div className="relative">
             <Button
@@ -156,8 +91,8 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
               }`}
               onClick={() => {
                 setShowCommodityDropdown(!showCommodityDropdown)
+                setShowScheduleMonthDropdown(false)
                 setShowTransportDropdown(false)
-                setShowTimeDropdown(false)
               }}
             >
               {commodityFilter || "Commodity"}
@@ -189,6 +124,48 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
             )}
           </div>
 
+          {/* Schedule Month Filter */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              className={`h-9 px-4 py-1.5 bg-slate-50 rounded-[10px] border border-slate-200 text-xs font-normal ${
+                scheduleMonthFilter ? 'text-blue-600 border-blue-300' : 'text-muted-foreground'
+              }`}
+              onClick={() => {
+                setShowScheduleMonthDropdown(!showScheduleMonthDropdown)
+                setShowCommodityDropdown(false)
+                setShowTransportDropdown(false)
+              }}
+            >
+              {scheduleMonthFilter || "Schedule Month"}
+              <ChevronDown className={`w-4 h-4 ml-6 transition-transform ${showScheduleMonthDropdown ? 'rotate-180' : ''}`} />
+            </Button>
+            
+            {showScheduleMonthDropdown && (
+              <div className="fixed top-auto left-auto mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50" style={{ top: '120px', left: 'calc(100% - 300px)' }}>
+                <div className="py-1">
+                  <button
+                    className="w-full px-4 py-2 text-left text-xs hover:bg-slate-50 text-muted-foreground"
+                    onClick={() => handleScheduleMonthSelect("")}
+                  >
+                    All Months
+                  </button>
+                  {uniqueScheduleMonths.map((scheduleMonth) => (
+                    <button
+                      key={scheduleMonth}
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-slate-50 ${
+                        scheduleMonthFilter === scheduleMonth ? 'bg-blue-50 text-blue-600' : 'text-neutral-600'
+                      }`}
+                      onClick={() => handleScheduleMonthSelect(scheduleMonth)}
+                    >
+                      {scheduleMonth}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Transportation Mode Filter */}
           <div className="relative">
             <Button
@@ -199,7 +176,7 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
               onClick={() => {
                 setShowTransportDropdown(!showTransportDropdown)
                 setShowCommodityDropdown(false)
-                setShowTimeDropdown(false)
+                setShowScheduleMonthDropdown(false)
               }}
             >
               {transportModeFilter || "Transportation Mode"}
@@ -243,7 +220,13 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
                 <div className="text-muted-foreground text-xs font-medium font-sans">File</div>
               </th>
               <th className="w-64 h-10 px-4 py-3 text-left">
+                <div className="text-muted-foreground text-xs font-medium font-sans">Asset Group</div>
+              </th>
+              <th className="w-64 h-10 px-4 py-3 text-left">
                 <div className="text-muted-foreground text-xs font-medium font-sans">Commodity</div>
+              </th>
+              <th className="w-64 h-10 px-4 py-3 text-left">
+                <div className="text-muted-foreground text-xs font-medium font-sans">Schedule Month</div>
               </th>
               <th className="w-44 h-10 px-4 py-3 text-left">
                 <div className="text-muted-foreground text-xs font-medium font-sans">Upload Date</div>
@@ -275,9 +258,19 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
                     </div>
                   </td>
 
+                  {/* Asset Group Column */}
+                  <td className="w-64 h-20 px-4 py-3">
+                    <div className="text-neutral-600 text-sm font-medium font-sans">{item.assetGroup.name}</div>
+                  </td>
+
                   {/* Commodity Column */}
                   <td className="w-64 h-20 px-4 py-3">
                     <div className="text-neutral-600 text-sm font-medium font-sans">{item.commodity.name}</div>
+                  </td>
+
+                  {/* Schedule Month Column */}
+                  <td className="w-64 h-20 px-4 py-3">
+                    <div className="text-neutral-600 text-sm font-medium font-sans">{item.scheduleMonth.name}</div>
                   </td>
 
                   {/* Upload Date Column */}
@@ -316,7 +309,7 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="h-20 px-4 py-3 text-center">
+                <td colSpan={7} className="h-20 px-4 py-3 text-center">
                   <div className="text-neutral-500 text-sm">No schedules found matching the selected filters.</div>
                 </td>
               </tr>
@@ -326,13 +319,13 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
       </div>
 
       {/* Click outside to close dropdowns */}
-      {(showCommodityDropdown || showTransportDropdown || showTimeDropdown) && (
+      {(showCommodityDropdown || showScheduleMonthDropdown || showTransportDropdown) && (
         <div 
           className="fixed inset-0 z-40" 
           onClick={() => {
             setShowCommodityDropdown(false)
+            setShowScheduleMonthDropdown(false)
             setShowTransportDropdown(false)
-            setShowTimeDropdown(false)
           }}
         />
       )}
