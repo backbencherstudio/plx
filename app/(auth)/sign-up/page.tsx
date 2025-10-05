@@ -35,7 +35,7 @@ export default function SignUp() {
   };
 
   const handleRegister = async () => {
-    // console.log("Signup payload:", formData);
+    console.log("Signup payload:", formData);
    
     try {
       const res = await signup(formData);
