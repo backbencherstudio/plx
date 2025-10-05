@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { X } from "lucide-react";
-import { verifyOtp } from '../../../../services/authService';
+import { verifyOtp } from "../../../../services/authService";
 import {useRouter} from "next/navigation";
 
 interface OtpModalProps {
@@ -57,7 +57,7 @@ export default function OtpModal({ isOpen, onClose }: OtpModalProps) {
 
       if (res.success) {
         setShowSuccessModal(true);
-        // success এর পর 5 সেকেন্ড পরে modal বন্ধ করে parent onClose call করছি
+        // success এর পর 5 সেকেন্ড পরে modalll বন্ধ করে parent onClose call করছি
         setTimeout(() => {
           setShowSuccessModal(false);
           onClose();

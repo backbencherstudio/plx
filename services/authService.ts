@@ -8,7 +8,20 @@ export interface LoginPayload {
 }
 
 export interface SignupPayload {
-    name: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    conformPassword: string;
+   
+}
+
+export interface VerifyOtp {
+    email: string;
+    otp: string;                
+}
+
+export interface SubscriberLoginPayload {
     email: string;
     password: string;
 }
@@ -28,11 +41,11 @@ export interface OtpPayload {
     otp: string;
 }
 
-export interface ResetPasswwordPayload {
-    email: string;
-    newPassword: string;
-    confirmPassword: string;
-}
+// export interface ResetPasswwordPayload {
+//     email: string;
+//     newPassword: string;
+//     confirmPassword: string;
+// }
 
 // ========= Auth service =========
 // *** Admin Login ***
@@ -55,9 +68,36 @@ export const adminLogin = async (payload: LoginPayload) => {
 // *** Signup Subscriber ***
 
 export const signup = async (payload: SignupPayload) => {
-    const res = await axiosClient.post("/auth/signup", payload)
+    const res = await axiosClient.post("/api/v1/auth/register/sendotp", payload)
+    console.log(res.data);
     return res.data
+    
 }
+// *** Signup Subscriber otp verification ***
+
+export const verifyOtp = async (payload: VerifyOtp) => {
+    const res = await axiosClient.post("/api/v1/auth/register/verifyotp", payload)
+    console.log(res.data);
+    return res.data
+    
+}
+
+// *** Subscriber login ***
+
+
+export const subscriberLogin = async (payload: SubscriberLoginPayload) => {
+  const res = await axiosClient.post("/api/v1/auth/user/login", payload);
+ 
+
+  const { success, message, data, token } = res.data;
+
+  if (success && token) {
+    localStorage.setItem("token", token);
+    return { success, message, user: data, token };
+  } else {
+    throw new Error(message || "Login failed");
+  }
+};
 
 // *** Logout ***
 export const logout = () => {
