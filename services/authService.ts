@@ -34,7 +34,7 @@ export interface ResetPasswwordPayload {
     confirmPassword: string;
 }
 
-// ========== Auth service ==========
+// ========= Auth service =========
 // *** Admin Login ***
 
 export const adminLogin = async (payload: LoginPayload) => {
