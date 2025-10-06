@@ -51,7 +51,7 @@ export interface OtpPayload {
 // *** Admin Login ***
 
 export const adminLogin = async (payload: LoginPayload) => {
-    // Backend responds with: { success, message, data: { token, user } }
+    // Backend responds with: { success, message, data: { token, useer } }
     const res = await axiosClient.post(
         "/api/v1/auth/admin/login",
         payload
