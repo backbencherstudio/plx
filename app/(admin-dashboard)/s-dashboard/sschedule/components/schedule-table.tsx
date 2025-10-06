@@ -253,7 +253,7 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
                       </div>
                       <div className="flex flex-col justify-between">
                         <div className="text-neutral-600 text-sm font-medium font-sans leading-tight">{item.file.name}</div>
-                        <div className="text-zinc-500 text-xs font-normal font-sans leading-none">{item.file.description}</div>
+                        {/* <div className="text-zinc-500 text-xs font-normal font-sans leading-none">{item.file.description}</div> */}
                       </div>
                     </div>
                   </td>
