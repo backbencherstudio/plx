@@ -4,14 +4,14 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 // *** axios instance ***
 
 const axiosClient: AxiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://192.168.4.3:4001",
+    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://once-seq-staffing-tony.trycloudflare.com",
     headers: {
         "Content-Type": "application/json",
     },
 });
 
 
-// *** Request Interceptor ***
+// *** Request Interceptorrrrr ***
 
 axiosClient.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {

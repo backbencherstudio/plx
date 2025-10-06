@@ -78,7 +78,7 @@ export default function PersonalInfo() {
     <div className=" bg-gray-50">
       <div className="mx-auto w-full">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-          {/* Personal Information Section */}
+          {/* Personal Information Sections */}
           <div className="px-6 pt-6 pb-10 bg-white rounded-xl flex flex-col gap-7">
             <div className="flex justify-between items-center">
               <h2 className="text-neutral-800 text-lg font-semibold font-sans leading-loose">Personal Information</h2>
@@ -97,7 +97,7 @@ export default function PersonalInfo() {
             </div>
 
             <div className="w-full flex flex-col gap-7">
-              {/* First Row: First Name & Last Name */}
+              {/* First Row: First Name & Last Namee */}
               <div className="flex gap-6">
                 <div className="flex-1 flex flex-col">
                   <label className="text-neutral-600 text-xs font-normal font-sans mb-1">First Name</label>
