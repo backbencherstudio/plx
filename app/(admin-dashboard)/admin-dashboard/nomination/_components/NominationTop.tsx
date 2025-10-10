@@ -13,14 +13,54 @@ import CalenderIcon from "@/public/nominations/icons/CalenderIcon";
 import LocationIcon from "@/public/nominations/icons/LocationIcon";
  
 import { ChevronDown, ChevronUp, Plus } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import axiosClient from "@/lib/axiosclient";
 
 export default function NominationTop() {
   const [isExpanded, setIsExpanded] = useState(true);
+  // subscriber search state
+  const [subscriberQuery, setSubscriberQuery] = useState("");
+  const [subscriberResults, setSubscriberResults] = useState<Array<{ id: string; label: string }>>([]);
+  const [subscriberLoading, setSubscriberLoading] = useState(false);
+  const [selectedSubscriber, setSelectedSubscriber] = useState<{ id: string; label: string } | null>(null);
+  const [showSubscriberDropdown, setShowSubscriberDropdown] = useState(false);
+  // commodity state
+  const [commodityType, setCommodityType] = useState<string>("");
+  const [crudeSubType, setCrudeSubType] = useState<string>("");
+  const [showCommodityPanel, setShowCommodityPanel] = useState(false);
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
   };
+
+  // fetch subscribers by first letters (debounced)
+  useEffect(() => {
+    const controller = new AbortController();
+    const handler = setTimeout(async () => {
+      try {
+        if (!subscriberQuery.trim()) {
+          setSubscriberResults([]);
+          return;
+        }
+        setSubscriberLoading(true);
+        const params: any = { page: 1, limit: 10, active: true, query: subscriberQuery.trim() };
+        const res = await axiosClient.get(`/api/v1/users/search`, { params, signal: controller.signal });
+        const data = (res.data?.data || []).map((u: any) => ({
+          id: u.id,
+          label: u.fullName || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.email,
+        }));
+        setSubscriberResults(data);
+      } catch (e) {
+        // ignore
+      } finally {
+        setSubscriberLoading(false);
+      }
+    }, 350);
+    return () => {
+      clearTimeout(handler);
+      controller.abort();
+    };
+  }, [subscriberQuery]);
 
   return (
     <div className=" bg-white p-6 rounded-md mt-6  w-full mx-auto  ">
@@ -68,25 +108,36 @@ export default function NominationTop() {
                 </h3>
 
                 {/* select email / name */}
-
-                <Select>
-                  <SelectTrigger className="w-full py-5 shadow-none">
-                    <SelectValue
-                      placeholder="Search by name or email..."
-                      className=" text-graytext text-sm"
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Fruits</SelectLabel>
-                      <SelectItem value="sararh chen">Sarah Chen</SelectItem>
-                      <SelectItem value="esther howard">Esther Howard</SelectItem>
-                      <SelectItem value="brooklyn simmons">Brooklyn Simmons</SelectItem>
-                      <SelectItem value="leslie alexander">Leslie Alexander</SelectItem>
-                      <SelectItem value="jenny wilson">Jenny Wilson</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <input
+                    value={subscriberQuery}
+                    onChange={(e) => { setSubscriberQuery(e.target.value); setShowSubscriberDropdown(true); }}
+                    placeholder="Search by name or email..."
+                    className="w-full py-4 px-4 rounded-[10px] border border-[#E6E6E6] text-sm font-medium text-graytext"
+                  />
+                  {(subscriberQuery && showSubscriberDropdown) && (
+                    <div className="absolute z-10 mt-2 w-full bg-white rounded-xl border border-gray-200 shadow-[0px_10px_30px_rgba(0,0,0,0.08)] max-h-64 overflow-y-auto">
+                      {subscriberLoading ? (
+                        <div className="px-4 py-3 text-sm text-gray-500">Searching...</div>
+                      ) : subscriberResults.length === 0 ? (
+                        <div className="px-4 py-3 text-sm text-gray-500">No results</div>
+                      ) : (
+                        subscriberResults.map((u) => (
+                          <button
+                            key={u.id}
+                            onClick={() => { setSelectedSubscriber(u); setSubscriberQuery(u.label); setShowSubscriberDropdown(false); }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-neutral-700"
+                          >
+                            {u.label}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                  {selectedSubscriber && (
+                    <div className="mt-2 text-xs text-gray-500">Selected ID: {selectedSubscriber.id}</div>
+                  )}
+                </div>
               </div>
             </div>
             {/* flex form  first*/}
@@ -113,29 +164,58 @@ export default function NominationTop() {
                     />
                   </div>
 
-                  <div>
-                    <p className=" text-xs text-graytext mb-2">
-                      Commodity Type
-                    </p>
-
-                    <Select>
-                      <SelectTrigger className="w-full py-5 shadow-none">
-                        <SelectValue
-                          placeholder="Select commodity type."
-                          className=" text-graytext text-sm"
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Select commodity type</SelectLabel>
-                          <SelectItem value="ngls">NGLs</SelectItem>
-                          <SelectItem value="refined products">Refined Products</SelectItem>
-                          <SelectItem value="natural gas">Natural Gas</SelectItem>
-                          <SelectItem value="petrochemicals">Petrochemicals</SelectItem>
-                          <SelectItem value="crude oil">Crude Oil</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                  <div className="relative">
+                    <p className=" text-xs text-graytext mb-2">Commodity Type</p>
+                    <button
+                      type="button"
+                      onClick={() => setShowCommodityPanel(v => !v)}
+                      className="w-full py-5 px-4 text-left rounded-[10px] border border-[#E6E6E6] text-sm font-medium text-graytext"
+                    >
+                      {commodityType ? commodityType.replaceAll('_',' ') : 'Select commodity type.'}
+                      {commodityType === 'crude_oil' && crudeSubType ? ` • ${crudeSubType.replaceAll('_',' ')}` : ''}
+                    </button>
+                    {showCommodityPanel && (
+                      <div className="absolute z-20 mt-2 w-full bg-white rounded-xl border border-gray-200 shadow-[0px_10px_30px_rgba(0,0,0,0.08)] p-0">
+                        <div className="grid grid-cols-2 gap-0">
+                          <div className="p-0">
+                            <div className="px-4 py-2 bg-primary text-white rounded-tl-xl rounded-tr-none text-sm font-semibold">Select commodity type</div>
+                            {[
+                              {v:'ngls',l:'NGLs'},
+                              {v:'refined_products',l:'Refined Products'},
+                              {v:'natural_gas',l:'Natural Gas'},
+                              {v:'petrochemicals',l:'Petrochemicals'},
+                              {v:'crude_oil',l:'Crude Oil'},
+                            ].map(opt => (
+                              <button
+                                key={opt.v}
+                                onClick={() => { setCommodityType(opt.v); if(opt.v !== 'crude_oil'){ setCrudeSubType(''); setShowCommodityPanel(false);} }}
+                                className={`w-full text-left px-4 py-3 hover:bg-gray-50 text-sm ${commodityType===opt.v? 'bg-gray-50':''}`}
+                              >{opt.l}</button>
+                            ))}
+                          </div>
+                          <div className="p-0">
+                            {commodityType === 'crude_oil' && (
+                              <div className="bg-white rounded-r-xl h-full">
+                                <div className="px-4 py-2 text-sm font-semibold text-neutral-700">Crude Oil</div>
+                                {[
+                                  // Exclude base 'Crude Oil' here to avoid duplicate selection
+                                  {v:'light_sweet_crude',l:'Light Sweet Crude'},
+                                  {v:'medium_crude',l:'Medium Crude'},
+                                  {v:'heavy_crude',l:'Heavy Crude'},
+                                  {v:'petrochemicals',l:'Petrochemicals'},
+                                ].map(opt => (
+                                  <button
+                                    key={opt.v}
+                                    onClick={() => { setCrudeSubType(opt.v); setShowCommodityPanel(false); }}
+                                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 text-sm ${crudeSubType===opt.v? 'bg-gray-50':''}`}
+                                  >{opt.l}</button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   
