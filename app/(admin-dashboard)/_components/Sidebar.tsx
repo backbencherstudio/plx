@@ -19,6 +19,8 @@ const menuItems = [
   { title: "Nomination", icon: NominationIcon, href: "/admin-dashboard/nomination" },
   { title: "Meetings", icon: CalenderIcon, href: "/admin-dashboard/meetings" },
   { title: "Message", icon: MessageIcon, href: "/admin-dashboard/message" },
+  // New: All User page
+  { title: "All User", icon: MessageIcon, href: "/admin-dashboard/all-users" },
 ];
 
  

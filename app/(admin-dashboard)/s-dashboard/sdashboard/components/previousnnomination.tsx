@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { Eye, ArrowRight, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import { userData } from '@/app/lib/userdata'
 import { NominationDetailsModal } from './nomination-details-modal'
-import axios from 'axios'
+import axiosClient from '@/lib/axiosclient'
 
 // API data will be used instead of static data
 
@@ -69,11 +69,7 @@ export default function Previousnnomination() {
       setDebugSteps(prev => [...prev, `2. Token retrieved: ${headerToken ? 'Present' : 'Not found'}`])
       setDebugSteps(prev => [...prev, '3. Making GET request to nomination API...'])
       
-      const res = await axios.get(`http://192.168.4.3:4001/api/v1/nomination/my`, {
-        headers: {
-          'Authorization': headerToken
-        }
-      })
+      const res = await axiosClient.get(`/api/v1/nomination/my`)
       
       setDebugSteps(prev => [...prev, '4. API call successful!'])
       setDebugSteps(prev => [...prev, `5. Response status: ${res.status}`])

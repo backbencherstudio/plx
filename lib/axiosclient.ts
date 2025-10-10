@@ -18,7 +18,7 @@ axiosClient.interceptors.request.use(
       const token =
         typeof window !== "undefined" ? localStorage.getItem("token") : null;
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+            config.headers.Authorization = `${token}`;
         }
         return config;
     },
