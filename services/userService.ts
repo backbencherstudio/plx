@@ -80,21 +80,11 @@ export const deleteUser = async (id: number): Promise<void> => {
 
 // *** Schedule API calls ***
 
-export const getSchedules = async (
-  params: PaginationParams = {}
-): Promise<ScheduleResponse> => {
-  const { page = 1, limit = 10 } = params;
-
-  // ❌ REMOVE THIS: If the interceptor is working, you don't need this block.
-  // const token = typeof window !== "undefined" ? localStorage.getItem("token")?.trim() : null;
-  // if (!token) throw new Error("No token found. Please login first."); 
+ export const getSchedules = async (params: PaginationParams = {}): Promise<ScheduleResponse> => {
+  const { page = 1, limit = 5 } = params;
 
   const res = await axiosClient.get<ScheduleResponse>("/api/v1/schedule", {
     params: { page, limit },
-    // ❌ REMOVE THIS ENTIRE HEADERS BLOCK (Interceptor handles it)
-    // headers: {
-    //   Authorization: `Bearer ${token}`, 
-    // },
   });
 
   return res.data;
