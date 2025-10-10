@@ -28,6 +28,18 @@ export default function NominationTop() {
   const [commodityType, setCommodityType] = useState<string>("");
   const [crudeSubType, setCrudeSubType] = useState<string>("");
   const [showCommodityPanel, setShowCommodityPanel] = useState(false);
+  // form fields
+  const [assetGroup, setAssetGroup] = useState("");
+  const [volume, setVolume] = useState("");
+  const [unit, setUnit] = useState("bbls");
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+  const [transportMode, setTransportMode] = useState("");
+  const [connection, setConnection] = useState("");
+  const [beginningDate, setBeginningDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -160,6 +172,8 @@ export default function NominationTop() {
                       name=""
                       id=""
                       placeholder="Enter Asset Group"
+                      value={assetGroup}
+                      onChange={(e)=>setAssetGroup(e.target.value)}
                       className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
                     />
                   </div>
@@ -227,14 +241,16 @@ export default function NominationTop() {
                       name=""
                       id=""
                       placeholder="Enter Volume"
+                      value={volume}
+                      onChange={(e)=>setVolume(e.target.value)}
                       className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
                     />
                   </div>
                   <div>
                     <p className="  text-xs text-graytext mb-2">Unit</p>
-                    <Select>
+                    <Select onValueChange={(v)=>setUnit(v)}>
                       <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
-                        <SelectValue placeholder="bbls" className=" " />
+                        <SelectValue placeholder={unit} className=" " />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
@@ -268,6 +284,8 @@ export default function NominationTop() {
                       name=""
                       id=""
                       placeholder="Enter origin location"
+                      value={origin}
+                      onChange={(e)=>setOrigin(e.target.value)}
                       className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
                     />
                   </div>
@@ -278,22 +296,24 @@ export default function NominationTop() {
                       name=""
                       id=""
                       placeholder="Enter destination location"
+                      value={destination}
+                      onChange={(e)=>setDestination(e.target.value)}
                       className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
                     />
                   </div>
                   <div>
                     <p className="  text-xs text-graytext mb-2">Transport Mode</p>
-                    <Select>
+                    <Select onValueChange={(v)=>setTransportMode(v)}>
                       <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
-                        <SelectValue placeholder="Select transport mode" className=" " />
+                        <SelectValue placeholder={transportMode || "Select transport mode"} className=" " />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>Select transport mode</SelectLabel>
-                          <SelectItem value="apple">Pipeline</SelectItem>
-                          <SelectItem value="banana">Trucking</SelectItem>
-                          <SelectItem value="blueberry">Railcar</SelectItem>
-                          <SelectItem value="grapes">Marine</SelectItem>
+                          <SelectItem value="Pipeline">Pipeline</SelectItem>
+                          <SelectItem value="Trucking">Trucking</SelectItem>
+                          <SelectItem value="Railcar">Railcar</SelectItem>
+                          <SelectItem value="Marine">Marine</SelectItem>
                           {/* <SelectItem value="pineapple">type E</SelectItem> */}
                         </SelectGroup>
                       </SelectContent>
@@ -307,6 +327,8 @@ export default function NominationTop() {
                       name=""
                       id=""
                       placeholder="Remarks"
+                      value={connection}
+                      onChange={(e)=>setConnection(e.target.value)}
                       className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
                     />
                   </div>
@@ -327,23 +349,55 @@ export default function NominationTop() {
                 <div className=" flex flex-col md:flex-row items-center gap-14 ">
                     <div className=" block md:flex-1 ">
                     <p className="  text-xs text-[#4A4C56] mb-2">Beginning Date</p>
-                     <input type="date" name="" id="" className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"/>
+                     <input type="date" value={beginningDate} onChange={(e)=>setBeginningDate(e.target.value)} className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"/>
                   </div>
                      <div className=" block md:flex-1 ">
                     <p className="  text-xs text-[#4A4C56] mb-2">End Date</p>
-                     <input type="date" name="" id="" className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"/>
+                     <input type="date" value={endDate} onChange={(e)=>setEndDate(e.target.value)} className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"/>
                   </div>
             </div>
             </div>
             {/* textarea */}
             <div className=" mb-10">
                 <p className="   text-xs text-[#4A4C56] mb-2">Notes (Optional)</p>
-                 <textarea className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6]   h-36" placeholder=" Additional information, special requirements, or comments..."/>
+                 <textarea value={notes} onChange={(e)=>setNotes(e.target.value)} className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6]   h-36" placeholder=" Additional information, special requirements, or comments..."/>
             </div>
             {/* buttons  */}
             <div className=" flex justify-end gap-4">
                 <button className=" text-[#1D1F2C] bg-[#E6E6E6]   text-sm font-medium py-3 px-12 rounded-xl cursor-pointer">Cancel</button>
-                <button className=" text-white bg-primary   text-sm font-medium py-3 px-12 rounded-xl cursor-pointer">Submit Nomination</button>
+                <button type="button" disabled={submitting} onClick={async ()=>{
+                  try{
+                    setSubmitting(true);
+                    if(!selectedSubscriber){
+                      alert('Please select a subscriber first.');
+                      return;
+                    }
+                    if(!commodityType){
+                      alert('Please choose a commodity type.');
+                      return;
+                    }
+                    const payload = {
+                      commodityType: commodityType === 'crude_oil' && crudeSubType ? crudeSubType.replaceAll('_',' ') : commodityType.replaceAll('_',' '),
+                      assetGroup: assetGroup,
+                      origin,
+                      volume,
+                      destination,
+                      unit,
+                      transportMode,
+                      beginningDate: beginningDate ? new Date(beginningDate).toISOString() : null,
+                      endDate: endDate ? new Date(endDate).toISOString() : null,
+                      notes,
+                      connection,
+                      userId: selectedSubscriber.id,
+                    } as any;
+                    await axiosClient.post('/api/v1/nomination/create', payload);
+                    alert('Nomination submitted');
+                  }catch(e:any){
+                    alert(e?.response?.data?.message || 'Failed to submit');
+                  }finally{
+                    setSubmitting(false);
+                  }
+                }} className={` text-white ${submitting?'bg-primary/60':'bg-primary'}   text-sm font-medium py-3 px-12 rounded-xl cursor-pointer ${submitting?'opacity-60 cursor-not-allowed':''}`}>Submit Nomination</button>
             </div>
           </div>
         )}
