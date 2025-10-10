@@ -12,6 +12,8 @@ import { X, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import CollapseIcon from "@/public/sidebar/icons/CollapseIcon";
 import { usePathname } from "next/navigation";
+import { logout } from "@/services/authService";
+import { useRouter } from "next/navigation";
 
 const menuItems = [
   { title: "Dashboard", icon: DashboardIcon, href: "/admin-dashboard" },
@@ -30,6 +32,9 @@ interface SidebarProps {
 // asaasefawe
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+  
+  const router= useRouter();
+
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false); // collapse works only on md+
 
@@ -43,6 +48,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       return pathname.startsWith(itemHref);
     }
   };
+
+
 
   return (
     <aside
@@ -158,8 +165,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </Link>
           );
         })()}
-        <Link
-          href="#"
+        <button
+         onClick={()=>{
+           logout()
+           router.push('/');
+           
+        }}
           className={`flex items-center ${
             isCollapsed ? "md:justify-center" : ""
           } gap-3.5 p-3 rounded-lg transition-all duration-200 text-base`}
@@ -178,7 +189,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           >
             Log Out
           </span>
-        </Link>
+        </button>
       </div>
     </aside>
   );

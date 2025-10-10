@@ -8,25 +8,53 @@ import { AdminData } from "../../../lib/admindata";
 import TransportPagination from "../../_components/reusable/TransportPagination";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Footer from "../../_components/footer";
+import { getSchedules, Schedule, SchedulePagination } from "@/services/userService";
 
-type Schedule = typeof AdminData.schedules[number];
 
-export default function Schedule() {
+type Scheduled = typeof AdminData.schedules[number];
+
+export default function ScheduleList() {
   const { schedules } = AdminData;
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [paginatedData, setPaginatedData] = useState<Schedule[]>([]);
+  const [paginatedData, setPaginatedData] = useState<Scheduled[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
 
+  const fetchSchedules = async (page: number) => {
+    try {
+      const storedToken= localStorage.getItem('token')
+      if(storedToken){
+        const response = await getSchedules({ page, limit: 10 });
+        console.log("Full Response:", response);
+      console.log("Success:", response.success);
+      console.log("Message:", response.message);
+      console.log("Schedule Data:", response.data);
+      console.log("Pagination:", response.pagination);
+      }else{
+        console.log("token not found");
+        
+      }
+      
+    
+      
+      // if (response.data && response.data.length > 0) {
+      //   console.log("First Schedule:", response.data[0]);
+      //   console.log("First Schedule User:", response.data[0].user);
+      // }
+      
+    } catch (error) {
+      console.error("Error fetching schedules:", error);
+    }
+  };
 
-   const handlePageChange = (pageNumber: number) => {
+  const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
   };
 
-    useEffect(() => {
+  useEffect(() => {
     let filteredData = schedules;
-   // Calculate total pages
+    // Calculate total pages
     const totalItems = filteredData.length;
     const calculatedTotalPages = Math.ceil(totalItems / itemsPerPage);
     setTotalPages(calculatedTotalPages);
@@ -42,13 +70,19 @@ export default function Schedule() {
     const paginated = filteredData.slice(startIndex, endIndex);
 
     setPaginatedData(paginated);
-  }, [itemsPerPage, currentPage ]);
+  }, [itemsPerPage, currentPage]);
 
   return (
     <div>
       <h1 className=" text-[32px] font-medium text-[#1D1F2C] mb-10">
         Upload Schedule
       </h1>
+      <button 
+        className=" text-xl text-black font-medium py-4 px-6 border rounded-xl cursor-pointer mb-5" 
+        onClick={() => fetchSchedules(1)}
+      >
+        Fetch Data
+      </button>
 
       <div className=" bg-white p-6 rounded-2xl">
         {/* assign input */}
@@ -79,53 +113,50 @@ export default function Schedule() {
           </Select>
         </div>
    
-             {/*  3 more input */}
+        {/*  3 more input */}
         <div className=" flex flex-col lg:flex-row lg:items-center gap-6 mb-5">
           {/* no. 1....... */}
           <div className=" flex flex-col w-full">
             <label htmlFor="asset" className=" text-[#4A4C56] text-sm mb-1.5">Asset Group</label>
             <input type="text" name="" id="asset" className=" border border-[#E6E6E6] py-3 pr-4 pl-5 rounded-[10px]" placeholder="Enter the name of business area" />
           </div>
-            {/* no. 2....... */}
-         <div className=" flex flex-col w-full">
-          <label htmlFor="commodity" className=" text-[#4A4C56] text-sm mb-1.5">Commodity Type</label>
-          <input type="text" name="" id="commodity" className=" border border-[#E6E6E6] py-3 pr-4 pl-5 rounded-[10px]" placeholder="Enter the commodity type" />
+          {/* no. 2....... */}
+          <div className=" flex flex-col w-full">
+            <label htmlFor="commodity" className=" text-[#4A4C56] text-sm mb-1.5">Commodity Type</label>
+            <input type="text" name="" id="commodity" className=" border border-[#E6E6E6] py-3 pr-4 pl-5 rounded-[10px]" placeholder="Enter the commodity type" />
+          </div>
+          {/* no. 3......... */}
+          <div className=" w-full">
+            <p className="text-[#4A4C56] text-sm mb-1.5">Schedule Month</p>
 
-         </div>
-         {/* no. 3......... */}
-         <div className=" w-full">
-          <p className="text-[#4A4C56] text-sm mb-1.5">Schedule Month</p>
-
-        <Select >
-          <SelectTrigger className="w-full py-[23px] shadow-none">
-            <SelectValue
-              placeholder="Select schedule month"
-              className=" text-graytext text-sm"
-            />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Select schedule month</SelectLabel>
-              <SelectItem value="january">January</SelectItem>
-              <SelectItem value="february">February</SelectItem>
-              <SelectItem value="march">March</SelectItem>
-              <SelectItem value="april">April</SelectItem>
-              <SelectItem value="may">May</SelectItem>
-              <SelectItem value="june">June</SelectItem>
-              <SelectItem value="july">July</SelectItem>
-              <SelectItem value="august">August</SelectItem>
-              <SelectItem value="september">September</SelectItem>
-              <SelectItem value="october">October</SelectItem>
-              <SelectItem value="november">November</SelectItem>
-              <SelectItem value="december">December</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-         </div>
-
+            <Select >
+              <SelectTrigger className="w-full py-[23px] shadow-none">
+                <SelectValue
+                  placeholder="Select schedule month"
+                  className=" text-graytext text-sm"
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Select schedule month</SelectLabel>
+                  <SelectItem value="january">January</SelectItem>
+                  <SelectItem value="february">February</SelectItem>
+                  <SelectItem value="march">March</SelectItem>
+                  <SelectItem value="april">April</SelectItem>
+                  <SelectItem value="may">May</SelectItem>
+                  <SelectItem value="june">June</SelectItem>
+                  <SelectItem value="july">July</SelectItem>
+                  <SelectItem value="august">August</SelectItem>
+                  <SelectItem value="september">September</SelectItem>
+                  <SelectItem value="october">October</SelectItem>
+                  <SelectItem value="november">November</SelectItem>
+                  <SelectItem value="december">December</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
      
-
         {/* Upload Schedule */}
         <div>
           <h3 className=" text-base text-graytext font-medium">
@@ -159,9 +190,6 @@ export default function Schedule() {
           <h2 className="text-lg font-semibold text-graytext">
             Upload Details
           </h2>
-          {/* <button className="text-sm font-semibold text-primary border border-[#E7ECF4] py-2 px-6 rounded-lg cursor-pointer btn_box_shadow">
-            View All
-          </button> */}
         </div>
 
         <DynamicTable
