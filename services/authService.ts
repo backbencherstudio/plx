@@ -100,6 +100,12 @@ export const subscriberLogin = async (payload: SubscriberLoginPayload) => {
 };
 
 // *** Logout ***
+ 
+
+// ======================== logout ============================
 export const logout = () => {
-    localStorage.removeItem("token");
+  // 🧹 1️⃣ Token remove করো
+  localStorage.removeItem("token");
+
+   
 };

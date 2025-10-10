@@ -1,6 +1,50 @@
 import axiosClient from "../lib/axiosclient";
 
-// *** User type define ***
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
+
+// *** Schedule types ***
+
+export interface ScheduleUser {
+    id: string;
+    fullName: string;
+    email: string;
+    avatar: string;
+    companyName: string | null;
+}
+
+export interface Schedule {
+    id: string;
+    assignTo: string;
+    commodityType: string;
+    transportMode: string;
+    scheduleFile: string;
+    assetGroup: string;
+    seduleMonth: string;
+    createdAt: string;
+    updatedAt: string;
+    user: ScheduleUser;
+}
+
+export interface SchedulePagination {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}
+
+export interface ScheduleResponse {
+    success: boolean;
+    message: string;
+    data: Schedule[];  // <-- directly array
+    pagination: SchedulePagination;
+}
+
+// *** User types ***
 
 export interface User {
     id: number;
@@ -8,21 +52,17 @@ export interface User {
     email: string;
 }
 
-// *** will call all users ***
+// *** User API calls ***
 
 export const getUsers = async (): Promise<User[]> => {
     const res = await axiosClient.get<User[]>("/users");
     return res.data;
 };
 
-// *** Create New User ***
-
 export const createUser = async (payload: Omit<User, "id">): Promise<User> => {
     const res = await axiosClient.post<User>("/users", payload);
     return res.data;
 };
-
-// *** Update user ***
 
 export const updateUser = async (
     id: number,
@@ -32,8 +72,20 @@ export const updateUser = async (
     return res.data;
 };
 
-// *** Delete user ***
-
-export const deleteUser = async (id:number): Promise<void> => {
+export const deleteUser = async (id: number): Promise<void> => {
     await axiosClient.delete(`/users/${id}`);
+};
+
+// *** Schedule API calls ***
+
+// *** Schedule API calls ***
+
+ export const getSchedules = async (params: PaginationParams = {}): Promise<ScheduleResponse> => {
+  const { page = 1, limit = 5 } = params;
+
+  const res = await axiosClient.get<ScheduleResponse>("/api/v1/schedule", {
+    params: { page, limit },
+  });
+
+  return res.data;
 };
