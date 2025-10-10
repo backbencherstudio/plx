@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { ChevronDown, Package, MapPin, Calendar, Plus } from "lucide-react"
 import { userData } from "../../../../lib/userdata"
+import axios from "axios"
 
 interface FormData {
   assetGroup: string
@@ -33,6 +34,14 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
   const [selectedCommodity, setSelectedCommodity] = useState<any>(null)
   const [unitOpen, setUnitOpen] = useState(false)
   const [transportModeOpen, setTransportModeOpen] = useState(false)
+
+  // API states
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [debugData, setDebugData] = useState<any>(null)
+  const [debugSteps, setDebugSteps] = useState<string[]>([])
+  const [showDebugBox, setShowDebugBox] = useState(false)
   
   // React Hook Form
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
@@ -69,123 +78,89 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
   const units = userData.nominationsPage.newNominationForm.formData.unit.options.map(option => option.symbol)
   const transportModes = userData.nominationsPage.newNominationForm.formData.transportMode.options.map(option => option.name)
 
+  // API call function
+  const submitNomination = async (data: FormData) => {
+    try {
+      setIsSubmitting(true)
+      setSubmitError(null)
+      setDebugSteps([])
+      
+      const token = localStorage.getItem('token')
+      
+      setDebugSteps(prev => [...prev, '1. Starting nomination submission...'])
+      setDebugSteps(prev => [...prev, `2. Token retrieved: ${token ? 'Present' : 'Not found'}`])
+      setDebugSteps(prev => [...prev, '3. Preparing request payload...'])
+      
+      // Prepare API payload matching the Postman structure
+      const apiPayload = {
+        commodityType: data.commodityType,
+        assetGroup: data.assetGroup,
+        origin: data.origin,
+        volume: data.volume,
+        destination: data.destination,
+        unit: data.unit,
+        transportMode: data.transportMode,
+        beginningDate: data.startDate ? new Date(data.startDate).toISOString() : null,
+        endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
+        notes: data.notes,
+        connection: data.connection
+      }
+      
+      setDebugSteps(prev => [...prev, '4. Making POST request to nomination API...'])
+      setDebugSteps(prev => [...prev, `5. Payload: ${JSON.stringify(apiPayload, null, 2)}`])
+      
+      const response = await axios.post(`http://192.168.4.3:4001/api/v1/nomination/create`, apiPayload, {
+        headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      setDebugSteps(prev => [...prev, '6. API call successful!'])
+      setDebugSteps(prev => [...prev, `7. Response status: ${response.status}`])
+      setDebugSteps(prev => [...prev, '8. Processing response data...'])
+      
+      console.log('API Response:', response.data)
+      setDebugData(response.data)
+      setDebugSteps(prev => [...prev, '9. Nomination submitted successfully!'])
+      
+      setSubmitSuccess(true)
+      
+      // Reset form after successful submission
+      reset({
+        assetGroup: "",
+        commodityType: "Select commodity type",
+        volume: "",
+        unit: "bbls",
+        origin: "",
+        destination: "",
+        transportMode: "Select transport mode",
+        connection: "",
+        startDate: "",
+        endDate: "",
+        notes: ""
+      })
+      
+      // Close all dropdowns
+      setCommodityTypeOpen(false)
+      setCommoditySubMenuOpen(false)
+      setSelectedCommodity(null)
+      setUnitOpen(false)
+      setTransportModeOpen(false)
+      
+    } catch (error: any) {
+      console.error('API Error:', error)
+      setDebugSteps(prev => [...prev, `Error: ${error.response?.data?.message || error.message}`])
+      setSubmitError(error.response?.data?.message || 'Failed to submit nomination. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   // Form submit handler
   const onSubmit = (data: FormData) => {
     console.log("Form Data:", data)
-    console.log("All form values:", {
-      assetGroup: data.assetGroup,
-      commodityType: data.commodityType,
-      volume: data.volume,
-      unit: data.unit,
-      origin: data.origin,
-      destination: data.destination,
-      transportMode: data.transportMode,
-      connection: data.connection,
-      startDate: data.startDate,
-      endDate: data.endDate,
-      notes: data.notes
-    })
-
-    // Create new nomination object following userdata.ts structure
-    const requestedDate = new Date().toISOString().split('T')[0] // Auto-generated submission date
-    const newNomination = {
-      id: `#${Math.floor(Math.random() * 900000) + 100000}`, // Generate random ID
-      file: {
-        name: `Schedule_${new Date().toLocaleDateString('en-US', { month: 'short' })}`,
-        downloadUrl: `/downloads/schedule-${new Date().toISOString().split('T')[0]}.pdf`,
-        fileType: "pdf",
-        fileSize: "2.4 MB"
-      },
-      requestedDate: requestedDate, // Auto-generated submission date
-      commodity: { 
-        name: data.commodityType, 
-        code: data.commodityType.toUpperCase().replace(/\s+/g, '_'), 
-        category: "gas" 
-      },
-      volume: { 
-        value: data.volume, 
-        unit: data.unit.toUpperCase() 
-      },
-      route: { 
-        from: data.origin, 
-        to: data.destination, 
-        distance: "240 miles" 
-      },
-      transport: { 
-        type: data.transportMode, 
-        code: data.transportMode.toUpperCase(), 
-        color: "blue", 
-        capacity: "high" 
-      },
-      beginningDate: data.startDate,
-      endDate: data.endDate,
-      status: { 
-        name: "Submitted", 
-        code: "SUBMITTED", 
-        color: "blue", 
-        description: "Nomination has been submitted and is under review" 
-      },
-      priority: { 
-        level: "Medium", 
-        code: "MEDIUM", 
-        color: "yellow" 
-      },
-      actions: [
-        { 
-          id: "view", 
-          label: "View", 
-          icon: "eye", 
-          action: "view_nomination", 
-          endpoint: `/api/nominations/${Math.floor(Math.random() * 900000) + 100000}`, 
-          method: "GET", 
-          isDisabled: false 
-        },
-        { 
-          id: "download", 
-          label: "Download", 
-          icon: "download", 
-          action: "download_file", 
-          endpoint: `/api/nominations/${Math.floor(Math.random() * 900000) + 100000}/download`, 
-          method: "GET", 
-          isDisabled: false 
-        }
-      ],
-      metadata: {
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        createdBy: userData.user.name,
-        lastModifiedBy: userData.user.name
-      }
-    }
-
-    // Add to userdata structure (this would be replaced with actual API call)
-    console.log("New Nomination to be added to backend:", newNomination)
-    
-    // Simulate adding to the data structure
-    // In real implementation, this would be an API call
-    // userData.nominationsPage.previousNominationsTable.data.unshift(newNomination)
-    
-    // Reset form to default values after successful submission
-    reset({
-      assetGroup: "",
-      commodityType: "Select commodity type",
-      volume: "",
-      unit: "bbls",
-      origin: "",
-      destination: "",
-      transportMode: "Select transport mode",
-      connection: "",
-      startDate: "",
-      endDate: "",
-      notes: ""
-    })
-    
-    // Close all dropdowns
-    setCommodityTypeOpen(false)
-    setCommoditySubMenuOpen(false)
-    setSelectedCommodity(null)
-    setUnitOpen(false)
-    setTransportModeOpen(false)
+    submitNomination(data)
   }
 
   return (
@@ -442,25 +417,123 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
             </div>
           </div>
 
+          {/* Success/Error Messages */}
+          {submitSuccess && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="text-green-800 text-sm font-medium">
+                ✅ Nomination submitted successfully!
+              </div>
+            </div>
+          )}
+          
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="text-red-800 text-sm font-medium">
+                ❌ {submitError}
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex justify-end">
             <div className="flex gap-4 w-96">
               <button 
                 type="button"
                 className="w-40 px-4 py-2 bg-gray-50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => {
+                  setSubmitSuccess(false)
+                  setSubmitError(null)
+                  setShowDebugBox(false)
+                }}
               >
                 <span className="text-sm font-medium text-neutral-800 font-['Manrope']">Cancel</span>
               </button>
               <button 
                 type="submit"
-                className="flex-1 px-4 py-2 bg-primary rounded-lg flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
+                disabled={isSubmitting}
+                className={`flex-1 px-4 py-2 rounded-lg flex items-center justify-center transition-colors ${
+                  isSubmitting 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-primary hover:bg-primary/90 cursor-pointer'
+                }`}
               >
-                <span className="text-sm font-medium text-white font-['Manrope']">Submit Nomination</span>
+                <span className="text-sm font-medium text-white font-['Manrope']">
+                  {isSubmitting ? 'Submitting...' : 'Submit Nomination'}
+                </span>
               </button>
             </div>
           </div>
         </form>
       )}
+
+      {/* Debug Box */}
+      <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4 max-w-[1274px] w-full mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Debug Console</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowDebugBox(!showDebugBox)}
+              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+            >
+              {showDebugBox ? 'Hide' : 'Show'} Debug
+            </button>
+            <button
+              onClick={() => {
+                setDebugSteps([])
+                setDebugData(null)
+                setSubmitSuccess(false)
+                setSubmitError(null)
+              }}
+              className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        {showDebugBox && (
+          <div className="space-y-4">
+            {/* Debug Steps */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Debug Steps:</h4>
+              <div className="bg-black text-green-400 p-3 rounded font-mono text-sm max-h-40 overflow-y-auto">
+                {debugSteps.length === 0 ? (
+                  <div className="text-gray-500">No debug steps yet...</div>
+                ) : (
+                  debugSteps.map((step, index) => (
+                    <div key={index} className="mb-1">
+                      {step}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* API Response Data */}
+            {debugData && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">API Response Data:</h4>
+                <div className="bg-gray-900 text-gray-100 p-3 rounded font-mono text-xs min-h-60 overflow-y-auto">
+                  <pre>{JSON.stringify(debugData, null, 2)}</pre>
+                </div>
+              </div>
+            )}
+
+            {/* Token Info */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Token Information:</h4>
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded text-sm">
+                <div className="font-mono break-all">
+                  <strong>Token:</strong> {localStorage.getItem('token') || 'No token found'}
+                </div>
+                <div className="mt-2">
+                  <strong>Token Length:</strong> {localStorage.getItem('token')?.length || 0} characters
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   )
 }

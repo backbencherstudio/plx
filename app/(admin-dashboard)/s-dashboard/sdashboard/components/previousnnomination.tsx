@@ -1,11 +1,11 @@
 "use client"
-import React, { useState, useMemo, useRef } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { Eye, ArrowRight, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import { userData } from '@/app/lib/userdata'
 import { NominationDetailsModal } from './nomination-details-modal'
+import axios from 'axios'
 
-// Get data from userdata.ts
-const nominationData = userData.previousNominations
+// API data will be used instead of static data
 
 export default function Previousnnomination() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -18,6 +18,17 @@ export default function Previousnnomination() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10 // Fixed at 10 items per page
+
+  // Debug states
+  const [debugData, setDebugData] = useState<any>(null)
+  const [debugSteps, setDebugSteps] = useState<string[]>([])
+  const [showDebugBox, setShowDebugBox] = useState(false)
+
+  // API data states
+  const [apiData, setApiData] = useState<any[]>([])
+  const [apiPagination, setApiPagination] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [authToken, setAuthToken] = useState<string | null>(null)
 
   // Refs for date inputs
   const fromDateRef = useRef<HTMLInputElement>(null)
@@ -42,9 +53,70 @@ export default function Previousnnomination() {
     toDateRef.current?.showPicker()
   }
 
-  // Filter data based on date range
+
+  // Safely hydrate token on client only
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setAuthToken(localStorage.getItem('token'))
+    }
+  }, [])
+
+  const test = async (tokenParam?: string | null) => {
+    try {
+      setIsLoading(true)
+      setDebugSteps(prev => [...prev, '1. Starting API call...'])
+      const headerToken = typeof window !== 'undefined' ? (tokenParam ?? authToken ?? localStorage.getItem('token')) : tokenParam ?? authToken
+      setDebugSteps(prev => [...prev, `2. Token retrieved: ${headerToken ? 'Present' : 'Not found'}`])
+      setDebugSteps(prev => [...prev, '3. Making GET request to nomination API...'])
+      
+      const res = await axios.get(`http://192.168.4.3:4001/api/v1/nomination/my`, {
+        headers: {
+          'Authorization': headerToken
+        }
+      })
+      
+      setDebugSteps(prev => [...prev, '4. API call successful!'])
+      setDebugSteps(prev => [...prev, `5. Response status: ${res.status}`])
+      setDebugSteps(prev => [...prev, '6. Processing response data...'])
+      
+      console.log(res.data)
+      setDebugData(res.data)
+      
+      // Store API data for table
+      if (res.data && res.data.data) {
+        setApiData(res.data.data)
+        setApiPagination(res.data.pagination)
+        setDebugSteps(prev => [...prev, '7. API data stored for table display'])
+      }
+      
+      setDebugSteps(prev => [...prev, '8. Data stored in debug state'])
+    } catch (error) {
+      setDebugSteps(prev => [...prev, `Error: ${error}`])
+      console.error('API Error:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+ 
+  useEffect(() => {
+    // Trigger API only after token is available (or at least once on client)
+    if (typeof window !== 'undefined') {
+      test(authToken)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authToken])
+
+
+
+
+
+
+
+
+
+  // Filter data based on date range using API data
   const filteredData = useMemo(() => {
-    let filtered = nominationData
+    let filtered = apiData
 
     if (fromDate) {
       filtered = filtered.filter(item => {
@@ -63,14 +135,14 @@ export default function Previousnnomination() {
     }
 
     return filtered
-  }, [fromDate, toDate])
+  }, [apiData, fromDate, toDate])
 
-  // Pagination calculations
-  const totalItems = filteredData.length
-  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  // Pagination calculations - use API pagination if available, otherwise client-side
+  const totalItems = apiPagination ? apiPagination.totalItems : filteredData.length
+  const totalPages = apiPagination ? apiPagination.totalPages : Math.ceil(filteredData.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
-  const currentData = filteredData.slice(startIndex, endIndex)
+  const currentData = apiPagination ? filteredData : filteredData.slice(startIndex, endIndex)
 
   // Generate page numbers
   const getPageNumbers = () => {
@@ -211,66 +283,80 @@ export default function Previousnnomination() {
 
               {/* Table Body */}
               <tbody>
-                {currentData.map((item, index) => (
-                  <tr 
-                    key={item.id} 
-                    className={`border-b border-slate-200 hover:bg-gray-50 transition-colors ${
-                      index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                    }`}
-                  >
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
-                      {item.id}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
-                      {item.requestedDate}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
-                      {item.commodity}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
-                      {item.volume}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-neutral-600 text-sm font-medium font-['Roboto'] whitespace-nowrap">
-                          {item.route.from}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <ArrowRight className="w-4 h-4 text-zinc-500" />
-                          <span className="text-zinc-500 whitespace-nowrap text-xs font-medium font-['Roboto']">
-                            {item.route.to}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
-                      {item.connection}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium font-['Roboto'] whitespace-nowrap ${
-                        item.transport.color === 'blue' ? 'bg-blue-100 text-blue-900' : 
-                        item.transport.color === 'green' ? 'bg-green-100 text-green-800' : 
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {item.transport.type}
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
-                      {item.beginningDate}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
-                      {item.endDate}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3">
-                      <button 
-                        onClick={() => handleViewNomination(item)}
-                        className="p-1 hover:bg-gray-100 rounded transition-colors whitespace-nowrap"
-                      >
-                        <Eye className="w-5 h-5 text-neutral-600" />
-                      </button>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={10} className="px-3 sm:px-6 py-8 text-center text-neutral-600 text-sm font-medium font-['Manrope']">
+                      Loading nominations...
                     </td>
                   </tr>
-                ))}
+                ) : currentData.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="px-3 sm:px-6 py-8 text-center text-neutral-600 text-sm font-medium font-['Manrope']">
+                      No nominations found
+                    </td>
+                  </tr>
+                ) : (
+                  currentData.map((item, index) => (
+                    <tr 
+                      key={item.id} 
+                      className={`border-b border-slate-200 hover:bg-gray-50 transition-colors ${
+                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                      }`}
+                    >
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                        {item.nominationId}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                        {new Date(item.requestedDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                        {item.commodityType}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                        {item.volume} {item.unit}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-neutral-600 text-sm font-medium font-['Roboto'] whitespace-nowrap">
+                            {item.origin}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <ArrowRight className="w-4 h-4 text-zinc-500" />
+                            <span className="text-zinc-500 whitespace-nowrap text-xs font-medium font-['Roboto']">
+                              {item.destination}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                        {item.connection}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium font-['Roboto'] whitespace-nowrap ${
+                          item.transportMode === 'Pipeline' ? 'bg-blue-100 text-blue-900' : 
+                          item.transportMode === 'Trucking' ? 'bg-green-100 text-green-800' : 
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {item.transportMode}
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                        {new Date(item.beginningDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-neutral-600 text-sm font-medium font-['Manrope']">
+                        {new Date(item.endDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3">
+                        <button 
+                          onClick={() => handleViewNomination(item)}
+                          className="p-1 hover:bg-gray-100 rounded transition-colors whitespace-nowrap"
+                        >
+                          <Eye className="w-5 h-5 text-neutral-600" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
               </table>
             </div>
@@ -327,10 +413,82 @@ export default function Previousnnomination() {
             {/* Showing info */}
             <div className="flex justify-start items-center gap-4">
               <div className="justify-start text-zinc-700 text-xs font-medium font-['Roboto'] leading-none">
-                Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} entries
+                {apiPagination ? (
+                  `Showing ${apiPagination.currentPage * apiPagination.itemsPerPage - apiPagination.itemsPerPage + 1} to ${Math.min(apiPagination.currentPage * apiPagination.itemsPerPage, apiPagination.totalItems)} of ${apiPagination.totalItems} entries`
+                ) : (
+                  `Showing ${startIndex + 1} to ${Math.min(endIndex, totalItems)} of ${totalItems} entries`
+                )}
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Debug Box */}
+        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Debug Console</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDebugBox(!showDebugBox)}
+                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+              >
+                {showDebugBox ? 'Hide' : 'Show'} Debug
+              </button>
+              <button
+                onClick={() => {
+                  setDebugSteps([])
+                  setDebugData(null)
+                  test()
+                }}
+                className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {showDebugBox && (
+            <div className="space-y-4">
+              {/* Debug Steps */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Debug Steps:</h4>
+                <div className="bg-black text-green-400 p-3 rounded font-mono text-sm max-h-40 overflow-y-auto">
+                  {debugSteps.length === 0 ? (
+                    <div className="text-gray-500">No debug steps yet...</div>
+                  ) : (
+                    debugSteps.map((step, index) => (
+                      <div key={index} className="mb-1">
+                        {step}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* API Response Data */}
+              {debugData && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">API Response Data:</h4>
+                  <div className="bg-gray-900 text-gray-100 p-3 rounded font-mono text-xs min-h-60 overflow-y-auto">
+                    <pre>{JSON.stringify(debugData, null, 2)}</pre>
+                  </div>
+                </div>
+              )}
+
+              {/* Token Info */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Token Information:</h4>
+                <div className="bg-yellow-50 border border-yellow-200 p-3 rounded text-sm">
+                      <div className="font-mono break-all">
+                    <strong>Token:</strong> {authToken || 'No token found'}
+                  </div>
+                  <div className="mt-2">
+                    <strong>Token Length:</strong> {authToken ? authToken.length : 0} characters
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -341,18 +499,18 @@ export default function Previousnnomination() {
           onClose={handleCloseModal}
           nomination={{
             id: selectedNomination.id,
-            name: selectedNomination.file.name,
-            status: "Confirmed",
-            commodity: selectedNomination.commodity,
-            volume: selectedNomination.volume,
-            origin: selectedNomination.route.from,
-            destination: selectedNomination.route.to,
+            name: selectedNomination.nominationId,
+            status: selectedNomination.status,
+            commodity: selectedNomination.commodityType,
+            volume: `${selectedNomination.volume} ${selectedNomination.unit}`,
+            origin: selectedNomination.origin,
+            destination: selectedNomination.destination,
             connection: selectedNomination.connection,
-            transportMode: selectedNomination.transport.type,
+            transportMode: selectedNomination.transportMode,
             requestedDate: selectedNomination.requestedDate,
             beginningDate: selectedNomination.beginningDate,
             endDate: selectedNomination.endDate,
-            notes: "Additional notes for this nomination request."
+            notes: selectedNomination.notes || "No additional notes for this nomination request."
           }}
         />
       )}

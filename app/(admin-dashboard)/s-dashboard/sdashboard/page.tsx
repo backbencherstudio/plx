@@ -1,3 +1,4 @@
+"use client"
 import React from 'react'
 import TopPart from './components/toppart'
 import Previousnnomination from './components/previousnnomination'
