@@ -20,6 +20,7 @@ type EventDetail = {
   meetingType?: string
   participants?: string[]
   notes?: string
+  meetingLink?: string
 }
 
 type Props = {
@@ -58,6 +59,19 @@ export default function EventDetailModal({ open, onClose, event }: Props) {
             <div>
               <div className="text-sm text-zinc-500">Email</div>
               <div className="text-neutral-700">{event.email}</div>
+            </div>
+          )}
+          {event.meetingLink && (
+            <div>
+              <div className="text-sm text-zinc-500">Meeting</div>
+              <a
+                href={event.meetingLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-8 px-3 rounded-md bg-blue-600 text-white text-sm items-center hover:bg-blue-700"
+              >
+                Open {event.title}
+              </a>
             </div>
           )}
           {event.timeZone && (

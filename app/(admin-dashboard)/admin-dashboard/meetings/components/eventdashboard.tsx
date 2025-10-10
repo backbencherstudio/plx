@@ -1,10 +1,10 @@
 "use client";
 import { ChevronLeft, ChevronRight, Calendar, List } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import EventDetailModal from "./event-detail-modal";
 import DynamicTable from "@/app/(admin-dashboard)/_components/reusable/DynamicTable";
 import { UpcomingMeetingColumn } from "@/app/(admin-dashboard)/_components/columns/UpcomingMettingColumn";
-import { AdminData } from "@/app/lib/admindata";
+import axiosClient from "@/lib/axiosclient";
 
 
 type EventItem = {
@@ -21,35 +21,58 @@ type DayEvents = {
   items: EventItem[];
 };
 
+type ApiMeeting = {
+  event_name?: string;
+  start_time?: string; // ISO
+  end_time?: string;   // ISO
+  meeting_link?: string;
+  invitee_name?: string;
+  invitee_email?: string;
+  organizer_name?: string;
+  organizer_email?: string;
+};
+
 export default function EventDashboard() {
-  // Build calendar events from AdminData.meetings (group by meetingDate)
+  const [apiMeetings, setApiMeetings] = useState<ApiMeeting[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch meetings from API
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await axiosClient.get("/api/v1/meetings");
+        setApiMeetings(res.data?.meetings ?? []);
+      } catch (e: any) {
+        setError(e?.response?.data?.message || "Failed to load meetings");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  // Build calendar events by grouping API by start_time date (YYYY-MM-DD)
   const events: DayEvents[] = useMemo(() => {
     const byDate = new Map<string, EventItem[]>();
-    for (const m of AdminData.meetings || []) {
-      const dateKey = m.meetingDate;
-      const color: EventItem["color"] =
-        m.typeCode === "CONSULTATION"
-          ? "emerald"
-          : m.typeCode === "COMPLIANCE"
-          ? "slate"
-          : "violet";
+    for (const m of apiMeetings || []) {
+      if (!m.start_time) continue;
+      const dateKey = m.start_time.slice(0, 10);
       const arr = byDate.get(dateKey) || [];
       arr.push({
-        id: String(m.id),
-        title: m.user,
-        time: m.time,
-        color,
-        location: m.meetingType, // lightweight hint
-        description: m.subject,
-        // extra fields are passed to modal via selectedEvent below
+        id: `${m.event_name ?? "meeting"}-${m.start_time}`,
+        title: m.event_name ?? "Meeting",
+        time: new Date(m.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        color: "emerald",
+        location: m.organizer_name,
+        description: m.invitee_name,
       });
       byDate.set(dateKey, arr);
     }
-    return Array.from(byDate.entries()).map(([date, items]) => ({
-      date,
-      items,
-    }));
-  }, []);
+    return Array.from(byDate.entries()).map(([date, items]) => ({ date, items }));
+  }, [apiMeetings]);
 
   const [current, setCurrent] = useState(() => {
     const firstEvent = events[0];
@@ -146,7 +169,7 @@ export default function EventDashboard() {
 
   // Filter data based on date range
   const filteredData = useMemo(() => {
-    let filtered = AdminData.meetings;
+    let filtered: any[] = apiMeetings as any[];
 
     if (fromDate) {
       filtered = filtered.filter((item) => {
@@ -165,7 +188,7 @@ export default function EventDashboard() {
     }
 
     return filtered;
-  }, [fromDate, toDate]);
+  }, [apiMeetings, fromDate, toDate]);
 
   const [selectedEvent, setSelectedEvent] = useState<null | {
     id: string;
@@ -185,6 +208,7 @@ export default function EventDashboard() {
     location?: string;
     description?: string;
     color?: "emerald" | "slate" | "violet";
+    meetingLink?: string;
   }>(null);
 
   return (
@@ -234,12 +258,9 @@ export default function EventDashboard() {
                 Today
               </div>
             </button>
-            <div className="text-red-500 text-base font-normal font-sans leading-tight">
-              You have{" "}
-              {events.find((e) => e.date === formatDateKey(today))?.items
-                .length ?? 0}{" "}
-              meetings today!
-            </div>
+              <div className="text-red-500 text-base font-normal font-sans leading-tight">
+                {loading ? "Loading meetings..." : error ? error : `You have ${events.find((e) => e.date === formatDateKey(today))?.items.length ?? 0} meetings today!`}
+              </div>
           </div>
         </div>
         <div className="h-14 px-4 py-3 bg-slate-200 rounded-lg flex justify-center items-center gap-3">
@@ -321,31 +342,32 @@ export default function EventDashboard() {
                       {dayEvents?.items?.map((ev) => (
                         <button
                           onClick={() => {
-                            const m = (AdminData.meetings || []).find(
-                              (mm) => String(mm.id) === ev.id
+                            const m = (apiMeetings || []).find(
+                              (mm) => (mm.event_name ?? "meeting") + "-" + (mm.start_time ?? "") === ev.id
                             );
                             setSelectedEvent({
                               id: ev.id,
-                              title: m?.user || ev.title,
-                              time: m?.time || ev.time,
+                              title: m?.event_name || ev.title,
+                              time: ev.time,
                               date: key,
-                              email: m?.email,
-                              timeZone: m?.timeZone,
-                              duration: m?.duration,
-                              subject: m?.subject,
-                              status: m?.status,
-                              type: m?.type,
-                              priority: m?.priority,
-                              meetingType: m?.meetingType,
-                              participants: m?.participants,
-                              notes: m?.notes,
+                              email: m?.invitee_email,
+                              timeZone: undefined,
+                              duration: undefined,
+                              subject: undefined,
+                              status: undefined,
+                              type: undefined,
+                              priority: undefined,
+                              meetingType: undefined,
+                              participants: undefined,
+                              notes: undefined,
                               location: ev.location,
                               description: ev.description,
+                              meetingLink: m?.meeting_link,
                               color: ev.color,
                             });
                           }}
                           key={ev.id}
-                          className={`self-stretch h-5 pl-1.5 pr-1 rounded-full flex justify-center items-center gap-1 border ${colorChip(
+                          className={`self-stretch h-8 pl-1.5 pr-1 rounded-full flex justify-center items-center gap-1 border ${colorChip(
                             ev.color
                           )} cursor-pointer`}
                         >
@@ -353,7 +375,7 @@ export default function EventDashboard() {
                             {ev.title}
                           </div>
                           <div className="w-0.5 h-2.5 border-l border-current/30" />
-                          <div className="w-12 text-xs font-normal font-sans leading-none">
+                          <div className="w-12 text-xs font-normal font-sans leading-none whitespace-nowrap ">
                             {ev.time}
                           </div>
                         </button>
@@ -428,7 +450,16 @@ export default function EventDashboard() {
             </div>
             <DynamicTable
               columns={UpcomingMeetingColumn}
-              data={(AdminData.meetings || []).slice(0, 50)}
+              data={(apiMeetings || []).map((m, idx) => ({
+                id: String(idx + 1),
+                user: m.invitee_name || "—",
+                meetingType: m.organizer_name || "—",
+                meetingDate: m.start_time?.slice(0, 10) || "—",
+                time: new Date(m.start_time ?? '').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                subject: m.event_name || "Meeting",
+                status: 'scheduled',
+                typeCode: 'CONSULTATION',
+              }))}
               hasWrapperBorder={false}
               wrapperBorderColor="#E7ECF4"
               headerStyles={{
