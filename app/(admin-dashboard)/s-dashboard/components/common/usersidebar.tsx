@@ -11,7 +11,7 @@ import LogOutIcon from "@/public/sidebar/icons/LogOutIcon";
 import { X, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import CollapseIcon from "@/public/sidebar/icons/CollapseIcon";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const menuItems = [
   { title: "Dashboard", icon: DashboardIcon, href: "/s-dashboard" },
@@ -31,8 +31,70 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const pathname= usePathname()
+  const pathname = usePathname()
+  const router = useRouter()
   const [isCollapsed, setIsCollapsed] = useState(false); // collapse works only on md+
+
+  // Logout function
+  const handleLogout = () => {
+    try {
+      // Clear all localStorage data
+      localStorage.clear()
+      
+      // Clear all sessionStorage data
+      sessionStorage.clear()
+      
+      // Clear all cookies (if any)
+      document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+      });
+      
+      // Clear IndexedDB (if used)
+      if ('indexedDB' in window) {
+        indexedDB.databases().then(databases => {
+          databases.forEach(db => {
+            if (db.name) {
+              indexedDB.deleteDatabase(db.name);
+            }
+          });
+        }).catch(console.error);
+      }
+      
+      // Clear WebSQL (if used)
+      if ('openDatabase' in window) {
+        // WebSQL is deprecated but clearing if exists
+        try {
+          const db = (window as any).openDatabase('', '', '', '');
+          if (db) {
+            db.transaction((tx: any) => {
+              tx.executeSql('DROP TABLE IF EXISTS data');
+            });
+          }
+        } catch (e) {
+          // WebSQL not available or already cleared
+        }
+      }
+      
+      // Clear Cache API (if used)
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => {
+            caches.delete(name);
+          });
+        });
+      }
+      
+      console.log('All storage data cleared successfully')
+      
+      // Redirect to Energy Transportation Expertise website
+      window.location.href = 'https://energytransportx.com/'
+      
+    } catch (error) {
+      console.error('Error during logout:', error)
+      // Even if there's an error, still redirect
+      window.location.href = 'https://energytransportx.com/'
+    }
+  }
 
   return (
     <aside
@@ -111,26 +173,52 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
              {/* Bottom items */}
        <div className="mt-auto p-4 space-y-2">
-         {bottomMenuItems.map((item, index) => (
-           <Link
-             key={index}
-             href={item.href}
-             onClick={onClose}
-             className={`flex items-center ${isCollapsed ? "md:justify-center" : ""} gap-3.5 p-3 rounded-lg transition-all duration-200 text-base`}
-             title={isCollapsed ? item.title : ""}
-           >
-             <div className="w-5 h-5">
-               <item.icon color={item.title === "Log Out" ? "#EF6471" : "#777980"} />
-             </div>
-             <span
-               className={`font-medium transition-all duration-300
-               ${isCollapsed ? "md:opacity-0 md:max-w-0 md:ml-0" : "opacity-100 ml-1"}
-               overflow-hidden whitespace-nowrap inline-block ${item.title === "Log Out" ? "text-[#EF6471]" : ""}`}
+         {bottomMenuItems.map((item, index) => {
+           // Handle logout button differently
+           if (item.title === "Log Out") {
+             return (
+               <button
+                 key={index}
+                 onClick={handleLogout}
+                 className={`flex items-center ${isCollapsed ? "md:justify-center" : ""} gap-3.5 p-3 rounded-lg transition-all duration-200 text-base w-full hover:bg-red-50`}
+                 title={isCollapsed ? item.title : ""}
+               >
+                 <div className="w-5 h-5">
+                   <item.icon color="#EF6471" />
+                 </div>
+                 <span
+                   className={`font-medium transition-all duration-300
+                   ${isCollapsed ? "md:opacity-0 md:max-w-0 md:ml-0" : "opacity-100 ml-1"}
+                   overflow-hidden whitespace-nowrap inline-block text-[#EF6471]`}
+                 >
+                   {item.title}
+                 </span>
+               </button>
+             )
+           }
+           
+           // Regular menu items
+           return (
+             <Link
+               key={index}
+               href={item.href}
+               onClick={onClose}
+               className={`flex items-center ${isCollapsed ? "md:justify-center" : ""} gap-3.5 p-3 rounded-lg transition-all duration-200 text-base`}
+               title={isCollapsed ? item.title : ""}
              >
-               {item.title}
-             </span>
-           </Link>
-         ))}
+               <div className="w-5 h-5">
+                 <item.icon color="#777980" />
+               </div>
+               <span
+                 className={`font-medium transition-all duration-300
+                 ${isCollapsed ? "md:opacity-0 md:max-w-0 md:ml-0" : "opacity-100 ml-1"}
+                 overflow-hidden whitespace-nowrap inline-block`}
+               >
+                 {item.title}
+               </span>
+             </Link>
+           )
+         })}
        </div>
     </aside>
   );
