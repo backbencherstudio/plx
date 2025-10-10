@@ -28,6 +28,7 @@ export default function Previousnnomination() {
   const [apiData, setApiData] = useState<any[]>([])
   const [apiPagination, setApiPagination] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [authToken, setAuthToken] = useState<string | null>(null)
 
   // Refs for date inputs
   const fromDateRef = useRef<HTMLInputElement>(null)
@@ -53,24 +54,24 @@ export default function Previousnnomination() {
   }
 
 
+  // Safely hydrate token on client only
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setAuthToken(localStorage.getItem('token'))
+    }
+  }, [])
 
-
-
-
-
-  
-  const token = localStorage.getItem('token')
-  
-  const test = async () => {
+  const test = async (tokenParam?: string | null) => {
     try {
       setIsLoading(true)
       setDebugSteps(prev => [...prev, '1. Starting API call...'])
-      setDebugSteps(prev => [...prev, `2. Token retrieved: ${token ? 'Present' : 'Not found'}`])
+      const headerToken = typeof window !== 'undefined' ? (tokenParam ?? authToken ?? localStorage.getItem('token')) : tokenParam ?? authToken
+      setDebugSteps(prev => [...prev, `2. Token retrieved: ${headerToken ? 'Present' : 'Not found'}`])
       setDebugSteps(prev => [...prev, '3. Making GET request to nomination API...'])
       
       const res = await axios.get(`http://192.168.4.3:4001/api/v1/nomination/my`, {
         headers: {
-          'Authorization': token
+          'Authorization': headerToken
         }
       })
       
@@ -96,10 +97,14 @@ export default function Previousnnomination() {
       setIsLoading(false)
     }
   }
-
+ 
   useEffect(() => {
-    test()
-  }, [])
+    // Trigger API only after token is available (or at least once on client)
+    if (typeof window !== 'undefined') {
+      test(authToken)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authToken])
 
 
 
@@ -474,11 +479,11 @@ export default function Previousnnomination() {
               <div>
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Token Information:</h4>
                 <div className="bg-yellow-50 border border-yellow-200 p-3 rounded text-sm">
-                  <div className="font-mono break-all">
-                    <strong>Token:</strong> {token || 'No token found'}
+                      <div className="font-mono break-all">
+                    <strong>Token:</strong> {authToken || 'No token found'}
                   </div>
                   <div className="mt-2">
-                    <strong>Token Length:</strong> {token ? token.length : 0} characters
+                    <strong>Token Length:</strong> {authToken ? authToken.length : 0} characters
                   </div>
                 </div>
               </div>
