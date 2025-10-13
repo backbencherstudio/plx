@@ -257,8 +257,14 @@ export const nominationColumn = (handleOpenModal: (row: any) => void, onDeleted?
     width: "20%",
     formatter: (item: string, row: any) => (
       <div className="flex items-center gap-2">
-        <div className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-200 text-sm font-semibold">
-          {row.subscriber?.charAt(0)}
+        <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center shrink-0">
+          {row.avatar ? (
+            <Image src={row.avatar} alt={row.subscriber} width={36} height={36} className="w-9 h-9 object-cover" />
+          ) : (
+            <span className="text-sm font-semibold text-gray-700">
+              {row.subscriber?.charAt(0)}
+            </span>
+          )}
         </div>
         <div>
           <div className="flex items-center gap-1">

@@ -22,6 +22,7 @@ type TransformedNomination = {
   subscriber: string;
   company: string;
   email: string;
+  avatar?: string | null;
   requestedDate: string;
   rawRequestedDate?: string;
   commodity: string;
@@ -61,6 +62,7 @@ export default function NominationBottom() {
       subscriber: item.user.fullName,
       company: item.assetGroup || "N/A",
       email: item.user.email,
+      avatar: item.user.avatar || null,
       requestedDate: new Date(item.requestedDate).toLocaleDateString(),
       rawRequestedDate: item.requestedDate,
       commodity: item.commodityType,
