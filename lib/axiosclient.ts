@@ -4,7 +4,7 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 // *** axios instance ***
 
 const axiosClient: AxiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://once-seq-staffing-tony.trycloudflare.com",
+    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://192.168.112.1:4001",
     headers: {
         "Content-Type": "application/json",
     },
