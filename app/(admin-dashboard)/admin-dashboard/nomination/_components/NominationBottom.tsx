@@ -24,6 +24,8 @@ export default function NominationBottom() {
   const [paginatedData, setPaginatedData] = useState<Nomination[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
+  const hasPrevPage = currentPage > 1;
+  const hasNextPage = currentPage < totalPages;
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
@@ -165,6 +167,8 @@ export default function NominationBottom() {
           <TransportPagination
             currentPage={currentPage}
             totalPages={totalPages}
+            hasNextPage={hasNextPage}
+            hasPrevPage={hasPrevPage}
             onPageChange={handlePageChange}
             show={false}
           />
