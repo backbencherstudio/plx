@@ -9,6 +9,8 @@ import LockIcon from "@/public/commonIcons/LockIcon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {  forgotPasswordSendOtp, resetPassword, subscriberLogin, verifyForgotPasswordOtp } from "@/services/authService";
+import toast from 'react-hot-toast';
+import { Spinner } from "@/components/ui/spinner";
 
 export default function SubscriberLogin() {
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -16,24 +18,31 @@ export default function SubscriberLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  
   const router = useRouter();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      alert("Please enter both email and password!");
+      toast.error("Please enter both email and password!");
       return;
     }
     try {
       setLoading(true);
       const res = await subscriberLogin({ email, password });
       if (res.success) {
-        alert(res.message || "Login successful!");
+     toast.success("Successfully logged in", {
+       duration: 3000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     });
         router.push("/s-dashboard");
       } else {
-        alert(res.message || "Invalid credentials!");
+        toast.error(res.message || "Invalid credentials!");
       }
     } catch (error: any) {
-      alert(error?.message || "Something went wrong!");
+      toast.error(error?.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }
@@ -156,6 +165,14 @@ export default function SubscriberLogin() {
           </div>
         </div>
       )}
+      {
+        loading &&(
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+           <Spinner className=" animate-spin-slow text-[#123F93]" size={50}  />
+
+          </div>
+        )
+      }
     </>
   );
 }
@@ -166,19 +183,31 @@ function ForgotPasswordUI({ email, setEmail, setShowForgotModal, setShowSuccessM
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [forgotEmail,setForgotEmail]=useState("");
   const [password, setPassword] = useState("");
+  const [loading,setLoading]=useState(false)
 
 
  const  handleForgot= async ()=>{
       
     try{
+      setLoading(true)
       const res = await  forgotPasswordSendOtp(forgotEmail);
       localStorage.setItem('forgot-email',forgotEmail);
-      console.log(res);
+      console.log(res.message);
+      setLoading(false)
       setStep(2);
       
-    }catch{
-      setStep(1)
-      console.log('something wrong');
+    }catch (error:any){
+     setStep(1);
+     const message = error?.response?.data?.message || error?.message || "Something went wrong!";
+     toast.error(message,{
+       duration: 5000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     })
+      
+      
       
     }
      
@@ -189,17 +218,29 @@ function ForgotPasswordUI({ email, setEmail, setShowForgotModal, setShowSuccessM
     const otpValue = otp.join("");
 
     if (!getForgotEmail || !otpValue) {
-      alert("Please enter the OTP correctly!");
+      toast.error("Please enter the OTP correctly!");
       return;
     }
 
     try {
-      const res = verifyForgotPasswordOtp(getForgotEmail, otpValue);
+      setLoading(true)
+      const res = await verifyForgotPasswordOtp(getForgotEmail, otpValue);
       console.log(res);
+
+      setLoading(false)
       setStep(3);
 
-    } catch {
-      console.log('something wrong');
+    } catch(error:any) {
+     
+     const message = error?.response?.data?.message || error?.message || "Something went wrong!";
+     setLoading(false)
+     toast.error(message,{
+       duration: 5000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     })
       
     }
   };
@@ -208,17 +249,34 @@ function ForgotPasswordUI({ email, setEmail, setShowForgotModal, setShowSuccessM
     const getForgotEmail = localStorage.getItem("forgot-email");
 
     if (!getForgotEmail || !password) {
-      alert("Please enter the OTP correctly!");
+      toast.error("Please enter the OTP correctly!");
       return;
     }
     try {
-      const res = resetPassword(getForgotEmail, password);
-      console.log(res);
+      setLoading(true)
+      const res = await resetPassword(getForgotEmail, password);
+      console.log(res.data.message);
       setShowForgotModal(false);
-      setShowSuccessModal(true);
-      setTimeout(() => setShowSuccessModal(false), 2000);
-    } catch {
-      console.log('something wrong');
+      setLoading(false);
+      toast.success(res?.data?.message || 'something went wrong',{
+       duration: 5000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     })
+       
+      
+    } catch(error:any) {
+         setLoading(false)
+          const message = error?.response?.data?.message || error?.message || "Something went wrong!";
+     toast.error(message,{
+       duration: 5000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     })
       
     }
   };
@@ -387,6 +445,14 @@ function ForgotPasswordUI({ email, setEmail, setShowForgotModal, setShowSuccessM
           </div>
         </>
       )}
+        {
+        loading &&(
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+           <Spinner className=" animate-spin-slow text-[#123F93]" size={50}  />
+
+          </div>
+        )
+      }
     </>
   );
 }
