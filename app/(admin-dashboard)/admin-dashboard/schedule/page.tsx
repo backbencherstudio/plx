@@ -48,7 +48,7 @@ export default function ScheduleList() {
       if (!token) throw new Error("No auth token found");
 
       const res = await axios.get(
-        `http://192.168.4.3:4001/api/v1/schedule`,
+        `http://192.168.7.12:4001/api/v1/schedule`,
         {
           params: { page, limit },
           headers: { Authorization: token },
@@ -100,7 +100,7 @@ export default function ScheduleList() {
       try {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
         const res = await axios.get(
-          `http://192.168.4.3:4001/api/v1/users/search`,
+          `http://192.168.7.12:4001/api/v1/users/search`,
           {
             params: { query, page: 1, limit: 10 },
             headers: { Authorization: token || "" },
@@ -134,7 +134,7 @@ export default function ScheduleList() {
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
       const res = await axios.post(
-        "http://192.168.4.3:4001/api/v1/schedule",
+        "http://192.168.7.12:4001/api/v1/schedule",
         formData,
         { headers: { Authorization: token || "", "Content-Type": "multipart/form-data" } }
       );

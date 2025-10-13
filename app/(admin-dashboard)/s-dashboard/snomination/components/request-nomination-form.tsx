@@ -109,7 +109,7 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
       setDebugSteps(prev => [...prev, '4. Making POST request to nomination API...'])
       setDebugSteps(prev => [...prev, `5. Payload: ${JSON.stringify(apiPayload, null, 2)}`])
       
-      const response = await axios.post(`http://192.168.4.3:4001/api/v1/nomination/create`, apiPayload, {
+      const response = await axios.post(`http://192.168.7.12:4001/api/v1/nomination/create`, apiPayload, {
         headers: {
           'Authorization': token,
           'Content-Type': 'application/json'
