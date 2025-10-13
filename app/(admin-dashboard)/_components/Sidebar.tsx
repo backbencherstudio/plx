@@ -8,7 +8,7 @@ import CalenderIcon from "@/public/sidebar/icons/CalenderIcon";
 import MessageIcon from "@/public/sidebar/icons/MessageIcon";
 import SettingsIcon from "@/public/sidebar/icons/SettingsIcon";
 import LogOutIcon from "@/public/sidebar/icons/LogOutIcon";
-import { X, ChevronLeft } from "lucide-react";
+import { X, ChevronLeft, Users } from "lucide-react";
 import Image from "next/image";
 import CollapseIcon from "@/public/sidebar/icons/CollapseIcon";
 import { usePathname } from "next/navigation";
@@ -22,7 +22,7 @@ const menuItems = [
   { title: "Meetings", icon: CalenderIcon, href: "/admin-dashboard/meetings" },
   { title: "Message", icon: MessageIcon, href: "/admin-dashboard/message" },
   // New: All User page
-  { title: "All User", icon: MessageIcon, href: "/admin-dashboard/all-users" },
+  { title: "All User", icon: Users, href: "/admin-dashboard/all-users" },
 ];
 
  
@@ -119,7 +119,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               title={isCollapsed ? item.title : ""}
             >
               <div className="w-6 h-6 shrink-0 flex items-center justify-center">
-                <item.icon color={isActive ? "#123F93" : "#777980"} />
+                {item.title === "All User" ? (
+                  <Users size={20} color={isActive ? "#123F93" : "#777980"} />
+                ) : (
+                  <item.icon color={isActive ? "#123F93" : "#777980"} />
+                )}
               </div>
               <h3
                 className={`text-[#777980] font-medium transition-all duration-300
