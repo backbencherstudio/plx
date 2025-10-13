@@ -10,65 +10,113 @@ const ScheduleModal = ({ schedule, onClose }: { schedule: any; onClose: () => vo
   if (!schedule) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60   z-50 flex items-center justify-center">
-      <div className="bg-white w-[90%] md:w-[600px] rounded-2xl p-6 shadow-xl relative">
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl"
-        >
-          ✕
-        </button>
-        <h2 className="text-xl font-semibold text-[#1D1F2C] mb-4">Schedule Details</h2>
-
-        <div className="">
-          <div className=" flex items-center gap-8">
-            <div className=" bg-[#E7ECF4] p-2.5 rounded-xl">
-
-            <BoxIcon/>
-            </div>
-            <div>
-          <h2 className=" text-[#1D1F2C] text-lg font-medium">
-            {schedule?.user?.fullName} 
+    <div className="fixed inset-0 bg-black/80   z-50 flex items-center justify-center">
+      <div className="bg-white w-[90%] md:w-[600px] rounded-2xl    ">
+        <div className=" flex justify-between items-center py-6 px-10">
+          <h2 className=" text-[#1D1F2C] text-xl font-medium">
+            Schedule Details
           </h2>
-          <p className=" text-base text-[#777980] ">{schedule?.user?.email}</p>
+          <button
+            onClick={onClose}
+            className="  text-gray-500 hover:text-gray-700 text-xl cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
 
-            </div>
-
+        {/* name and email */}
+        <div className=" flex items-center gap-8 py-6 px-10   border-y">
+          <div className=" bg-[#E7ECF4] p-2.5 rounded-xl  ">
+            <BoxIcon />
           </div>
-          <p>
-            <span className="font-medium">Asset Group:</span> {schedule?.assetGroup}
-          </p>
-          <p>
-            <span className="font-medium">Commodity Type:</span> {schedule?.commodityType}
-          </p>
-          <p>
-            <span className="font-medium">Schedule Month:</span>{" "}
-            {schedule?.scheduleMonth || schedule?.seduleMonth}
-          </p>
-          <p>
-            <span className="font-medium">Transport Mode:</span>{" "}
-            {schedule?.transportMode || "N/A"}
-          </p>
-          <p>
-            <span className="font-medium">Uploaded:</span>{" "}
-            {new Date(schedule?.createdAt).toLocaleString()}
-          </p>
-          <div className="mt-4">
-            <a
-              href={schedule?.scheduleFile}
-              download
-              className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition"
-            >
-              <DownloadIcon /> Download File
-            </a>
-            <button
-              onClick={() => window.open(schedule?.scheduleFile, "_blank")}
-              className="ml-3 underline text-sm text-blue-600"
-            >
-              View in new tab
-            </button>
+          <div>
+            <h2 className=" text-[#1D1F2C] font-medium text-lg">
+              {" "}
+              {schedule?.user?.fullName}
+            </h2>
+            <p className=" text-[#777980] text-base">{schedule?.user?.email}</p>
           </div>
         </div>
+
+        {/* others details */}
+        <div className=" px-14  pt-6 pb-10 space-y-3.5 md:space-y-10">
+          {/*  one */}
+          <div className=" flex flex-col md:flex-row space-y-3.5 md:space-y-0  text-center md:text-left items-center justify-between">
+            <div>
+              <p className="  text-base text-[#777980]"> Asset Group</p>
+              <p className=" text-[#1D1F2C] text-lg font-medium">
+                {schedule?.assetGroup}
+              </p>
+            </div>
+            <div>
+              <p className="  text-base text-[#777980]">Uploaded Date</p>
+              <p className=" text-[#1D1F2C] text-lg font-medium">
+                {new Date(schedule?.createdAt).toLocaleDateString("en-GB")}
+              </p>
+            </div>
+          </div>
+          {/* two */}
+          <div className=" flex flex-col md:flex-row space-y-3.5 md:space-y-0 text-center md:text-left  items-center justify-between">
+            <div>
+              <p className="  text-base text-[#777980]">Commodity Type</p>
+              <p className=" text-[#1D1F2C] text-lg font-medium">
+                {schedule?.commodityType}
+              </p>
+            </div>
+            <div>
+              <p className="  text-base text-[#777980]">Schedule Month</p>
+
+              <p className=" text-[#1D1F2C] text-lg font-medium">
+                {schedule?.scheduleMonth || schedule?.seduleMonth}
+              </p>
+            </div>
+          </div>
+          {/* three */}
+
+          <div className=" flex flex-col md:flex-row space-y-3.5 md:space-y-0 text-center md:text-left  items-center justify-between">
+            <div>
+              <p className="  text-base text-[#777980]">File</p>
+             
+                <a
+                  href={schedule?.scheduleFile}
+                  download
+                 className=" text-[#1D1F2C] text-lg font-medium flex itmes-center gap-2"
+                >
+                  Download 
+                  <div className=" mt-2">
+
+                  <DownloadIcon/>
+                  </div>
+                </a>
+               
+            </div>
+            <div>
+              <p className="  text-base text-[#777980]">Transport Mode</p>
+               <p className=" text-[#1D1F2C] text-lg font-medium">
+          
+          {schedule?.transportMode || "N/A"}
+        </p>
+            </div>
+          </div>
+        </div>
+
+       
+
+        {/* <div className="mt-4">
+          <a
+            href={schedule?.scheduleFile}
+            download
+            className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition"
+          >
+            <DownloadIcon /> Download File
+          </a>
+          <button
+            onClick={() => window.open(schedule?.scheduleFile, "_blank")}
+            className="ml-3 underline text-sm text-blue-600"
+          >
+            View in new tab
+          </button>
+        </div> */}
       </div>
     </div>
   );
