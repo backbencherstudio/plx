@@ -9,70 +9,26 @@ import { PlusCircleIcon } from "lucide-react";
 import LocationIcon from "@/public/nominations/icons/LocationIcon";
 import CalenderIcon from "@/public/nominations/icons/CalenderIcon";
 import BoxIcon from "@/public/nominations/icons/BoxIcon";
-import { updateNomination, updateNominationStatus } from "@/services/nominationService";
+import { updateNominationStatus } from "@/services/nominationService";
 
 // Edit Modal Component
 const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () => void; rowData: any }) => {
   if (!isOpen) return null;
 
-  const [form, setForm] = useState({
-    subscriber: "",
-    commodity: "",
-    volume: "",
-    unit: "bbls",
-    origin: "",
-    destination: "",
-    transport: "",
-    beginDate: "",
-    endDate: "",
-    notes: "",
-    status: "",
-  });
+  const [selectedStatus, setSelectedStatus] = useState<string>("Submitted");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!rowData) return;
-    const toDateInput = (s?: string) => (s ? String(s).slice(0, 10) : "");
-    setForm({
-      subscriber: rowData?.subscriber || "",
-      commodity: rowData?.commodity || "",
-      volume: rowData?.volume || "",
-      unit: rowData?.unit || "bbls",
-      origin: rowData?.origin || "",
-      destination: rowData?.destination || "",
-      transport: (rowData?.transport || "").toLowerCase(),
-      beginDate: toDateInput(rowData?.rawBeginDate || rowData?.beginDate),
-      endDate: toDateInput(rowData?.rawEndDate || rowData?.endDate),
-      notes: rowData?.notes || "",
-      status: rowData?.status || "",
-    });
+    setSelectedStatus(rowData?.status || "Submitted");
   }, [rowData]);
-
-  const handleChange = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      await updateNomination(rowData.id, {
-        assetGroup: rowData.company,
-        commodityType: form.commodity,
-        volume: form.volume,
-        unit: form.unit,
-        origin: form.origin,
-        destination: form.destination,
-        transportMode: form.transport,
-        connection: rowData.connection || "",
-        beginningDate: form.beginDate,
-        endDate: form.endDate,
-        notes: form.notes,
-      });
-
-      if (form.status && form.status !== rowData.status) {
-        await updateNominationStatus(rowData.id, form.status);
-      }
+      await updateNominationStatus(rowData.id, selectedStatus);
 
       onClose();
-      // Optionally refresh: window.location.reload();
     } catch (e) {
       console.error("Failed to update nomination", e);
     } finally {
@@ -115,195 +71,37 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
           </button>
         </div>
 
-        {/* Form */}
+        {/* Status-only Form */}
         <div className="mt-7">
-          <div>
-            <h3 className="text-lg text-[#1D1F2C] font-medium mb-2.5">
-              Choose Subscriber
-            </h3>
-            <Select defaultValue={form.subscriber}>
-              <SelectTrigger className="w-full py-5 shadow-none">
-                <SelectValue placeholder="Search by name or email..." />
-              </SelectTrigger>
-              <SelectContent className="z-[10001]">
-                <SelectGroup>
-                  <SelectLabel>Subscribers</SelectLabel>
-                  <SelectItem value="Sarah Chen">Sarah Chen</SelectItem>
-                  <SelectItem value="Esther Howard">Esther Howard</SelectItem>
-                  <SelectItem value="Brooklyn Simmons">Brooklyn Simmons</SelectItem>
-                  <SelectItem value="Leslie Alexander">Leslie Alexander</SelectItem>
-                  <SelectItem value="Jenny Wilson">Jenny Wilson</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Flex Form First */}
-          <div className="flex flex-col md:flex-row items-start my-10 gap-14">
-            {/* Left Side - Commodity Details */}
-            <div className="block md:flex-1 w-full">
-              <div className="flex items-center gap-3 mb-8">
-                <BoxIcon />
-                <h3 className="text-lg text-[#1D1F2C] font-medium">
-                  Commodity Details
-                </h3>
-              </div>
-              <div className="space-y-6">
-                <div>
-                  <p className="text-xs text-graytext mb-2">Commodity Type</p>
-                  <Select defaultValue={form.commodity?.toLowerCase()} onValueChange={(v) => handleChange("commodity", v)}>
-                    <SelectTrigger className="w-full py-5 shadow-none">
-                      <SelectValue placeholder="Select commodity type" />
-                    </SelectTrigger>
-                    <SelectContent className="z-[10001]">
-                      <SelectGroup>
-                        <SelectLabel>Select commodity type</SelectLabel>
-                        <SelectItem value="ngls">NGLs</SelectItem>
-                        <SelectItem value="refined products">Refined Products</SelectItem>
-                        <SelectItem value="natural gas">Natural Gas</SelectItem>
-                        <SelectItem value="petrochemicals">Petrochemicals</SelectItem>
-                        <SelectItem value="crude oil">Crude Oil</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <p className="text-xs text-graytext mb-2">Volume</p>
-                  <input
-                    type="text"
-                    value={form.volume}
-                    onChange={(e) => handleChange("volume", e.target.value)}
-                    placeholder="Enter Volume"
-                    className="py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6] rounded-[10px]"
-                  />
-                </div>
-                <div>
-                  <p className="text-xs text-graytext mb-2">Unit</p>
-                  <Select defaultValue={form.unit} onValueChange={(v) => handleChange("unit", v)}>
-                    <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
-                      <SelectValue placeholder="bbls" />
-                    </SelectTrigger>
-                    <SelectContent className="z-[10001]">
-                      <SelectGroup>
-                        <SelectLabel>Unit</SelectLabel>
-                        <SelectItem value="bbls">bbls</SelectItem>
-                        <SelectItem value="gallons">gallons</SelectItem>
-                        <SelectItem value="mcf">MCF</SelectItem>
-                        <SelectItem value="tons">tons</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Side - Location & Transport */}
-            <div className="block md:flex-1 w-full">
-              <div className="flex items-center gap-3 mb-8">
-                <LocationIcon />
-                <h3 className="text-lg text-[#1D1F2C] font-medium">
-                  Location & Transport
-                </h3>
-              </div>
-              <div className="space-y-6">
-                <div>
-                  <p className="text-xs text-graytext mb-2">Origin</p>
-                  <input
-                    type="text"
-                    value={form.origin}
-                    onChange={(e) => handleChange("origin", e.target.value)}
-                    placeholder="Enter origin location"
-                    className="py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6] rounded-[10px]"
-                  />
-                </div>
-                <div>
-                  <p className="text-xs text-graytext mb-2">Destination</p>
-                  <input
-                    type="text"
-                    value={form.destination}
-                    onChange={(e) => handleChange("destination", e.target.value)}
-                    placeholder="Enter destination location"
-                    className="py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6] rounded-[10px]"
-                  />
-                </div>
-                <div>
-                  <p className="text-xs text-graytext mb-2">Transport Mode</p>
-                  <Select defaultValue={form.transport} onValueChange={(v) => handleChange("transport", v)}>
-                    <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
-                      <SelectValue placeholder="Select transport mode" />
-                    </SelectTrigger>
-                    <SelectContent className="z-[10001]">
-                      <SelectGroup>
-                        <SelectLabel>Select transport mode</SelectLabel>
-                        <SelectItem value="pipeline">Pipeline</SelectItem>
-                        <SelectItem value="trucking">Trucking</SelectItem>
-                        <SelectItem value="railcar">Railcar</SelectItem>
-                        <SelectItem value="marine">Marine</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Flex Form Second - Scheduling */}
           <div className="mb-6">
-            <div className="flex items-center gap-3 mb-8">
-              <CalenderIcon />
-              <h3 className="text-lg text-[#1D1F2C] font-medium">
-                Scheduling & Additional Information
-              </h3>
-            </div>
-            <div className="flex flex-col md:flex-row items-center gap-14">
-              <div className="block md:flex-1 w-full">
-                <p className="text-xs text-[#4A4C56] mb-2">Beginning Date</p>
-                <input
-                  type="date"
-                  value={form.beginDate}
-                  onChange={(e) => handleChange("beginDate", e.target.value)}
-                  className="w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"
-                />
-              </div>
-              <div className="block md:flex-1 w-full">
-                <p className="text-xs text-[#4A4C56] mb-2">End Date</p>
-                <input
-                  type="date"
-                  value={form.endDate}
-                  onChange={(e) => handleChange("endDate", e.target.value)}
-                  className="w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"
-                />
-              </div>
-            </div>
-          </div>
+            <h3 className="text-lg text-[#1D1F2C] font-medium mb-2.5">
+              Update Status
+            </h3>
+            <p className="text-sm text-neutral-600 mb-4">Allowed statuses: Submitted, Complete, Withdraw</p>
 
-          {/* Textarea */}
-          <div className="mb-10">
-            <p className="text-xs text-[#4A4C56] mb-2">Notes (Optional)</p>
-            <textarea
-              value={form.notes}
-              onChange={(e) => handleChange("notes", e.target.value)}
-              className="w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] h-36"
-              placeholder="Additional information, special requirements, or comments..."
-            />
-          </div>
-
-          {/* Status */}
-          <div className="mb-10">
-            <p className="text-xs text-[#4A4C56] mb-2">Status</p>
-            <Select defaultValue={form.status} onValueChange={(v) => handleChange("status", v)}>
-              <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent className="z-[10001]">
-                <SelectGroup>
-                  <SelectLabel>Status</SelectLabel>
-                  <SelectItem value="Submitted">Submitted</SelectItem>
-                  <SelectItem value="Confirmed">Confirmed</SelectItem>
-                  <SelectItem value="Draft">Draft</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedStatus("Submitted")}
+                className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${selectedStatus === "Submitted" ? "bg-yellow-100 text-yellow-800 border-yellow-300" : "bg-white text-yellow-700 border-yellow-300 hover:bg-yellow-50"}`}
+              >
+                Submitted
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedStatus("Complete")}
+                className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${selectedStatus === "Complete" ? "bg-green-100 text-green-800 border-green-300" : "bg-white text-green-700 border-green-300 hover:bg-green-50"}`}
+              >
+                Complete
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedStatus("Withdraw")}
+                className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${selectedStatus === "Withdraw" ? "bg-red-100 text-red-800 border-red-300" : "bg-white text-red-700 border-red-300 hover:bg-red-50"}`}
+              >
+                Withdraw
+              </button>
+            </div>
           </div>
 
           {/* Buttons */}
@@ -319,7 +117,7 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
               disabled={saving}
               className="text-white bg-primary text-sm font-medium py-3 px-12 rounded-xl cursor-pointer hover:bg-primary/90 transition-colors"
             >
-              {saving ? "Saving..." : "Update Nomination"}
+              {saving ? "Saving..." : "Update Status"}
             </button>
           </div>
         </div>
@@ -549,16 +347,18 @@ export const nominationColumn = (handleOpenModal: (row: any) => void, onDeleted?
     label: "Status",
     accessor: "status",
     width: "8.88%",
-    formatter: (item: string, row: any) => {
-      const bg =
-        row.statusCode === "SUBMITTED"
-          ? "bg-blue-100 text-blue-700"
-          : row.statusCode === "CONFIRMED"
+    formatter: (item: string) => {
+      const normalized = (item || "").toLowerCase();
+      const classes =
+        normalized === "complete"
           ? "bg-green-100 text-green-700"
+          : normalized === "submitted"
+          ? "bg-yellow-100 text-yellow-800"
+          : normalized === "withdraw"
+          ? "bg-red-100 text-red-700"
           : "bg-gray-100 text-gray-700";
-
       return (
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${bg}`}>
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${classes}`}>
           {item}
         </span>
       );
