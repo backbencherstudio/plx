@@ -34,6 +34,12 @@ export interface NominationResponse {
   scheduleFile: string | null;
   requestedDate: string;
   updatedAt: string;
+  user: {
+    id: string;
+    email: string;
+    fullName: string;
+    avatar: string | null;
+  };
 }
 
 export interface GetNominationsResponse {
@@ -140,6 +146,47 @@ export const updateNomination = async (id: string, payload: Partial<CreateNomina
   } catch (error: any) {
     console.error("Error updating nomination:", error.response?.data || error.message);
     throw error;
+  }
+};
+
+// *** Get All Nominations (Admin) ***
+export const getAllNominations = async (params: GetNominationsParams = {}) => {
+  try {
+    // Check if token exists before making the request
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found. Please log in again.');
+    }
+
+    const queryParams = new URLSearchParams();
+    
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+
+    const queryString = queryParams.toString();
+    const url = `/api/v1/nomination/all${queryString ? `?${queryString}` : ''}`;
+    
+    console.log("Fetching all nominations from:", url);
+    console.log("Using token:", token.substring(0, 20) + "...");
+    
+    const res = await axiosClient.get(url);
+    console.log("All nominations fetched successfully:", res.data);
+    return res.data as GetNominationsResponse;
+  } catch (error: any) {
+    console.error("Error fetching all nominations:", error.response?.data || error.message);
+    
+    // Provide more specific error messages
+    if (error.response?.status === 401) {
+      throw new Error('Authentication failed. Please log in again.');
+    } else if (error.response?.status === 403) {
+      throw new Error('Access denied. You do not have permission to view nominations.');
+    } else if (error.response?.status >= 500) {
+      throw new Error('Server error. Please try again later.');
+    } else {
+      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch nominations');
+    }
   }
 };
 

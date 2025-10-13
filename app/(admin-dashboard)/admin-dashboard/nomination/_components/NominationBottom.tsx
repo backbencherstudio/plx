@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import DynamicTable from "@/app/(admin-dashboard)/_components/reusable/DynamicTable";
-import { AdminData } from "../../../../lib/admindata";
 import { nominationColumn } from "../../../_components/columns/NominationColumn";
 import BoxIcon from "@/public/admin-dashboard/icons/BoxIcon";
 import NominationModal from "@/app/(admin-dashboard)/_components/reusable/CustomModal";
@@ -14,52 +13,104 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "lucide-react";
 import Footer from "@/app/(admin-dashboard)/_components/footer";
+import { getAllNominations, NominationResponse, GetNominationsResponse } from "@/services/nominationService";
 
-type Nomination = (typeof AdminData.nominations)[number];
+// Transform API data to match table structure
+type TransformedNomination = {
+  id: string;
+  subscriber: string;
+  company: string;
+  email: string;
+  requestedDate: string;
+  commodity: string;
+  origin: string;
+  destination: string;
+  transport: string;
+  beginDate: string;
+  endDate: string;
+  status: string;
+  statusCode: string;
+  volume: string;
+  notes: string;
+};
 
 export default function NominationBottom() {
-  const { nominations } = AdminData;
-
+  const [nominations, setNominations] = useState<TransformedNomination[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [paginatedData, setPaginatedData] = useState<Nomination[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const hasPrevPage = currentPage > 1;
   const hasNextPage = currentPage < totalPages;
+
+  // Transform API data to match table structure
+  const transformNominationData = (apiData: NominationResponse[]): TransformedNomination[] => {
+    return apiData.map((item) => ({
+      id: item.id,
+      subscriber: item.user.fullName,
+      company: item.assetGroup || "N/A",
+      email: item.user.email,
+      requestedDate: new Date(item.requestedDate).toLocaleDateString(),
+      commodity: item.commodityType,
+      origin: item.origin,
+      destination: item.destination,
+      transport: item.transportMode,
+      beginDate: new Date(item.beginningDate).toLocaleDateString(),
+      endDate: new Date(item.endDate).toLocaleDateString(),
+      status: item.status,
+      statusCode: item.status.toUpperCase(),
+      volume: item.volume,
+      notes: item.notes,
+    }));
+  };
+
+  // Fetch nominations from API
+  const fetchNominations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response: GetNominationsResponse = await getAllNominations({
+        page: currentPage,
+        limit: itemsPerPage,
+        startDate: fromDate,
+        endDate: toDate,
+      });
+
+      if (response.success) {
+        const transformedData = transformNominationData(response.data);
+        setNominations(transformedData);
+        setTotalPages(response.pagination.totalPages);
+        setTotalItems(response.pagination.totalItems);
+      } else {
+        setError("Failed to fetch nominations");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch nominations");
+      console.error("Error fetching nominations:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
   };
 
+  // Fetch data when component mounts or dependencies change
   useEffect(() => {
-    let filteredData = nominations;
-    // Calculate total pages
-    const totalItems = filteredData.length;
-    const calculatedTotalPages = Math.ceil(totalItems / itemsPerPage);
-    setTotalPages(calculatedTotalPages);
-
-    // Ensure current page doesn't exceed total pages
-    if (currentPage > calculatedTotalPages && calculatedTotalPages > 0) {
-      setCurrentPage(calculatedTotalPages);
-    }
-
-    // Get paginated data
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginated = filteredData.slice(startIndex, endIndex);
-
-    setPaginatedData(paginated);
-  }, [itemsPerPage, currentPage]);
+    fetchNominations();
+  }, [currentPage, itemsPerPage, fromDate, toDate]);
 
   const [openModal, setOpenModal] = useState(false);
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
 
   const columns = nominationColumn(handleOpenModal);
-
-  // ========= date ==============================================
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
   // Refs for date inputs
   const fromDateRef = useRef<HTMLInputElement>(null);
   const toDateRef = useRef<HTMLInputElement>(null);
@@ -73,27 +124,17 @@ export default function NominationBottom() {
     toDateRef.current?.showPicker();
   };
 
-  // Filter data based on date range
-  const filteredData = useMemo(() => {
-    let filtered = nominations;
+  // Handle date filter changes
+  const handleDateFilterChange = () => {
+    setCurrentPage(1); // Reset to first page when filtering
+    fetchNominations();
+  };
 
-    if (fromDate) {
-      filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.requestedDate);
-        const fromDateObj = new Date(fromDate);
-        return itemDate >= fromDateObj;
-      });
+  // Update useEffect to handle date changes
+  useEffect(() => {
+    if (fromDate || toDate) {
+      handleDateFilterChange();
     }
-
-    if (toDate) {
-      filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.requestedDate);
-        const toDateObj = new Date(toDate);
-        return itemDate <= toDateObj;
-      });
-    }
-
-    return filtered;
   }, [fromDate, toDate]);
 
   return (
@@ -144,21 +185,31 @@ export default function NominationBottom() {
           </div>
         </div>
 
-        <DynamicTable
-          columns={columns}
-          data={paginatedData}
-          hasWrapperBorder={true}
-          wrapperBorderColor="#E7ECF4"
-          headerStyles={{
-            backgroundColor: "#F5F8FA",
-            textColor: "#625F6E",
-            fontSize: "14px",
-            padding: "12px 16px",
-            fontWeight: "500",
-          }}
-          cellBorderColor="#E7ECF4"
-          roundedClass="rounded-b-none"
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="text-gray-500">Loading nominations...</div>
+          </div>
+        ) : error ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="text-red-500">Error: {error}</div>
+          </div>
+        ) : (
+          <DynamicTable
+            columns={columns}
+            data={nominations}
+            hasWrapperBorder={true}
+            wrapperBorderColor="#E7ECF4"
+            headerStyles={{
+              backgroundColor: "#F5F8FA",
+              textColor: "#625F6E",
+              fontSize: "14px",
+              padding: "12px 16px",
+              fontWeight: "500",
+            }}
+            cellBorderColor="#E7ECF4"
+            roundedClass="rounded-b-none"
+          />
+        )}
       </div>
 
       {/* ============================================ nomination pagination start ======================================= */}
@@ -177,10 +228,8 @@ export default function NominationBottom() {
         <div className=" flex items-center gap-4">
           <div className="text-[#44444A] text-sm font-medium">
             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-            {currentPage * itemsPerPage < nominations.length
-              ? currentPage * itemsPerPage
-              : nominations.length}{" "}
-            of {nominations.length} entries
+            {Math.min(currentPage * itemsPerPage, totalItems)}{" "}
+            of {totalItems} entries
           </div>
 
           <div className="">
@@ -189,6 +238,7 @@ export default function NominationBottom() {
               onValueChange={(value) => {
                 setItemsPerPage(parseInt(value));
                 setCurrentPage(1);
+                // The useEffect will automatically fetch new data
               }}
             >
               <SelectTrigger className=" text-[#44444A] text-sm font-medium">
