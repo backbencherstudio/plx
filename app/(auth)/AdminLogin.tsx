@@ -31,11 +31,12 @@ export default function AdminLogin() {
     try {
       const res = await adminLogin({email, password});
       console.log("Logged in admin", res.user);
-
+        alert('succcessfully logged in ')
       // redirect after login
       router.push("/admin-dashboard");
     } catch (err: any) {
       console.error("Login failed", err.response?.data || err.message);
+      alert('something wrong!')
     };
   };
 
