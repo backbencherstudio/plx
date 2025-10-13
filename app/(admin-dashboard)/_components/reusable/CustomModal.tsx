@@ -2,12 +2,32 @@
 import React from "react";
 import BoxIcon from "@/public/admin-dashboard/icons/BoxIcon";
 
+interface NominationModalData {
+  id: string;
+  nominationId?: string;
+  subscriber: string;
+  company?: string;
+  email: string;
+  requestedDate: string;
+  commodity: string;
+  origin: string;
+  destination: string;
+  transport: string;
+  beginDate: string;
+  endDate: string;
+  status: string;
+  volume: string;
+  unit?: string;
+  notes: string;
+}
+
 interface ModalProps {
   open: boolean;
   onClose: () => void;
+  data?: NominationModalData | null;
 }
 
-export default function NominationModal({ open, onClose }: ModalProps) {
+export default function NominationModal({ open, onClose, data }: ModalProps) {
   if (!open) return null;
 
   return (
@@ -27,7 +47,7 @@ export default function NominationModal({ open, onClose }: ModalProps) {
                 <h3 className="text-xl text-[#1D1F2C] font-medium">
                   Nomination Details
                 </h3>
-                <p className="text-base text-graytext">Jenny Wilson</p>
+                <p className="text-base text-graytext">{data?.subscriber || "-"}</p>
               </div>
             </div>
 
@@ -46,33 +66,27 @@ export default function NominationModal({ open, onClose }: ModalProps) {
             <div className="space-y-10">
               <div className="space-y-2">
                 <p className="text-base text-color6">NOM ID</p>
-                <p className="text-lg text-[#1D1F2C] font-medium">#3583475</p>
+                <p className="text-lg text-[#1D1F2C] font-medium">{data?.nominationId || data?.id || "-"}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-base text-color6">Commodity Type</p>
-                <p className="text-lg text-[#1D1F2C] font-medium">
-                  Crude Oil - WTI
-                </p>
+                <p className="text-lg text-[#1D1F2C] font-medium">{data?.commodity || "-"}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-base text-color6">Origin</p>
-                <p className="text-lg text-[#1D1F2C] font-medium">
-                  Houston, TX
-                </p>
+                <p className="text-lg text-[#1D1F2C] font-medium">{data?.origin || "-"}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-base text-color6">Transport Mode</p>
-                <p className="text-lg text-[#1D1F2C] font-medium">Pipeline</p>
+                <p className="text-lg text-[#1D1F2C] font-medium">{data?.transport || "-"}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-base text-color6">Beginning Date</p>
-                <p className="text-lg text-[#1D1F2C] font-medium">1/20/2025</p>
+                <p className="text-lg text-[#1D1F2C] font-medium">{data?.beginDate || "-"}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-base text-color6">Notes</p>
-                <p className="text-lg text-[#1D1F2C] font-medium">
-                  Urgent delivery required
-                </p>
+                <p className="text-lg text-[#1D1F2C] font-medium">{data?.notes || "-"}</p>
               </div>
             </div>
 
@@ -80,29 +94,23 @@ export default function NominationModal({ open, onClose }: ModalProps) {
             <div className="space-y-10">
               <div className="space-y-2">
                 <p className="text-base text-color6">Status</p>
-                <p className="text-lg text-color2 bg-color22 font-medium text-center py-1 px-4 rounded-full">
-                  confirmed
-                </p>
+                <p className="text-lg text-color2 bg-color22 font-medium text-center py-1 px-4 rounded-full">{data?.status || "-"}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-base text-color6">Volume</p>
-                <p className="text-lg text-[#1D1F2C] font-medium">
-                  10,000 bbls
-                </p>
+                <p className="text-lg text-[#1D1F2C] font-medium">{data ? `${data.volume}${data.unit ? ` ${data.unit}` : ""}` : "-"}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-base text-color6">Destination</p>
-                <p className="text-lg text-[#1D1F2C] font-medium">
-                  Cushing, OK
-                </p>
+                <p className="text-lg text-[#1D1F2C] font-medium">{data?.destination || "-"}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-base text-color6">Requested Date</p>
-                <p className="text-lg text-[#1D1F2C] font-medium">1/20/2025</p>
+                <p className="text-lg text-[#1D1F2C] font-medium">{data?.requestedDate || "-"}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-base text-color6">End Date</p>
-                <p className="text-lg text-[#1D1F2C] font-medium">1/20/2025</p>
+                <p className="text-lg text-[#1D1F2C] font-medium">{data?.endDate || "-"}</p>
               </div>
             </div>
           </div>

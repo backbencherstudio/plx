@@ -18,19 +18,25 @@ import { getAllNominations, NominationResponse, GetNominationsResponse } from "@
 // Transform API data to match table structure
 type TransformedNomination = {
   id: string;
+  nominationId?: string;
   subscriber: string;
   company: string;
   email: string;
   requestedDate: string;
+  rawRequestedDate?: string;
   commodity: string;
   origin: string;
   destination: string;
   transport: string;
   beginDate: string;
+  rawBeginDate?: string;
   endDate: string;
+  rawEndDate?: string;
   status: string;
   statusCode: string;
   volume: string;
+  unit?: string;
+  connection?: string;
   notes: string;
 };
 
@@ -51,19 +57,25 @@ export default function NominationBottom() {
   const transformNominationData = (apiData: NominationResponse[]): TransformedNomination[] => {
     return apiData.map((item) => ({
       id: item.id,
+      nominationId: item.nominationId,
       subscriber: item.user.fullName,
       company: item.assetGroup || "N/A",
       email: item.user.email,
       requestedDate: new Date(item.requestedDate).toLocaleDateString(),
+      rawRequestedDate: item.requestedDate,
       commodity: item.commodityType,
       origin: item.origin,
       destination: item.destination,
       transport: item.transportMode,
       beginDate: new Date(item.beginningDate).toLocaleDateString(),
+      rawBeginDate: item.beginningDate,
       endDate: new Date(item.endDate).toLocaleDateString(),
+      rawEndDate: item.endDate,
       status: item.status,
       statusCode: item.status.toUpperCase(),
       volume: item.volume,
+      unit: item.unit,
+      connection: item.connection,
       notes: item.notes,
     }));
   };
@@ -107,10 +119,18 @@ export default function NominationBottom() {
   }, [currentPage, itemsPerPage, fromDate, toDate]);
 
   const [openModal, setOpenModal] = useState(false);
-  const handleOpenModal = () => setOpenModal(true);
-  const handleCloseModal = () => setOpenModal(false);
+  const [selectedRow, setSelectedRow] = useState<TransformedNomination | null>(null);
+  const handleOpenModal = (row: TransformedNomination) => {
+    setSelectedRow(row);
+    setOpenModal(true);
+  };
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedRow(null);
+  };
 
-  const columns = nominationColumn(handleOpenModal);
+  const refresh = () => fetchNominations();
+  const columns = nominationColumn(handleOpenModal, refresh);
   // Refs for date inputs
   const fromDateRef = useRef<HTMLInputElement>(null);
   const toDateRef = useRef<HTMLInputElement>(null);
@@ -258,7 +278,7 @@ export default function NominationBottom() {
       <Footer/>
 
       {openModal && (
-        <NominationModal open={openModal} onClose={handleCloseModal} />
+        <NominationModal open={openModal} onClose={handleCloseModal} data={selectedRow} />
       )}
     </div>
   );

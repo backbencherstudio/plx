@@ -140,11 +140,23 @@ export const getNominationById = async (id: string) => {
 // *** Update Nomination ***
 export const updateNomination = async (id: string, payload: Partial<CreateNominationPayload>) => {
   try {
-    const res = await axiosClient.put(`/api/v1/nomination/${id}`, payload);
+    const res = await axiosClient.patch(`/api/v1/nomination/${id}`, payload);
     console.log("Nomination updated successfully:", res.data);
     return res.data;
   } catch (error: any) {
     console.error("Error updating nomination:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// *** Update Nomination Status ***
+export const updateNominationStatus = async (id: string, status: string) => {
+  try {
+    const res = await axiosClient.patch(`/api/v1/nomination/status/${id}`, { status });
+    console.log("Nomination status updated successfully:", res.data);
+    return res.data;
+  } catch (error: any) {
+    console.error("Error updating nomination status:", error.response?.data || error.message);
     throw error;
   }
 };
@@ -193,7 +205,8 @@ export const getAllNominations = async (params: GetNominationsParams = {}) => {
 // *** Delete Nomination ***
 export const deleteNomination = async (id: string) => {
   try {
-    const res = await axiosClient.delete(`/api/v1/nomination/${id}`);
+    // Backend requires exact delete path: /api/v1/nomination/delete/:id
+    const res = await axiosClient.delete(`/api/v1/nomination/delete/${id}`);
     console.log("Nomination deleted successfully:", res.data);
     return res.data;
   } catch (error: any) {

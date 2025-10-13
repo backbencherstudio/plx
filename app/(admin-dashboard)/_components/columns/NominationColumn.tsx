@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import rightArrow from "@/public/nominations/Frame.svg";
 import EyeIcon from "@/public/nominations/icons/EyeIcon";
@@ -9,10 +9,76 @@ import { PlusCircleIcon } from "lucide-react";
 import LocationIcon from "@/public/nominations/icons/LocationIcon";
 import CalenderIcon from "@/public/nominations/icons/CalenderIcon";
 import BoxIcon from "@/public/nominations/icons/BoxIcon";
+import { updateNomination, updateNominationStatus } from "@/services/nominationService";
 
 // Edit Modal Component
 const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () => void; rowData: any }) => {
   if (!isOpen) return null;
+
+  const [form, setForm] = useState({
+    subscriber: "",
+    commodity: "",
+    volume: "",
+    unit: "bbls",
+    origin: "",
+    destination: "",
+    transport: "",
+    beginDate: "",
+    endDate: "",
+    notes: "",
+    status: "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!rowData) return;
+    const toDateInput = (s?: string) => (s ? String(s).slice(0, 10) : "");
+    setForm({
+      subscriber: rowData?.subscriber || "",
+      commodity: rowData?.commodity || "",
+      volume: rowData?.volume || "",
+      unit: rowData?.unit || "bbls",
+      origin: rowData?.origin || "",
+      destination: rowData?.destination || "",
+      transport: (rowData?.transport || "").toLowerCase(),
+      beginDate: toDateInput(rowData?.rawBeginDate || rowData?.beginDate),
+      endDate: toDateInput(rowData?.rawEndDate || rowData?.endDate),
+      notes: rowData?.notes || "",
+      status: rowData?.status || "",
+    });
+  }, [rowData]);
+
+  const handleChange = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await updateNomination(rowData.id, {
+        assetGroup: rowData.company,
+        commodityType: form.commodity,
+        volume: form.volume,
+        unit: form.unit,
+        origin: form.origin,
+        destination: form.destination,
+        transportMode: form.transport,
+        connection: rowData.connection || "",
+        beginningDate: form.beginDate,
+        endDate: form.endDate,
+        notes: form.notes,
+      });
+
+      if (form.status && form.status !== rowData.status) {
+        await updateNominationStatus(rowData.id, form.status);
+      }
+
+      onClose();
+      // Optionally refresh: window.location.reload();
+    } catch (e) {
+      console.error("Failed to update nomination", e);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <>
@@ -55,7 +121,7 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
             <h3 className="text-lg text-[#1D1F2C] font-medium mb-2.5">
               Choose Subscriber
             </h3>
-            <Select defaultValue={rowData?.subscriber}>
+            <Select defaultValue={form.subscriber}>
               <SelectTrigger className="w-full py-5 shadow-none">
                 <SelectValue placeholder="Search by name or email..." />
               </SelectTrigger>
@@ -85,7 +151,7 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
               <div className="space-y-6">
                 <div>
                   <p className="text-xs text-graytext mb-2">Commodity Type</p>
-                  <Select defaultValue={rowData?.commodity?.toLowerCase()}>
+                  <Select defaultValue={form.commodity?.toLowerCase()} onValueChange={(v) => handleChange("commodity", v)}>
                     <SelectTrigger className="w-full py-5 shadow-none">
                       <SelectValue placeholder="Select commodity type" />
                     </SelectTrigger>
@@ -105,14 +171,15 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
                   <p className="text-xs text-graytext mb-2">Volume</p>
                   <input
                     type="text"
-                    defaultValue={rowData?.volume}
+                    value={form.volume}
+                    onChange={(e) => handleChange("volume", e.target.value)}
                     placeholder="Enter Volume"
                     className="py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6] rounded-[10px]"
                   />
                 </div>
                 <div>
                   <p className="text-xs text-graytext mb-2">Unit</p>
-                  <Select defaultValue="bbls">
+                  <Select defaultValue={form.unit} onValueChange={(v) => handleChange("unit", v)}>
                     <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
                       <SelectValue placeholder="bbls" />
                     </SelectTrigger>
@@ -143,7 +210,8 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
                   <p className="text-xs text-graytext mb-2">Origin</p>
                   <input
                     type="text"
-                    defaultValue={rowData?.origin}
+                    value={form.origin}
+                    onChange={(e) => handleChange("origin", e.target.value)}
                     placeholder="Enter origin location"
                     className="py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6] rounded-[10px]"
                   />
@@ -152,14 +220,15 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
                   <p className="text-xs text-graytext mb-2">Destination</p>
                   <input
                     type="text"
-                    defaultValue={rowData?.destination}
+                    value={form.destination}
+                    onChange={(e) => handleChange("destination", e.target.value)}
                     placeholder="Enter destination location"
                     className="py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6] rounded-[10px]"
                   />
                 </div>
                 <div>
                   <p className="text-xs text-graytext mb-2">Transport Mode</p>
-                  <Select defaultValue={rowData?.transport?.toLowerCase()}>
+                  <Select defaultValue={form.transport} onValueChange={(v) => handleChange("transport", v)}>
                     <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
                       <SelectValue placeholder="Select transport mode" />
                     </SelectTrigger>
@@ -191,7 +260,8 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
                 <p className="text-xs text-[#4A4C56] mb-2">Beginning Date</p>
                 <input
                   type="date"
-                  defaultValue={rowData?.beginDate}
+                  value={form.beginDate}
+                  onChange={(e) => handleChange("beginDate", e.target.value)}
                   className="w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"
                 />
               </div>
@@ -199,7 +269,8 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
                 <p className="text-xs text-[#4A4C56] mb-2">End Date</p>
                 <input
                   type="date"
-                  defaultValue={rowData?.endDate}
+                  value={form.endDate}
+                  onChange={(e) => handleChange("endDate", e.target.value)}
                   className="w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"
                 />
               </div>
@@ -210,10 +281,29 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
           <div className="mb-10">
             <p className="text-xs text-[#4A4C56] mb-2">Notes (Optional)</p>
             <textarea
-              defaultValue={rowData?.notes}
+              value={form.notes}
+              onChange={(e) => handleChange("notes", e.target.value)}
               className="w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] h-36"
               placeholder="Additional information, special requirements, or comments..."
             />
+          </div>
+
+          {/* Status */}
+          <div className="mb-10">
+            <p className="text-xs text-[#4A4C56] mb-2">Status</p>
+            <Select defaultValue={form.status} onValueChange={(v) => handleChange("status", v)}>
+              <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent className="z-[10001]">
+                <SelectGroup>
+                  <SelectLabel>Status</SelectLabel>
+                  <SelectItem value="Submitted">Submitted</SelectItem>
+                  <SelectItem value="Confirmed">Confirmed</SelectItem>
+                  <SelectItem value="Draft">Draft</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Buttons */}
@@ -225,14 +315,11 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
               Cancel
             </button>
             <button
-              onClick={() => {
-                // Handle save logic here
-                console.log("Saving changes for:", rowData);
-                onClose();
-              }}
+              onClick={handleSave}
+              disabled={saving}
               className="text-white bg-primary text-sm font-medium py-3 px-12 rounded-xl cursor-pointer hover:bg-primary/90 transition-colors"
             >
-              Update Nomination
+              {saving ? "Saving..." : "Update Nomination"}
             </button>
           </div>
         </div>
@@ -242,9 +329,12 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
 };
 
 // Dropdown component for the action menu
-const ActionDropdown = ({ rowId, rowData }: { rowId: any; rowData: any }) => {
+import { deleteNomination } from "@/services/nominationService";
+
+const ActionDropdown = ({ rowId, rowData, onDeleted }: { rowId: any; rowData: any; onDeleted?: () => void }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleAction = (action: string) => {
     console.log(`Action: ${action} on row: ${rowId}`);
@@ -254,6 +344,20 @@ const ActionDropdown = ({ rowId, rowData }: { rowId: any; rowData: any }) => {
       setIsEditModalOpen(true);
     }
     // Handle other actions here
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this nomination?")) return;
+    try {
+      setIsDeleting(true);
+      await deleteNomination(rowId);
+      onDeleted && onDeleted();
+    } catch (e) {
+      console.error("Failed to delete nomination", e);
+    } finally {
+      setIsDeleting(false);
+      setIsOpen(false);
+    }
   };
 
   return (
@@ -321,6 +425,13 @@ const ActionDropdown = ({ rowId, rowData }: { rowId: any; rowData: any }) => {
                 </button>
                 <button
                   className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+                <button
+                  className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150"
                   onClick={() => handleAction('edit')}
                 >
                   Edit
@@ -341,7 +452,7 @@ const ActionDropdown = ({ rowId, rowData }: { rowId: any; rowData: any }) => {
   );
 };
 
-export const nominationColumn = (handleOpenModal: () => void) => [
+export const nominationColumn = (handleOpenModal: (row: any) => void, onDeleted?: () => void) => [
   {
     label: "Subscriber",
     accessor: "subscriber",
@@ -461,11 +572,11 @@ export const nominationColumn = (handleOpenModal: () => void) => [
       <div className="flex items-center gap-10">
         <button
           className="cursor-pointer"
-          onClick={() => handleOpenModal()}
+          onClick={() => handleOpenModal(row)}
         >
           <EyeIcon />
         </button>
-        <ActionDropdown rowId={row.id || item} rowData={row} />
+        <ActionDropdown rowId={row.id || item} rowData={row} onDeleted={onDeleted} />
       </div>
     ),
   },
