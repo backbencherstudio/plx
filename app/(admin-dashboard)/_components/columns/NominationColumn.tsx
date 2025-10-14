@@ -18,15 +18,27 @@ const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () 
   const [selectedStatus, setSelectedStatus] = useState<string>("Submitted");
   const [saving, setSaving] = useState(false);
 
+  // Map any casing (e.g. "complete") to the backend-allowed, case-sensitive values
+  const normalizeStatus = (value: string | undefined | null): "Submitted" | "Complete" | "Withdraw" => {
+    const v = (value || "").trim().toLowerCase();
+    if (v === "submitted") return "Submitted";
+    if (v === "complete") return "Complete";
+    if (v === "withdraw") return "Withdraw";
+    // Default to a safe value
+    return "Submitted";
+  };
+
   useEffect(() => {
     if (!rowData) return;
-    setSelectedStatus(rowData?.status || "Submitted");
+    setSelectedStatus(normalizeStatus(rowData?.status));
   }, [rowData]);
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      await updateNominationStatus(rowData.id, selectedStatus);
+      // Ensure we always send an allowed, case-sensitive status
+      const safeStatus = normalizeStatus(selectedStatus);
+      await updateNominationStatus(rowData.id, safeStatus);
 
       onClose();
     } catch (e) {

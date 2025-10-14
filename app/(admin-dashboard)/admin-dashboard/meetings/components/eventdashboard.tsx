@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import EventDetailModal from "./event-detail-modal";
 import DynamicTable from "@/app/(admin-dashboard)/_components/reusable/DynamicTable";
 import { UpcomingMeetingColumn } from "@/app/(admin-dashboard)/_components/columns/UpcomingMettingColumn";
-import axiosClient from "@/lib/axiosclient";
+import { getAllMeetings, MeetingResponse, GetMeetingsResponse } from "@/services/meetingService";
 
 
 type EventItem = {
@@ -22,37 +22,78 @@ type DayEvents = {
 };
 
 type ApiMeeting = {
-  event_name?: string;
-  start_time?: string; // ISO
+  id: string;
+  event_name: string;
+  start_time: string; // ISO
   end_time?: string;   // ISO
   meeting_link?: string;
-  invitee_name?: string;
+  invitee_name: string;
   invitee_email?: string;
-  organizer_name?: string;
+  organizer_name: string;
   organizer_email?: string;
+  location?: string;
+  description?: string;
+  status: string;
+  meeting_type?: string;
+  duration?: number;
 };
 
 export default function EventDashboard() {
   const [apiMeetings, setApiMeetings] = useState<ApiMeeting[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
-  // Fetch meetings from API
+  // Fetch meetings from API using the meeting service
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await axiosClient.get("/api/v1/meetings");
-        setApiMeetings(res.data?.meetings ?? []);
+        
+        console.log("Fetching meetings with params:", { fromDate, toDate });
+        
+        const params: any = {};
+        if (fromDate) params.startDate = fromDate;
+        if (toDate) params.endDate = toDate;
+        
+        const response: GetMeetingsResponse = await getAllMeetings(params);
+        
+        console.log("Meetings API response:", response);
+        
+        // Handle different possible response structures
+        let meetings: ApiMeeting[] = [];
+        
+        if (response.success && response.meetings) {
+          meetings = response.meetings;
+        } else if (response.meetings) {
+          // If meetings exist but success might be false
+          meetings = response.meetings;
+        } else if (Array.isArray(response)) {
+          // If response is directly an array
+          meetings = response;
+        } else if (response.data && Array.isArray(response.data)) {
+          // If meetings are in a data property
+          meetings = response.data;
+        }
+        
+        if (meetings.length > 0) {
+          setApiMeetings(meetings);
+          console.log("Successfully loaded meetings:", meetings.length);
+        } else {
+          console.log("No meetings found in response");
+          setApiMeetings([]);
+        }
       } catch (e: any) {
-        setError(e?.response?.data?.message || "Failed to load meetings");
+        console.error("Error loading meetings:", e);
+        setError(e.message || "Failed to load meetings");
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [fromDate, toDate]);
 
   // Build calendar events by grouping API by start_time date (YYYY-MM-DD)
   const events: DayEvents[] = useMemo(() => {
@@ -152,8 +193,6 @@ export default function EventDashboard() {
   };
 
   // ========= date ==============================================
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
   // Refs for date inputs
   const fromDateRef = useRef<HTMLInputElement>(null);
   const toDateRef = useRef<HTMLInputElement>(null);
@@ -167,13 +206,30 @@ export default function EventDashboard() {
     toDateRef.current?.showPicker();
   };
 
+  // Refresh meetings when date filters change
+  const refreshMeetings = () => {
+    // The useEffect will automatically trigger when fromDate or toDate changes
+    console.log("Refreshing meetings with filters:", { fromDate, toDate });
+  };
+
+  // Test API call without filters
+  const testApiCall = async () => {
+    try {
+      console.log("Testing API call...");
+      const response = await getAllMeetings({});
+      console.log("Test API response:", response);
+    } catch (e) {
+      console.error("Test API error:", e);
+    }
+  };
+
   // Filter data based on date range
   const filteredData = useMemo(() => {
-    let filtered: any[] = apiMeetings as any[];
+    let filtered: ApiMeeting[] = apiMeetings;
 
     if (fromDate) {
       filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.requestDate);
+        const itemDate = new Date(item.start_time);
         const fromDateObj = new Date(fromDate);
         return itemDate >= fromDateObj;
       });
@@ -181,7 +237,7 @@ export default function EventDashboard() {
 
     if (toDate) {
       filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.requestDate);
+        const itemDate = new Date(item.start_time);
         const toDateObj = new Date(toDate);
         return itemDate <= toDateObj;
       });
@@ -446,19 +502,46 @@ export default function EventDashboard() {
                     />
                   </div>
                 </div>
+                <button
+                  onClick={testApiCall}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+                >
+                  Test API
+                </button>
               </div>
             </div>
-            <DynamicTable
+            {loading ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="text-gray-500">Loading meetings...</div>
+              </div>
+            ) : error ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="text-red-500">Error: {error}</div>
+              </div>
+            ) : filteredData.length === 0 ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="text-gray-500">No meetings found for the selected date range.</div>
+              </div>
+            ) : (
+              <DynamicTable
               columns={UpcomingMeetingColumn}
-              data={(apiMeetings || []).map((m, idx) => ({
-                id: String(idx + 1),
+              data={filteredData.map((m, idx) => ({
+                id: m.id || String(idx + 1),
                 user: m.invitee_name || "—",
-                meetingType: m.organizer_name || "—",
-                meetingDate: m.start_time?.slice(0, 10) || "—",
-                time: new Date(m.start_time ?? '').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                companyName: m.organizer_name || "—",
+                email: m.invitee_email || "",
+                requestDate: new Date(m.start_time).toLocaleDateString(),
+                meetingDate: new Date(m.start_time).toLocaleDateString(),
+                time: new Date(m.start_time).toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit',
+                  hour12: true 
+                }),
+                timeZone: "UTC", // Default timezone, can be enhanced later
+                duration: m.duration ? `${m.duration} min` : "N/A",
                 subject: m.event_name || "Meeting",
-                status: 'scheduled',
-                typeCode: 'CONSULTATION',
+                status: m.status || "scheduled",
+                typeCode: m.meeting_type?.toUpperCase() || "MEETING",
               }))}
               hasWrapperBorder={false}
               wrapperBorderColor="#E7ECF4"
@@ -471,6 +554,7 @@ export default function EventDashboard() {
               }}
               cellBorderColor="#E7ECF4"
             />
+            )}
           </div>
         )}
       </div>
@@ -478,3 +562,4 @@ export default function EventDashboard() {
     </div>
   );
 }
+

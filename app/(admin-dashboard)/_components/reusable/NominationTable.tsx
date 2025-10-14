@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import DynamicTable from "@/app/(admin-dashboard)/_components/reusable/DynamicTable";
-import { nominationColumn } from "../../../_components/columns/NominationColumn";
-import BoxIcon from "@/public/admin-dashboard/icons/BoxIcon";
-import NominationModal from "@/app/(admin-dashboard)/_components/reusable/CustomModal";
-import TransportPagination from "@/app/(admin-dashboard)/_components/reusable/TransportPagination";
+"use client";
+import React, { useEffect, useState } from "react";
+import DynamicTable from "./DynamicTable";
+import { nominationColumn } from "../columns/NominationColumn";
+import { getAllNominations, NominationResponse, GetNominationsResponse } from "@/services/nominationService";
+import TransportPagination from "./TransportPagination";
 import {
   Select,
   SelectContent,
@@ -12,8 +12,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "lucide-react";
-import Footer from "@/app/(admin-dashboard)/_components/footer";
-import { getAllNominations, NominationResponse, GetNominationsResponse } from "@/services/nominationService";
 
 // Transform API data to match table structure
 type TransformedNomination = {
@@ -41,12 +39,26 @@ type TransformedNomination = {
   notes: string;
 };
 
-export default function NominationBottom() {
+interface NominationTableProps {
+  showFilters?: boolean;
+  showPagination?: boolean;
+  limit?: number;
+  onDeleted?: () => void;
+  handleOpenModal?: (row: any) => void;
+}
+
+export default function NominationTable({
+  showFilters = true,
+  showPagination = true,
+  limit = 5,
+  onDeleted,
+  handleOpenModal = () => {},
+}: NominationTableProps) {
   const [nominations, setNominations] = useState<TransformedNomination[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(limit);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [fromDate, setFromDate] = useState("");
@@ -88,14 +100,17 @@ export default function NominationBottom() {
       setLoading(true);
       setError(null);
       
-      const response: GetNominationsResponse = await getAllNominations({
+      const params: any = {
         page: currentPage,
         limit: itemsPerPage,
-        startDate: fromDate,
-        endDate: toDate,
-      });
+      };
+      
+      if (fromDate) params.startDate = fromDate;
+      if (toDate) params.endDate = toDate;
 
-      if (response.success) {
+      const response: GetNominationsResponse = await getAllNominations(params);
+      
+      if (response.success && response.data) {
         const transformedData = transformNominationData(response.data);
         setNominations(transformedData);
         setTotalPages(response.pagination.totalPages);
@@ -104,68 +119,39 @@ export default function NominationBottom() {
         setError("Failed to fetch nominations");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to fetch nominations");
       console.error("Error fetching nominations:", err);
+      setError(err.message || "Failed to fetch nominations");
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
-  };
-
-  // Fetch data when component mounts or dependencies change
   useEffect(() => {
     fetchNominations();
   }, [currentPage, itemsPerPage, fromDate, toDate]);
 
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<TransformedNomination | null>(null);
-  const handleOpenModal = (row: TransformedNomination) => {
-    setSelectedRow(row);
-    setOpenModal(true);
-  };
-  const handleCloseModal = () => {
-    setOpenModal(false);
-    setSelectedRow(null);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
-  const refresh = () => fetchNominations();
-  const columns = nominationColumn(handleOpenModal, refresh);
-  // Refs for date inputs
-  const fromDateRef = useRef<HTMLInputElement>(null);
-  const toDateRef = useRef<HTMLInputElement>(null);
-
-  // Handle calendar icon clicks
-  const handleFromCalendarClick = () => {
-    fromDateRef.current?.showPicker();
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1); // Reset to first page when changing items per page
   };
 
-  const handleToCalendarClick = () => {
-    toDateRef.current?.showPicker();
-  };
-
-  // Handle date filter changes
   const handleDateFilterChange = () => {
-    setCurrentPage(1); // Reset to first page when filtering
+    setCurrentPage(1); // Reset to first page when applying filters
     fetchNominations();
   };
 
-  // Update useEffect to handle date changes
-  useEffect(() => {
-    if (fromDate || toDate) {
-      handleDateFilterChange();
-    }
-  }, [fromDate, toDate]);
+  const columns = nominationColumn(handleOpenModal, onDeleted);
 
   return (
-    <div className=" mt-8">
-      {/* nomination table */}
-      <div>
-        <div className="px-6 py-5 flex items-center justify-between bg-white rounded-t-2xl border-x border-[#E7ECF4]">
-          <h2 className="text-lg font-semibold text-graytext">Nominations</h2>
-          <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4 sm:gap-6 w-full sm:w-auto">
+    <div>
+      {/* Filters */}
+      {showFilters && (
+        <div className="bg-white rounded-2xl p-6 mb-6">
+          <div className="flex flex-wrap gap-4 items-center">
             <div className="flex justify-start items-center gap-2">
               <div className="justify-start text-Text-Secondary text-xs font-medium font-['Roboto'] leading-none">
                 From
@@ -177,12 +163,8 @@ export default function NominationBottom() {
                   onChange={(e) => setFromDate(e.target.value)}
                   className="justify-start text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none [&::-webkit-calendar-picker-indicator]:hidden"
                   placeholder="mm/dd/yyyy"
-                  ref={fromDateRef}
                 />
-                <Calendar
-                  className="w-4 h-4 text-zinc-500 cursor-pointer"
-                  onClick={handleFromCalendarClick}
-                />
+                <Calendar className="w-4 h-4 text-zinc-500 cursor-pointer" />
               </div>
             </div>
             <div className="flex justify-start items-center gap-2">
@@ -196,17 +178,22 @@ export default function NominationBottom() {
                   onChange={(e) => setToDate(e.target.value)}
                   className="justify-start text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none [&::-webkit-calendar-picker-indicator]:hidden"
                   placeholder="mm/dd/yyyy"
-                  ref={toDateRef}
                 />
-                <Calendar
-                  className="w-4 h-4 text-zinc-500 cursor-pointer"
-                  onClick={handleToCalendarClick}
-                />
+                <Calendar className="w-4 h-4 text-zinc-500 cursor-pointer" />
               </div>
             </div>
+            <button
+              onClick={handleDateFilterChange}
+              className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              Apply Filters
+            </button>
           </div>
         </div>
+      )}
 
+      {/* Table */}
+      <div className="bg-white rounded-2xl">
         {loading ? (
           <div className="flex justify-center items-center py-8">
             <div className="text-gray-500">Loading nominations...</div>
@@ -229,42 +216,19 @@ export default function NominationBottom() {
               fontWeight: "500",
             }}
             cellBorderColor="#E7ECF4"
-            roundedClass="rounded-b-none"
+            roundedClass={showPagination ? "rounded-b-none" : "rounded-b-2xl"}
           />
         )}
       </div>
 
-      {/* ============================================ nomination pagination start ======================================= */}
-      <div className=" flex justify-between bg-white rounded-b-2xl px-4 border-x border-[#F3F3F3] border-b">
-        <div className=" ">
-          <TransportPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            hasNextPage={hasNextPage}
-            hasPrevPage={hasPrevPage}
-            onPageChange={handlePageChange}
-            show={false}
-          />
-        </div>
-
-        <div className=" flex items-center gap-4">
-          <div className="text-[#44444A] text-sm font-medium">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-            {Math.min(currentPage * itemsPerPage, totalItems)}{" "}
-            of {totalItems} entries
-          </div>
-
-          <div className="">
-            <Select
-              value={`${itemsPerPage}`}
-              onValueChange={(value) => {
-                setItemsPerPage(parseInt(value));
-                setCurrentPage(1);
-                // The useEffect will automatically fetch new data
-              }}
-            >
-              <SelectTrigger className=" text-[#44444A] text-sm font-medium">
-                <SelectValue className=" ">Show {itemsPerPage}</SelectValue>
+      {/* Pagination */}
+      {showPagination && (
+        <div className="flex justify-between bg-white rounded-b-2xl px-4 border border-[#F3F3F3] py-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Show</span>
+            <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+              <SelectTrigger className="w-16 h-8">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="5">5</SelectItem>
@@ -273,14 +237,19 @@ export default function NominationBottom() {
                 <SelectItem value="50">50</SelectItem>
               </SelectContent>
             </Select>
+            <span className="text-sm text-gray-600">entries</span>
           </div>
-        </div>
-      </div>
-      {/* ============================================ nomination pagination end ======================================= */}
-      <Footer/>
 
-      {openModal && (
-        <NominationModal open={openModal} onClose={handleCloseModal} data={selectedRow} />
+          <TransportPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            hasPrevPage={hasPrevPage}
+            hasNextPage={hasNextPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+          />
+        </div>
       )}
     </div>
   );

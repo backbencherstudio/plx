@@ -1,21 +1,18 @@
 "use client";
 import React, { useState } from "react";
-import DynamicTable from "../../_components/reusable/DynamicTable";
-
 import { AdminData } from "../../../lib/admindata";
 import PlusIcon from "@/public/admin-dashboard/icons/PlusIcon";
-import { UpcomingMeetingColumn } from "../../_components/columns/UpcomingMettingColumn";
 import SubmitIcon from "@/public/admin-dashboard/icons/SubmitIcon";
 import ConfirmedIcon from "@/public/admin-dashboard/icons/ConfirmedIcon";
 import StarCalenderIcon from "@/public/admin-dashboard/icons/StarCalenderIcon";
 import OverviewCard from "./_components/OverviewCard";
-import { nominationColumn } from "../../_components/columns/NominationColumn";
-import BoxIcon from "@/public/admin-dashboard/icons/BoxIcon";
 import Footer from "../../_components/footer";
 import NominationModal from "../../_components/reusable/CustomModal";
 import { ChartAreaDefault } from "./_components/ChartAreaDefault";
 import { ChartPieDonutText } from "./_components/ChartPieDonutText";
 import Link from "next/link";
+import NominationTable from "../../_components/reusable/NominationTable";
+import MeetingTable from "../../_components/reusable/MeetingTable";
 
 const iconComponents: { [key: string]: React.JSX.Element } = {
   SubmitIcon: <SubmitIcon />,
@@ -24,17 +21,12 @@ const iconComponents: { [key: string]: React.JSX.Element } = {
 };
 
 export default function Dashboard() {
-  const { nominations, dashboardStats, meetings } = AdminData;
-
-  const sliceNominationData = nominations.slice(0, 5);
-  const sliceMeetingData = meetings.slice(0, 5);
+  const { dashboardStats } = AdminData;
 
   const [openModal, setOpenModal] = useState(false);
 
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
-
-  const columns = nominationColumn(handleOpenModal);
 
   return (
     <div className=" ">
@@ -55,8 +47,6 @@ export default function Dashboard() {
         </Link>
       </div>
 
-
-    
       {/* overview card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 my-6">
         {dashboardStats.map((state, index) => (
@@ -70,19 +60,15 @@ export default function Dashboard() {
         ))}
       </div>
 
-
-        {/* schedule statistics line chart */}
-
-        <div className="  grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      {/* schedule statistics line chart */}
+      <div className="  grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <div className=" lg:col-span-2">
-
-       <ChartAreaDefault/>
+          <ChartAreaDefault/>
         </div>
         <div className=" bg-white rounded-2xl"> 
           <ChartPieDonutText/>
         </div>
       </div>
-
 
       {/* nomination table */}
       <div>
@@ -93,19 +79,11 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        <DynamicTable
-          columns={columns}
-          data={sliceNominationData}
-          hasWrapperBorder={true}
-          wrapperBorderColor="#E7ECF4"
-          headerStyles={{
-            backgroundColor: "#F5F8FA",
-            textColor: "#625F6E",
-            fontSize: "14px",
-            padding: "12px 16px",
-            fontWeight: "500",
-          }}
-          cellBorderColor="#E7ECF4"
+        <NominationTable
+          showFilters={false}
+          showPagination={false}
+          limit={5}
+          handleOpenModal={handleOpenModal}
         />
       </div>
 
@@ -119,19 +97,12 @@ export default function Dashboard() {
             View All
           </Link>
         </div>
-        <DynamicTable
-          columns={UpcomingMeetingColumn}
-          data={sliceMeetingData}
-          hasWrapperBorder={true}
-          wrapperBorderColor="#E7ECF4"
-          headerStyles={{
-            backgroundColor: "#F5F8FA",
-            textColor: "#625F6E",
-            fontSize: "14px",
-            padding: "12px 16px",
-            fontWeight: "500",
-          }}
-          cellBorderColor="#E7ECF4"
+        
+        <MeetingTable
+          showFilters={false}
+          showPagination={false}
+          limit={5}
+          status="scheduled"
         />
       </div>
 
