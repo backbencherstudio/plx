@@ -56,7 +56,7 @@ export const adminLogin = async (payload: LoginPayload) => {
         "/api/v1/auth/admin/login",
         payload
     );
-    const { token, user } = res.data.data;
+ 
     localStorage.setItem("token", res?.data?.token);
     return res;
 }
