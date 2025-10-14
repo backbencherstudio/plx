@@ -1,12 +1,18 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import UploadIcon from "@/public/schedule/icons/UploadIcon";
 import DynamicTable from "../../_components/reusable/DynamicTable";
 import { scheduleColumn } from "../../_components/columns/scheduleColumn";
 import TransportPagination from "../../_components/reusable/TransportPagination";
 import Footer from "../../_components/footer";
-import { Schedule, SchedulePagination } from "@/services/userService";
+
+import {
+  getSchedules,
+  searchUsers,
+  uploadSchedule,
+  Schedule,
+  SchedulePagination,
+} from "@/services/scheduleService";
 
 interface User {
   id: string;
@@ -14,10 +20,7 @@ interface User {
   email: string;
 }
 
-const BASE_URL = "http://192.168.7.12:4001/api/v1";
-
 export default function ScheduleList() {
-  const [authToken, setAuthToken] = useState<string | null>(null);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [pagination, setPagination] = useState<SchedulePagination | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,7 +35,7 @@ export default function ScheduleList() {
   const [scheduleMonth, setScheduleMonth] = useState("");
   const [scheduleFile, setScheduleFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [transportMode, setTransportMode]=useState("")
+  const [transportMode, setTransportMode] = useState("");
 
   // User search suggestions
   const [userSuggestions, setUserSuggestions] = useState<User[]>([]);
@@ -42,16 +45,9 @@ export default function ScheduleList() {
   const fetchSchedules = async (page = 1, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const token = authToken || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
-      if (!token) throw new Error("No auth token found");
-
-      const res = await axios.get(`${BASE_URL}/schedule`, {
-        params: { page, limit },
-        headers: { Authorization: token },
-      });
-
-      setSchedules(res.data.data as Schedule[]);
-      setPagination(res.data.pagination as SchedulePagination);
+      const data = await getSchedules(page, limit);
+      setSchedules(data.data as Schedule[]);
+      setPagination(data.pagination as SchedulePagination);
     } catch (error) {
       console.error("Error fetching schedules:", error);
     } finally {
@@ -59,22 +55,20 @@ export default function ScheduleList() {
     }
   };
 
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
-  };
-
+  // Pagination
+  const handlePageChange = (pageNumber: number) => setCurrentPage(pageNumber);
   const handleItemsPerPageChange = (value: string) => {
     const limit = parseInt(value);
     setItemsPerPage(limit);
     setCurrentPage(1);
   };
 
+  // File input
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setScheduleFile(e.target.files[0]);
-    }
+    if (e.target.files && e.target.files[0]) setScheduleFile(e.target.files[0]);
   };
 
+  // User search
   const handleUserSearch = (query: string) => {
     setAssignToName(query);
     if (searchTimeout) clearTimeout(searchTimeout);
@@ -85,12 +79,8 @@ export default function ScheduleList() {
         return;
       }
       try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
-        const res = await axios.get(`${BASE_URL}/users/search`, {
-          params: { query, page: 1, limit: 10 },
-          headers: { Authorization: token || "" },
-        });
-        setUserSuggestions(res.data.data || []);
+        const users = await searchUsers(query);
+        setUserSuggestions(users || []);
       } catch (err) {
         console.error("User search failed:", err);
         setUserSuggestions([]);
@@ -100,6 +90,7 @@ export default function ScheduleList() {
     setSearchTimeout(timeout);
   };
 
+  // Upload schedule
   const handleUpload = async () => {
     if (!assignTo || !commodityType || !assetGroup || !scheduleMonth || !scheduleFile) {
       alert("Please fill all fields and select a file");
@@ -110,21 +101,14 @@ export default function ScheduleList() {
     formData.append("scheduleFile", scheduleFile);
     formData.append("assignTo", assignTo);
     formData.append("commodityType", commodityType);
-    formData.append("seduleMonth", scheduleMonth);
     formData.append("assetGroup", assetGroup);
-    formData.append("transportMode",transportMode)
+    formData.append("seduleMonth", scheduleMonth);
+    formData.append("transportMode", transportMode);
 
     setUploading(true);
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
-      const res = await axios.post(`${BASE_URL}/schedule`, formData, {
-        headers: {
-          Authorization: token || "",
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      alert(res.data.message || "Schedule uploaded successfully!");
+      const res = await uploadSchedule(formData);
+      alert(res.message || "Schedule uploaded successfully!");
       setAssignTo("");
       setAssignToName("");
       setCommodityType("");
@@ -132,7 +116,6 @@ export default function ScheduleList() {
       setScheduleMonth("");
       setScheduleFile(null);
       setUserSuggestions([]);
-
       fetchSchedules(currentPage, itemsPerPage);
     } catch (error: any) {
       console.error("Upload failed:", error);
@@ -143,8 +126,6 @@ export default function ScheduleList() {
   };
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (storedToken) setAuthToken(storedToken);
     fetchSchedules(currentPage, itemsPerPage);
   }, [currentPage, itemsPerPage]);
 
@@ -214,13 +195,12 @@ export default function ScheduleList() {
               className="border border-[#E6E6E6] py-3 px-5 rounded-[10px] w-full"
             >
               <option value="">Transport Mode</option>
-              {[
-                "Pipeline","Trucking","Railcar","Marine" 
-              ].map((transport) => (
-                <option key={transport} value={transport}>{transport}</option>
+              {["Pipeline", "Trucking", "Railcar", "Marine"].map((t) => (
+                <option key={t} value={t}>{t}</option>
               ))}
             </select>
           </div>
+
           <div className="w-full">
             <label className="text-[#4A4C56] text-sm mb-1.5">Schedule Month</label>
             <select
@@ -287,7 +267,7 @@ export default function ScheduleList() {
           <DynamicTable
             columns={scheduleColumn}
             data={schedules}
-            hasWrapperBorder={true}
+            hasWrapperBorder
             wrapperBorderColor="#F3F3F3"
             headerStyles={{
               backgroundColor: "#F5F8FA",
