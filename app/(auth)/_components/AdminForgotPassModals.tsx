@@ -71,13 +71,7 @@ export function ForgotPasswordUI({
         error?.message ||
         "Something went wrong!";
       setLoading(false);
-      toast.error(message, {
-        duration: 5000,
-        iconTheme: {
-          primary: "#123F93",
-          secondary: "#FFFFFF",
-        },
-      });
+      toast.error(message);
     }
   };
 
@@ -107,13 +101,7 @@ export function ForgotPasswordUI({
         error?.response?.data?.message ||
         error?.message ||
         "Something went wrong!";
-      toast.error(message, {
-        duration: 5000,
-        iconTheme: {
-          primary: "#123F93",
-          secondary: "#FFFFFF",
-        },
-      });
+      toast.error(message);
     }
   };
 

@@ -8,15 +8,18 @@ import adminImg from "@/public/Admin-Login.png";
 import EmailIcon from "@/public/commonIcons/EmailIcon";
 import LockIcon from "@/public/commonIcons/LockIcon";
 import Link from "next/link";
+import toast from 'react-hot-toast';
 
 import { EyeOff, Eye } from "lucide-react";
 import { ForgotPasswordUI } from "./_components/AdminForgotPassModals";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading,setLoading]=useState(false);
   const router = useRouter();
 
   // handleShowPassword = () => {
@@ -25,14 +28,24 @@ export default function AdminLogin() {
 
   const handleAdminLogin = async () => {
     try {
+      setLoading(true)
       const res = await adminLogin({ email, password });
-      console.log("Logged in admin", res);
-      alert("succcessfully logged in ");
+       setLoading(false)
+       toast.success( res.data.message, {
+       duration: 3000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     });
+      // alert("succcessfully logged in ");
       // redirect after login
       router.push("/admin-dashboard");
     } catch (err: any) {
-      console.error("Login failed", err.response?.data || err.message);
-      alert("something wrong!");
+      setLoading(false)
+      const message =err?.response?.data?.message || err?.message || "Something went wrong!";
+        toast.error(message);
+      
     }
   };
 
@@ -137,6 +150,15 @@ export default function AdminLogin() {
           </div>
         </div>
       )}
+       
+            {
+              loading &&(
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+                 <Spinner className=" animate-spin-slow text-[#123F93]" size={50}  />
+      
+                </div>
+              )
+            }
     </>
   );
 }
