@@ -79,7 +79,7 @@ export function ForgotPasswordUI({
     const getForgotEmail = localStorage.getItem("forgot-email");
 
     if (!getForgotEmail || !password) {
-      toast.error("Please enter the OTP correctly!");
+      toast.error("Please enter the password ");
       return;
     }
     try {
@@ -88,6 +88,7 @@ export function ForgotPasswordUI({
       console.log(res.data.message);
       setShowForgotModal(false);
       setLoading(false);
+      localStorage.removeItem('forgot-email')
       toast.success(res?.data?.message || "something went wrong", {
         duration: 5000,
         iconTheme: {
