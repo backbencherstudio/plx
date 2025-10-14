@@ -58,7 +58,7 @@ export const adminLogin = async (payload: LoginPayload) => {
     );
     const { token, user } = res.data.data;
     localStorage.setItem("token", res?.data?.token);
-    return { token, user };
+    return res;
 }
 
 // *** User Login ***
