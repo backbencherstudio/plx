@@ -39,3 +39,8 @@ export const uploadSchedule = async (data: FormData) => {
   });
   return res.data;
 };
+
+export const deleteSchedule = async (id: string) => {
+  const res = await axiosClient.delete(`/api/v1/schedule/delete/${id}`);
+  return res.data;
+};

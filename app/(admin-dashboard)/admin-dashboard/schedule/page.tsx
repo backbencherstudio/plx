@@ -12,6 +12,7 @@ import {
   uploadSchedule,
   Schedule,
   SchedulePagination,
+  deleteSchedule,
 } from "@/services/scheduleService";
 
 interface User {
@@ -124,6 +125,20 @@ export default function ScheduleList() {
       setUploading(false);
     }
   };
+
+
+  const handleDeleteSchedule = async (id: string) => {
+  if (!confirm("Are you sure you want to delete this schedule?")) return;
+
+  try {
+    const res = await deleteSchedule(id);
+    alert(res.message || "Schedule deleted successfully!");
+    fetchSchedules(currentPage, itemsPerPage); // refresh table
+  } catch (error: any) {
+    console.error("Delete failed:", error);
+    alert(error.response?.data?.message || "Delete failed!");
+  }
+};
 
   useEffect(() => {
     fetchSchedules(currentPage, itemsPerPage);
@@ -265,7 +280,7 @@ export default function ScheduleList() {
           <div className="text-center py-10">Loading...</div>
         ) : (
           <DynamicTable
-            columns={scheduleColumn}
+            columns={scheduleColumn({onDelete:handleDeleteSchedule})}
             data={schedules}
             hasWrapperBorder
             wrapperBorderColor="#F3F3F3"

@@ -43,8 +43,7 @@ interface DynamicTableProps {
   cellBorderColor?: string;
   hasWrapperBorder?: boolean;
   wrapperBorderColor?: string;
-
-   roundedClass?: string;
+  roundedClass?: string;
 }
 
 export default function DynamicTable({

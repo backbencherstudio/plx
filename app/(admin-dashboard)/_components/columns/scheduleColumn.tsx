@@ -122,9 +122,11 @@ const ScheduleModal = ({ schedule, onClose }: { schedule: any; onClose: () => vo
   );
 };
 
-export const scheduleColumn = [
+
+export const scheduleColumn = ({onDelete}:{onDelete :(id:string)=>void})=> [
   {
     label: "Assigned User",
+    
     accessor: "user",
     width: "20%",
     formatter: (item: any) => (
@@ -223,7 +225,7 @@ export const scheduleColumn = [
     label: "Actions",
     accessor: "id",
     width: "11%",
-    formatter: (item: string, row: any) => {
+    formatter: (id:string, row: any) => {
       const [open, setOpen] = useState(false);
       return (
         <>
@@ -231,9 +233,10 @@ export const scheduleColumn = [
             <button className="cursor-pointer" onClick={() => setOpen(true)}>
               <EyeIcon />
             </button>
-            <button className="cursor-pointer">
+            <button className="cursor-pointer" onClick={()=>onDelete(id)}>
               <DeleteIcon />
             </button>
+            
           </div>
           {open && <ScheduleModal schedule={row} onClose={() => setOpen(false)} />}
         </>
