@@ -1,12 +1,10 @@
 "use client"
 
-import { ChevronDown, Download, FileText, Eye } from "lucide-react"
+import { ChevronDown, Download, FileText, Eye, Bug } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState, useMemo } from "react"
-import { userData } from "@/app/lib/userdata"
-
-// Get schedule data from userdata
-const scheduleData = userData.schedulePage.schedulesTable.data
+import { useEffect, useMemo, useState } from "react"
+import { getMySchedules } from "@/services/scheduleService"
+import axiosClient from "@/lib/axiosclient"
 
 interface SchedulesTableProps {
   onViewDetail: (scheduleId: string) => void;
@@ -19,6 +17,43 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
   const [showCommodityDropdown, setShowCommodityDropdown] = useState(false)
   const [showScheduleMonthDropdown, setShowScheduleMonthDropdown] = useState(false)
   const [showTransportDropdown, setShowTransportDropdown] = useState(false)
+
+  // API state
+  const [isLoading, setIsLoading] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
+  const [apiData, setApiData] = useState<any[]>([])
+  const [pagination, setPagination] = useState<any>(null)
+  const [debugOpen, setDebugOpen] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<any>(null)
+  const [tokenPreview, setTokenPreview] = useState<string | null>(null)
+
+  const page = 1
+  const itemsPerPage = 50
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    setTokenPreview(token ? `${token.substring(0, 24)}...` : null)
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        setApiError(null)
+        const res = await getMySchedules(page, itemsPerPage)
+        setApiData(res?.data || [])
+        setPagination(res?.pagination || null)
+        setDebugInfo({
+          baseURL: (axiosClient.defaults as any).baseURL,
+          path: "/api/v1/schedule/my",
+          params: { page, limit: itemsPerPage },
+          pagination: res?.pagination,
+        })
+      } catch (e: any) {
+        setApiError(e?.response?.data?.message || e?.message || 'Failed to fetch schedules')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
 
   // Function to get transportation mode colors
   const getTransportationModeColor = (mode: string) => {
@@ -36,28 +71,28 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
     }
   }
 
-  // Get unique values for dropdowns
+  // Get unique values for dropdowns from API data
   const uniqueCommodities = useMemo(() => {
-    return Array.from(new Set(scheduleData.map(item => item.commodity.name)))
-  }, [])
+    return Array.from(new Set((apiData || []).map((item: any) => item.commodityType).filter(Boolean)))
+  }, [apiData])
 
   const uniqueScheduleMonths = useMemo(() => {
-    return Array.from(new Set(scheduleData.map(item => item.scheduleMonth.name)))
-  }, [])
+    return Array.from(new Set((apiData || []).map((item: any) => item.scheduleMonth).filter(Boolean)))
+  }, [apiData])
 
   const uniqueTransportModes = useMemo(() => {
-    return Array.from(new Set(scheduleData.map(item => item.transportationMode.name)))
-  }, [])
+    return Array.from(new Set((apiData || []).map((item: any) => item.transportMode).filter(Boolean)))
+  }, [apiData])
 
   // Filter data based on selected filters
   const filteredData = useMemo(() => {
-    return scheduleData.filter(item => {
-      const commodityMatch = !commodityFilter || item.commodity.name === commodityFilter
-      const scheduleMonthMatch = !scheduleMonthFilter || item.scheduleMonth.name === scheduleMonthFilter
-      const transportMatch = !transportModeFilter || item.transportationMode.name === transportModeFilter
+    return (apiData || []).filter((item: any) => {
+      const commodityMatch = !commodityFilter || item.commodityType === commodityFilter
+      const scheduleMonthMatch = !scheduleMonthFilter || item.scheduleMonth === scheduleMonthFilter
+      const transportMatch = !transportModeFilter || item.transportMode === transportModeFilter
       return commodityMatch && scheduleMonthMatch && transportMatch
     })
-  }, [commodityFilter, scheduleMonthFilter, transportModeFilter])
+  }, [apiData, commodityFilter, scheduleMonthFilter, transportModeFilter])
 
   const handleCommoditySelect = (commodity: string) => {
     setCommodityFilter(commodity === commodityFilter ? "" : commodity)
@@ -80,6 +115,14 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
       <div className="px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2.5">
           <h1 className="text-neutral-600 text-lg font-medium font-sans">Schedules</h1>
+          <button
+            type="button"
+            className="ml-3 inline-flex items-center gap-2 text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded cursor-pointer"
+            onClick={() => setDebugOpen(v => !v)}
+            title="Toggle API Debugger"
+          >
+            <Bug className="w-4 h-4" /> Debug
+          </button>
         </div>
         <div className="flex items-center gap-6">
           {/* Commodity Filter */}
@@ -210,6 +253,18 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
         </div>
       </div>
 
+      {/* Debugger */}
+      {debugOpen && (
+        <div className="mx-6 mb-4 p-3 rounded-lg border bg-[#F5F8FA] text-xs text-[#4A4C56]">
+          <div className="flex justify-between items-center mb-2">
+            <div className="font-semibold">API Debugger</div>
+            <div className="opacity-70">Token: {tokenPreview || 'none'}</div>
+          </div>
+          {apiError && <div className="text-red-600 mb-2">Error: {apiError}</div>}
+          <pre className="overflow-auto max-h-40">{JSON.stringify({ ...debugInfo, pagination }, null, 2)}</pre>
+        </div>
+      )}
+
       {/* Table */}
       <div className="border-t border-zinc-200/30 relative">
         <table className="w-full">
@@ -242,17 +297,26 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
 
           {/* Table Body */}
           <tbody>
-            {filteredData.length > 0 ? (
-              filteredData.map((item) => (
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} className="h-20 px-4 py-3 text-center">
+                  <div className="text-neutral-500 text-sm">Loading schedules...</div>
+                </td>
+              </tr>
+            ) : filteredData.length > 0 ? (
+              filteredData.map((item: any) => (
                 <tr key={item.id} className="border-t border-slate-200">
                   {/* File Column */}
                   <td className="w-[500px] h-20 px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 ${getTransportationModeColor(item.transportationMode.name).bg} rounded-lg flex items-center justify-center`}>
-                        <FileText className={`w-5 h-5 ${getTransportationModeColor(item.transportationMode.name).text}`} />
+                      <div className={`w-10 h-10 ${getTransportationModeColor(item.transportMode).bg} rounded-lg flex items-center justify-center`}>
+                        <FileText className={`w-5 h-5 ${getTransportationModeColor(item.transportMode).text}`} />
                       </div>
                       <div className="flex flex-col justify-between">
-                        <div className="text-neutral-600 text-sm font-medium font-sans leading-tight">{item.file.name}</div>
+                        <div className="text-neutral-600 text-sm font-medium font-sans leading-tight">{(() => {
+                          const url = item.scheduleFile || ""
+                          try { return decodeURIComponent(url.split('/').pop() || url) } catch { return url }
+                        })()}</div>
                         {/* <div className="text-zinc-500 text-xs font-normal font-sans leading-none">{item.file.description}</div> */}
                       </div>
                     </div>
@@ -260,28 +324,28 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
 
                   {/* Asset Group Column */}
                   <td className="w-64 h-20 px-4 py-3">
-                    <div className="text-neutral-600 text-sm font-medium font-sans">{item.assetGroup.name}</div>
+                    <div className="text-neutral-600 text-sm font-medium font-sans">{item.assetGroup}</div>
                   </td>
 
                   {/* Commodity Column */}
                   <td className="w-64 h-20 px-4 py-3">
-                    <div className="text-neutral-600 text-sm font-medium font-sans">{item.commodity.name}</div>
+                    <div className="text-neutral-600 text-sm font-medium font-sans">{item.commodityType}</div>
                   </td>
 
                   {/* Schedule Month Column */}
                   <td className="w-64 h-20 px-4 py-3">
-                    <div className="text-neutral-600 text-sm font-medium font-sans">{item.scheduleMonth.name}</div>
+                    <div className="text-neutral-600 text-sm font-medium font-sans">{item.scheduleMonth}</div>
                   </td>
 
                   {/* Upload Date Column */}
                   <td className="w-44 h-20 px-4 py-3 opacity-80">
-                    <div className="text-neutral-600 text-sm font-medium font-sans">{item.uploadDate}</div>
+                    <div className="text-neutral-600 text-sm font-medium font-sans">{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-'}</div>
                   </td>
 
                   {/* Transportation Mode Column */}
                   <td className="w-44 h-20 px-4 py-3">
-                    <div className={`w-20 h-8 p-1 ${getTransportationModeColor(item.transportationMode.name).bg} rounded-full flex justify-center items-center`}>
-                      <div className={`text-sm font-medium font-sans ${getTransportationModeColor(item.transportationMode.name).text}`}>{item.transportationMode.name}</div>
+                    <div className={`w-20 h-8 p-1 ${getTransportationModeColor(item.transportMode).bg} rounded-full flex justify-center items-center`}>
+                      <div className={`text-sm font-medium font-sans ${getTransportationModeColor(item.transportMode).text}`}>{item.transportMode}</div>
                     </div>
                   </td>
 
@@ -300,6 +364,7 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0 hover:bg-slate-100"
+                        onClick={() => item.scheduleFile && window.open(item.scheduleFile, '_blank')}
                       >
                         <Download className="w-4 h-4 text-neutral-600" />
                       </Button>

@@ -26,6 +26,12 @@ export const getSchedules = async (page: number, limit: number) => {
   return res.data;
 };
 
+// Fetch schedules of the authenticated subscriber ("my" schedules)
+export const getMySchedules = async (page: number, limit: number) => {
+  const res = await axiosClient.get("/api/v1/schedule/my", { params: { page, limit } });
+  return res.data;
+};
+
 // Search users by name/email
 export const searchUsers = async (query: string, limit = 10) => {
   const res = await axiosClient.get("/api/v1/users/search", { params: { query, page: 1, limit } });

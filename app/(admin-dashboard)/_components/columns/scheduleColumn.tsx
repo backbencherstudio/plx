@@ -182,6 +182,8 @@ export const scheduleColumn = ({onDelete}:{onDelete :(id:string)=>void})=> [
             ? "text-[#116557] bg-[#E9FAF7]"
             : item === "Railcar"
             ? "text-[#6E00FF] bg-[#F1E6FF]"
+            : item === "Marine"
+            ? "text-[#8A5B00] bg-[#FFF7E6]"
             : ""
         }`}
       >
@@ -217,7 +219,7 @@ export const scheduleColumn = ({onDelete}:{onDelete :(id:string)=>void})=> [
     width: "14%",
     formatter: (item: string) => (
       <p className="text-sm text-graytext font-medium">
-        {new Date(item).toLocaleDateString()} {new Date(item).toLocaleTimeString()}
+        {new Date(item).toLocaleDateString()}
       </p>
     ),
   },
