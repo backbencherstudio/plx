@@ -5,6 +5,16 @@ import DynamicTable from "../../_components/reusable/DynamicTable";
 import { scheduleColumn } from "../../_components/columns/scheduleColumn";
 import TransportPagination from "../../_components/reusable/TransportPagination";
 import Footer from "../../_components/footer";
+import { ChevronDown } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   getSchedules,
@@ -32,6 +42,8 @@ export default function ScheduleList() {
   const [assignTo, setAssignTo] = useState("");
   const [assignToName, setAssignToName] = useState("");
   const [commodityType, setCommodityType] = useState("");
+  const [crudeSubType, setCrudeSubType] = useState("");
+  const [showCommodityPanel, setShowCommodityPanel] = useState(false);
   const [assetGroup, setAssetGroup] = useState("");
   const [scheduleMonth, setScheduleMonth] = useState("");
   const [scheduleFile, setScheduleFile] = useState<File | null>(null);
@@ -46,19 +58,6 @@ export default function ScheduleList() {
   const fetchSchedules = async (page = 1, limit = itemsPerPage) => {
     setLoading(true);
     try {
-      const token = authToken || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
-      if (!token) throw new Error("No auth token found");
-
-      const res = await axios.get(
-        `http://192.168.7.12:4001/api/v1/schedule`,
-        {
-          params: { page, limit },
-          headers: { Authorization: token },
-        }
-      );
-
-      setSchedules(res.data.data as Schedule[]);
-      setPagination(res.data.pagination as SchedulePagination);
       const data = await getSchedules(page, limit);
       setSchedules(data.data as Schedule[]);
       setPagination(data.pagination as SchedulePagination);
@@ -93,15 +92,6 @@ export default function ScheduleList() {
         return;
       }
       try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
-        const res = await axios.get(
-          `http://192.168.7.12:4001/api/v1/users/search`,
-          {
-            params: { query, page: 1, limit: 10 },
-            headers: { Authorization: token || "" },
-          }
-        );
-        setUserSuggestions(res.data.data || []);
         const users = await searchUsers(query);
         setUserSuggestions(users || []);
       } catch (err) {
@@ -125,19 +115,11 @@ export default function ScheduleList() {
     formData.append("assignTo", assignTo);
     formData.append("commodityType", commodityType);
     formData.append("assetGroup", assetGroup);
-    formData.append("seduleMonth", scheduleMonth);
+    formData.append("scheduleMonth", scheduleMonth);
     formData.append("transportMode", transportMode);
 
     setUploading(true);
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
-      const res = await axios.post(
-        "http://192.168.7.12:4001/api/v1/schedule",
-        formData,
-        { headers: { Authorization: token || "", "Content-Type": "multipart/form-data" } }
-      );
-
-      alert(res.data.message || "Schedule uploaded successfully!");
       const res = await uploadSchedule(formData);
       alert(res.message || "Schedule uploaded successfully!");
       setAssignTo("");
@@ -221,46 +203,98 @@ export default function ScheduleList() {
             />
           </div>
 
-          <div className="flex flex-col w-full">
+          <div className="w-full relative">
             <label className="text-[#4A4C56] text-sm mb-1.5">Commodity Type</label>
-            <input
-              type="text"
-              value={commodityType}
-              onChange={(e) => setCommodityType(e.target.value)}
-              placeholder="Enter commodity type"
-              className="border border-[#E6E6E6] py-3 px-5 rounded-[10px]"
-            />
+            <button
+              type="button"
+              onClick={() => setShowCommodityPanel(v => !v)}
+              className="w-full py-3 px-5 pr-10 text-left rounded-[10px] border border-[#E6E6E6] text-sm font-medium text-graytext relative"
+            >
+              <span>
+                {commodityType ? commodityType.replaceAll('_',' ') : 'Select commodity type'}
+                {commodityType === 'crude_oil' && crudeSubType ? ` • ${crudeSubType.replaceAll('_',' ')}` : ''}
+              </span>
+              <ChevronDown
+                className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 transition-transform ${showCommodityPanel ? "rotate-180" : ""}`}
+              />
+            </button>
+            {showCommodityPanel && (
+              <div className="absolute z-20 mt-2 w-full bg-white rounded-xl border border-gray-200 shadow-[0px_10px_30px_rgba(0,0,0,0.08)] p-0">
+                <div className="grid grid-cols-2 gap-0">
+                  <div className="p-0">
+                    <div className="px-4 py-2 bg-primary text-white rounded-tl-xl rounded-tr-none text-sm font-semibold">Select commodity type</div>
+                    {[
+                      {v:'ngls',l:'NGLs'},
+                      {v:'refined_products',l:'Refined Products'},
+                      {v:'natural_gas',l:'Natural Gas'},
+                      {v:'petrochemicals',l:'Petrochemicals'},
+                      {v:'crude_oil',l:'Crude Oil'},
+                    ].map(opt => (
+                      <button
+                        key={opt.v}
+                        onClick={() => { setCommodityType(opt.v); if(opt.v !== 'crude_oil'){ setCrudeSubType(''); setShowCommodityPanel(false);} }}
+                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 text-sm ${commodityType===opt.v? 'bg-gray-50':''}`}
+                      >{opt.l}</button>
+                    ))}
+                  </div>
+                  <div className="p-0">
+                    {commodityType === 'crude_oil' && (
+                      <div className="bg-white rounded-r-xl h-full">
+                        <div className="px-4 py-2 text-sm font-semibold text-neutral-700">Crude Oil</div>
+                        {[
+                          {v:'light_sweet_crude',l:'Light Sweet Crude'},
+                          {v:'medium_crude',l:'Medium Crude'},
+                          {v:'heavy_crude',l:'Heavy Crude'},
+                          {v:'petrochemicals',l:'Petrochemicals'},
+                        ].map(opt => (
+                          <button
+                            key={opt.v}
+                            onClick={() => { setCrudeSubType(opt.v); setShowCommodityPanel(false); }}
+                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 text-sm ${crudeSubType===opt.v? 'bg-gray-50':''}`}
+                          >{opt.l}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="w-full">
             <label className="text-[#4A4C56] text-sm mb-1.5">Transport Mode</label>
-            <select
-              value={transportMode}
-              onChange={(e) => setTransportMode(e.target.value)}
-              className="border border-[#E6E6E6] py-3 px-5 rounded-[10px] w-full"
-            >
-              <option value="">Transport Mode</option>
-              {["Pipeline", "Trucking", "Railcar", "Marine"].map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+            <Select value={transportMode} onValueChange={(v)=>setTransportMode(v)}>
+              <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
+                <SelectValue placeholder={transportMode || "Select transport mode"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Select transport mode</SelectLabel>
+                  <SelectItem value="Pipeline">Pipeline</SelectItem>
+                  <SelectItem value="Trucking">Trucking</SelectItem>
+                  <SelectItem value="Railcar">Railcar</SelectItem>
+                  <SelectItem value="Marine">Marine</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="w-full">
             <label className="text-[#4A4C56] text-sm mb-1.5">Schedule Month</label>
-            <select
-              value={scheduleMonth}
-              onChange={(e) => setScheduleMonth(e.target.value)}
-              className="border border-[#E6E6E6] py-3 px-5 rounded-[10px] w-full"
-            >
-              <option value="">Select month</option>
-              {[
-                "January","February","March","April","May","June","July",
-                "August","September","October","November","December"
-              ].map((month) => (
-                <option key={month} value={month.toLowerCase()}>{month}</option>
-              ))}
-            </select>
+            <Select value={scheduleMonth} onValueChange={(v)=>setScheduleMonth(v)}>
+              <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
+                <SelectValue placeholder={scheduleMonth || "Select month"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Select month</SelectLabel>
+                  {["January","February","March","April","May","June","July",
+                    "August","September","October","November","December"].map((m)=>(
+                      <SelectItem key={m} value={m.toLowerCase()}>{m}</SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
