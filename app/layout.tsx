@@ -1,6 +1,7 @@
  
 import type { Metadata } from "next";
 import { Roboto, Manrope } from "next/font/google";
+import  { Toaster } from 'react-hot-toast';
 import "./globals.css";
 
 const roboto = Roboto({
@@ -33,7 +34,8 @@ export default function RootLayout({
       <body
         className={`${roboto.variable} ${manrope.variable} antialiased`}
       >
-        {children}        
+        {children}     
+        <Toaster/>   
       </body>
     </html>
   );

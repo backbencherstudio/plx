@@ -8,92 +8,69 @@ import EmailIcon from "@/public/commonIcons/EmailIcon";
 import LockIcon from "@/public/commonIcons/LockIcon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { subscriberLogin } from "@/services/authService";
+import {  forgotPasswordSendOtp, resetPassword, subscriberLogin, verifyForgotPasswordOtp } from "@/services/authService";
+import toast from 'react-hot-toast';
+import { Spinner } from "@/components/ui/spinner";
+import { ForgotPasswordUI } from "../_components/AdminForgotPassModals";
+import { EyeOff, Eye } from "lucide-react";
 
 export default function SubscriberLogin() {
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [showResetModal, setShowResetModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  
   const router = useRouter();
 
-  // ✅ Login handler
   const handleLogin = async () => {
     if (!email || !password) {
-      alert("Please enter both email and password!");
+      toast.error("Please enter both email and password!");
       return;
     }
-
     try {
       setLoading(true);
       const res = await subscriberLogin({ email, password });
-
       if (res.success) {
-        console.log("✅ Login success:", res);
-        alert(res.message || "Login successful!");
+     toast.success("Successfully logged in", {
+       duration: 3000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     });
         router.push("/s-dashboard");
       } else {
-        alert(res.message || "Invalid credentials!");
+        toast.error(res.message || "Invalid credentials!");
       }
     } catch (error: any) {
-      alert(error?.message || "Something went wrong!");
+      toast.error(error?.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleForgotPassword = () => setShowForgotModal(true);
-  const handleSendOtp = () => { setShowForgotModal(false); setShowOtpModal(true); };
-  const handleOtpSubmit = () => { setShowOtpModal(false); setShowResetModal(true); };
-  const handleResetPassword = () => { setShowResetModal(false); setShowSuccessModal(true); };
-  const handleBackToLogin = () => { setShowSuccessModal(false); setEmail(""); setPassword(""); setOtp(["", "", "", ""]); };
-
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length <= 1) {
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
-      if (value && index < 5) {
-        const nextInput = document.getElementById(`otp-${index + 1}`);
-        if (nextInput) nextInput.focus();
-      }
-    }
-  };
-
-  const closeAllModals = () => {
-    setShowForgotModal(false);
-    setShowOtpModal(false);
-    setShowResetModal(false);
-    setShowSuccessModal(false);
-  };
+  const closeAllModals = () => setShowForgotModal(false);
 
   return (
     <>
       <div className="flex flex-col xl:flex-row items-center justify-center bg-[#F5F8FA]">
         <div className="max-w-[570px] mx-4 xl:mx-auto flex-1 my-4">
           <Image src={logo} width={200} height={89} alt="logo" />
-          <h1 className="text-black text-[40px] font-medium mt-14">
-            Welcome to PLX!
-          </h1>
+          <h1 className="text-black text-[40px] font-medium mt-14">Welcome to PLX!</h1>
           <p className="text-base text-[#777980] mb-10">
             Enter your email and password to access your dashboard.
           </p>
 
-          {/* Email Field */}
+          {/* Email */}
           <div className="flex flex-col relative">
-            <label htmlFor="email" className="text-sm text-[#4A4C56] mb-[2px]">
-              Email
-            </label>
+            <label htmlFor="email" className="text-sm text-[#4A4C56] mb-[2px]">Email</label>
             <div className="relative">
               <input
                 className="py-4 px-5 pl-12 w-full rounded-[10px] border border-[#E6E8EA] bg-white"
                 type="email"
                 id="email"
-                placeholder="Enter Your Email "
+                placeholder="Enter Your Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -103,15 +80,13 @@ export default function SubscriberLogin() {
             </div>
           </div>
 
-          {/* Password Field */}
+          {/* Password */}
           <div className="flex flex-col relative mt-6">
-            <label htmlFor="password" className="text-sm text-[#4A4C56] mb-[2px]">
-              Password
-            </label>
+            <label htmlFor="password" className="text-sm text-[#4A4C56] mb-[2px]">Password</label>
             <div className="relative">
               <input
                 className="py-4 px-5 pl-12 w-full rounded-[10px] border border-[#E6E8EA] bg-white"
-                type="password"
+                 type={showPassword ? "text" : "password"}
                 id="password"
                 placeholder="Enter Your Password"
                 value={password}
@@ -120,17 +95,27 @@ export default function SubscriberLogin() {
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                 <LockIcon />
               </div>
+              <button
+                              className=" absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff color="#afafb5" strokeWidth={1.75} />
+                              ) : (
+                                <Eye color="#afafb5" strokeWidth={1.75} />
+                              )}
+                            </button>
             </div>
           </div>
 
           <p
             className="text-end text-sm text-primary font-medium mt-2 cursor-pointer hover:underline"
-            onClick={handleForgotPassword}
+            onClick={() => setShowForgotModal(true)}
           >
             Forgot Password?
           </p>
 
-          {/* ✅ Login Button */}
+          {/* Login Button */}
           <button
             onClick={handleLogin}
             disabled={loading}
@@ -142,9 +127,9 @@ export default function SubscriberLogin() {
           </button>
 
           <div className="flex items-center pt-6 pb-[18px]">
-            <div className="flex-1 h-px bg-[#D2D2D5]"></div>
+            <div className="flex-1 h-px bg-[#D2D2D5]" />
             <span className="px-4 text-[#777980] text-xs font-medium">OR</span>
-            <div className="flex-1 h-px bg-[#D2D2D5]"></div>
+            <div className="flex-1 h-px bg-[#D2D2D5]" />
           </div>
 
           <div className="border border-[#E6E8EA] py-4 px-6 rounded-[8px] bg-white cursor-pointer">
@@ -156,9 +141,7 @@ export default function SubscriberLogin() {
 
           <p className="text-sm text-[#4A4C56] text-center mt-8">
             Don't have an Account?{" "}
-            <Link href="/sign-up" className="text-primary font-semibold ml-1">
-              Sign Up
-            </Link>
+            <Link href="/sign-up" className="text-primary font-semibold ml-1">Sign Up</Link>
           </p>
         </div>
 
@@ -167,8 +150,8 @@ export default function SubscriberLogin() {
         </div>
       </div>
 
-      {/* 🔒 Overlay & Modals */}
-      {(showForgotModal || showOtpModal || showResetModal || showSuccessModal) && (
+      {/* Overlay */}
+      {showForgotModal && (
         <div className="fixed inset-0 bg-black/50 z-40" onClick={closeAllModals}></div>
       )}
 
@@ -176,47 +159,27 @@ export default function SubscriberLogin() {
       {showForgotModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-[12px] p-8 w-full max-w-[450px] mx-4">
-            <h2 className="text-2xl font-semibold text-black mb-2">Forgot Password</h2>
-            <p className="text-[#777980] mb-6">
-              Enter your email address to receive an OTP
-            </p>
-
-            <div className="flex flex-col relative mb-6">
-              <label htmlFor="forgot-email" className="text-sm text-[#4A4C56] mb-[2px]">
-                Email
-              </label>
-              <div className="relative">
-                <input
-                  className="py-4 px-5 pl-12 w-full rounded-[10px] border border-[#E6E8EA]"
-                  type="email"
-                  id="forgot-email"
-                  placeholder="Enter Your Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  <EmailIcon />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                className="flex-1 py-3 px-6 border border-gray-300 text-gray-700 rounded-[8px] font-medium"
-                onClick={closeAllModals}
-              >
-                Cancel
-              </button>
-              <button
-                className="flex-1 py-3 px-6 bg-primary text-white rounded-[8px] font-medium"
-                onClick={handleSendOtp}
-              >
-                Send OTP
-              </button>
-            </div>
+            <ForgotPasswordUI
+              email={email}
+              setEmail={setEmail}
+              setShowForgotModal={setShowForgotModal}
+             
+            />
           </div>
         </div>
       )}
+
+     
+      {
+        loading &&(
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+           <Spinner className=" animate-spin-slow text-[#123F93]" size={50}  />
+
+          </div>
+        )
+      }
     </>
   );
 }
+
+ 

@@ -77,15 +77,4 @@ export const deleteUser = async (id: number): Promise<void> => {
 };
 
 // *** Schedule API calls ***
-
-// *** Schedule API calls ***
-
- export const getSchedules = async (params: PaginationParams = {}): Promise<ScheduleResponse> => {
-  const { page = 1, limit = 5 } = params;
-
-  const res = await axiosClient.get<ScheduleResponse>("/api/v1/schedule", {
-    params: { page, limit },
-  });
-
-  return res.data;
-};
+ 

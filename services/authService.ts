@@ -56,9 +56,9 @@ export const adminLogin = async (payload: LoginPayload) => {
         "/api/v1/auth/admin/login",
         payload
     );
-    const { token, user } = res.data.data;
+ 
     localStorage.setItem("token", res?.data?.token);
-    return { token, user };
+    return res;
 }
 
 // *** User Login ***
@@ -99,7 +99,20 @@ export const subscriberLogin = async (payload: SubscriberLoginPayload) => {
   }
 };
 
-// *** Logout ***
+export const forgotPasswordSendOtp= async (email:string)=>{
+    const res = await axiosClient.post('/api/v1/auth/forgotpassword/sendotp',{email})
+    return res.data
+}
+
+export const verifyForgotPasswordOtp = async (email: string, otp: string) => {
+   const res=axiosClient.post("/api/v1/auth/forgotpassword/verifyotp", { email, otp });
+   return res;
+};
+
+export const resetPassword=async (email:string,password:string)=>{
+     const res= axiosClient.post('/api/v1/auth/forgotpassword/reset',{email,password});
+     return res;
+}
  
 
 // ======================== logout ============================
