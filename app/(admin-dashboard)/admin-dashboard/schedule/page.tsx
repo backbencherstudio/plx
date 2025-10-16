@@ -103,7 +103,7 @@ export default function ScheduleList() {
     formData.append("assignTo", assignTo);
     formData.append("commodityType", commodityType);
     formData.append("assetGroup", assetGroup);
-    formData.append("seduleMonth", scheduleMonth);
+    formData.append("scheduleMonth", scheduleMonth);
     formData.append("transportMode", transportMode);
 
     setUploading(true);
