@@ -64,7 +64,7 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
         const res = await getCurrentUserProfile();
         const data = res?.data || {};
         if (!isMounted) return;
-        setUserName(data.fullName || `${data.firstName || ""} ${data.lastName || ""}`.trim());
+        setUserName(data.fullName || "");
         setUserType(data.type || "");
       } catch (e) {
         // swallow error for header UI; keep placeholders

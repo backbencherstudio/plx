@@ -1,12 +1,14 @@
+"use client";
 import profileImg from "@/public/header/images/profileImg.png";
 import Image from "next/image";
 import { Menu } from 'lucide-react';
 import NotificationIcon from "@/public/header/Icons/NotificationIcon";
 import ProfileIcon from "@/public/header/Icons/ProfileIcon";
 import { NotificationPopup } from "../NotificationPopup";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { userData } from "@/app/lib/userdata";
 import { usePathname } from "next/navigation"; // ✅ Correct import for App Router
+import { getCurrentUserProfile } from "@/services/authService";
 
 interface SubscriberHeaderProps {
   onMenuClick: () => void;
@@ -14,6 +16,9 @@ interface SubscriberHeaderProps {
 
 export default function SubscriberHeader({ onMenuClick }: SubscriberHeaderProps) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [userName, setUserName] = useState<string>("");
+  const [userType, setUserType] = useState<string>("");
+  const [isLoadingUser, setIsLoadingUser] = useState<boolean>(false);
 
   // ✅ Get current route in App Router
   const currentRoute = usePathname();
@@ -53,6 +58,29 @@ export default function SubscriberHeader({ onMenuClick }: SubscriberHeaderProps)
     return userData.notifications.count;
   };
 
+  // Fetch current user profile for header
+  useEffect(() => {
+    let isMounted = true;
+    const fetchMe = async () => {
+      try {
+        setIsLoadingUser(true);
+        const res = await getCurrentUserProfile();
+        const data = res?.data || {};
+        if (!isMounted) return;
+        setUserName(data.fullName || "");
+        setUserType(data.type || "");
+      } catch (e) {
+        // ignore error in header UI
+      } finally {
+        if (isMounted) setIsLoadingUser(false);
+      }
+    };
+    fetchMe();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <>
       <header className="bg-[#EDF2F7] py-3 pr-8 border-l border-l-[#E9E9EA]">
@@ -85,8 +113,8 @@ export default function SubscriberHeader({ onMenuClick }: SubscriberHeaderProps)
                 <ProfileIcon/>
               </div>
               <div>
-                <h3 className="text-sm text-graytext font-semibold">{userInfo.name}</h3>
-                <p className="text-[#777980] text-sm">{userInfo.company}</p>
+                <h3 className="text-sm text-graytext font-semibold">{isLoadingUser ? "Loading..." : (userName || "—")}</h3>
+                <p className="text-[#777980] text-sm">{userType ? userType.charAt(0).toUpperCase() + userType.slice(1) : "—"}</p>
               </div>
             </div>
           </div>
