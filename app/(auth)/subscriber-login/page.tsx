@@ -8,11 +8,19 @@ import EmailIcon from "@/public/commonIcons/EmailIcon";
 import LockIcon from "@/public/commonIcons/LockIcon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {  forgotPasswordSendOtp, resetPassword, subscriberLogin, verifyForgotPasswordOtp } from "@/services/authService";
-import toast from 'react-hot-toast';
+import {
+  forgotPasswordSendOtp,
+  googleLogin,
+  resetPassword,
+  subscriberLogin,
+  verifyForgotPasswordOtp,
+} from "@/services/authService";
+import toast from "react-hot-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { ForgotPasswordUI } from "../_components/AdminForgotPassModals";
 import { EyeOff, Eye } from "lucide-react";
+import { signInWithPopup, onAuthStateChanged } from "firebase/auth";
+import { auth, googleProvider } from "@/firebase.config";
 
 export default function SubscriberLogin() {
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -20,8 +28,29 @@ export default function SubscriberLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   const router = useRouter();
+
+  const handleGoogleLogin = async () => {
+    const result = await signInWithPopup(auth, googleProvider);
+
+    const email = result.user.email ?? "";
+    const displayName = result.user.displayName ?? "";
+    const photoURL = result.user.photoURL ?? "";
+
+    // console.log(displayName);
+    // console.log(photoURL);
+    // console.log(email);
+
+    try {
+      if (result) {
+        const res = await googleLogin(email, displayName, photoURL);
+        console.log(res);
+      }
+    } catch (error) {
+      console.error("Google login failed:", error);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -32,13 +61,13 @@ export default function SubscriberLogin() {
       setLoading(true);
       const res = await subscriberLogin({ email, password });
       if (res.success) {
-     toast.success("Successfully logged in", {
-       duration: 3000,  
-       iconTheme: {
-         primary: "#123F93",  
-         secondary: "#FFFFFF", 
-       },
-     });
+        toast.success("Successfully logged in", {
+          duration: 3000,
+          iconTheme: {
+            primary: "#123F93",
+            secondary: "#FFFFFF",
+          },
+        });
         router.push("/s-dashboard");
       } else {
         toast.error(res.message || "Invalid credentials!");
@@ -57,14 +86,18 @@ export default function SubscriberLogin() {
       <div className="flex flex-col xl:flex-row items-center justify-center bg-[#F5F8FA]">
         <div className="max-w-[570px] mx-4 xl:mx-auto flex-1 my-4">
           <Image src={logo} width={200} height={89} alt="logo" />
-          <h1 className="text-black text-[40px] font-medium mt-14">Welcome to PLX!</h1>
+          <h1 className="text-black text-[40px] font-medium mt-14">
+            Welcome to PLX!
+          </h1>
           <p className="text-base text-[#777980] mb-10">
             Enter your email and password to access your dashboard.
           </p>
 
           {/* Email */}
           <div className="flex flex-col relative">
-            <label htmlFor="email" className="text-sm text-[#4A4C56] mb-[2px]">Email</label>
+            <label htmlFor="email" className="text-sm text-[#4A4C56] mb-[2px]">
+              Email
+            </label>
             <div className="relative">
               <input
                 className="py-4 px-5 pl-12 w-full rounded-[10px] border border-[#E6E8EA] bg-white"
@@ -82,11 +115,16 @@ export default function SubscriberLogin() {
 
           {/* Password */}
           <div className="flex flex-col relative mt-6">
-            <label htmlFor="password" className="text-sm text-[#4A4C56] mb-[2px]">Password</label>
+            <label
+              htmlFor="password"
+              className="text-sm text-[#4A4C56] mb-[2px]"
+            >
+              Password
+            </label>
             <div className="relative">
               <input
                 className="py-4 px-5 pl-12 w-full rounded-[10px] border border-[#E6E8EA] bg-white"
-                 type={showPassword ? "text" : "password"}
+                type={showPassword ? "text" : "password"}
                 id="password"
                 placeholder="Enter Your Password"
                 value={password}
@@ -96,15 +134,15 @@ export default function SubscriberLogin() {
                 <LockIcon />
               </div>
               <button
-                              className=" absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? (
-                                <EyeOff color="#afafb5" strokeWidth={1.75} />
-                              ) : (
-                                <Eye color="#afafb5" strokeWidth={1.75} />
-                              )}
-                            </button>
+                className=" absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff color="#afafb5" strokeWidth={1.75} />
+                ) : (
+                  <Eye color="#afafb5" strokeWidth={1.75} />
+                )}
+              </button>
             </div>
           </div>
 
@@ -133,15 +171,20 @@ export default function SubscriberLogin() {
           </div>
 
           <div className="border border-[#E6E8EA] py-4 px-6 rounded-[8px] bg-white cursor-pointer">
-            <div className="flex justify-center items-center gap-6">
+            <button
+              onClick={handleGoogleLogin}
+              className="flex justify-center items-center gap-6"
+            >
               <Image src={googleImg} alt="google img" />
               <p>Continue with Google</p>
-            </div>
+            </button>
           </div>
 
           <p className="text-sm text-[#4A4C56] text-center mt-8">
             Don't have an Account?{" "}
-            <Link href="/sign-up" className="text-primary font-semibold ml-1">Sign Up</Link>
+            <Link href="/sign-up" className="text-primary font-semibold ml-1">
+              Sign Up
+            </Link>
           </p>
         </div>
 
@@ -152,7 +195,10 @@ export default function SubscriberLogin() {
 
       {/* Overlay */}
       {showForgotModal && (
-        <div className="fixed inset-0 bg-black/50 z-40" onClick={closeAllModals}></div>
+        <div
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={closeAllModals}
+        ></div>
       )}
 
       {/* Forgot Password Modal */}
@@ -163,23 +209,16 @@ export default function SubscriberLogin() {
               email={email}
               setEmail={setEmail}
               setShowForgotModal={setShowForgotModal}
-             
             />
           </div>
         </div>
       )}
 
-     
-      {
-        loading &&(
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
-           <Spinner className=" animate-spin-slow text-[#123F93]" size={50}  />
-
-          </div>
-        )
-      }
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+          <Spinner className=" animate-spin-slow text-[#123F93]" size={50} />
+        </div>
+      )}
     </>
   );
 }
-
- 
