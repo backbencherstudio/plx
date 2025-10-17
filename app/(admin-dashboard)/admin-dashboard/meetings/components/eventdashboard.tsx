@@ -73,9 +73,6 @@ export default function EventDashboard() {
         } else if (Array.isArray(response)) {
           // If response is directly an array
           meetings = response;
-        } else if (response.data && Array.isArray(response.data)) {
-          // If meetings are in a data property
-          meetings = response.data;
         }
         
         if (meetings.length > 0) {

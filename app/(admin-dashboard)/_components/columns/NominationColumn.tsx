@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useState } from "react";
 import Image from "next/image";
 import rightArrow from "@/public/nominations/Frame.svg";
 import EyeIcon from "@/public/nominations/icons/EyeIcon";
@@ -11,149 +11,45 @@ import CalenderIcon from "@/public/nominations/icons/CalenderIcon";
 import BoxIcon from "@/public/nominations/icons/BoxIcon";
 import { updateNominationStatus } from "@/services/nominationService";
 
-// Edit Modal Component
-const EditModal = ({ isOpen, onClose, rowData }: { isOpen: boolean; onClose: () => void; rowData: any }) => {
-  if (!isOpen) return null;
+// Dropdown component for the action menu
+import { deleteNomination } from "@/services/nominationService";
 
-  const [selectedStatus, setSelectedStatus] = useState<string>("Submitted");
-  const [saving, setSaving] = useState(false);
+const ActionDropdown = ({ rowId, rowData, onDeleted }: { rowId: string; rowData: any; onDeleted?: () => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Map any casing (e.g. "complete") to the backend-allowed, case-sensitive values
   const normalizeStatus = (value: string | undefined | null): "Submitted" | "Complete" | "Withdraw" => {
     const v = (value || "").trim().toLowerCase();
     if (v === "submitted") return "Submitted";
     if (v === "complete") return "Complete";
     if (v === "withdraw") return "Withdraw";
-    // Default to a safe value
     return "Submitted";
   };
 
-  useEffect(() => {
-    if (!rowData) return;
-    setSelectedStatus(normalizeStatus(rowData?.status));
-  }, [rowData]);
-
-  const handleSave = async () => {
+  const updateStatus = async (status: "Submitted" | "Complete" | "Withdraw") => {
     try {
-      setSaving(true);
-      // Ensure we always send an allowed, case-sensitive status
-      const safeStatus = normalizeStatus(selectedStatus);
-      await updateNominationStatus(rowData.id, safeStatus);
-
-      onClose();
+      const confirmed = window.confirm(`Are you sure you want to set status to ${status}?`);
+      if (!confirmed) return;
+      const res = await updateNominationStatus(String(rowId), status);
+      alert(res?.message || `Status updated to ${status}`);
+      // simple refresh to reflect changes
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
     } catch (e) {
       console.error("Failed to update nomination", e);
+      const msg = (e as any)?.response?.data?.message || (e as any)?.message || "Failed to update nomination status";
+      alert(msg);
     } finally {
-      setSaving(false);
+      setIsOpen(false);
     }
   };
 
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 z-[9999]"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[10000] w-11/12 max-w-4xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto p-6">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex items-center gap-4">
-            <button className="w-11 h-11 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-              <PlusCircleIcon className="w-6 h-6 text-white" />
-            </button>
-            <div className="flex flex-col gap-1">
-              <h1 className="text-lg font-medium text-neutral-800 font-['roboto']">
-                Edit Nomination
-              </h1>
-              <p className="text-sm text-neutral-600 font-['roboto']">
-                Update nomination details for {rowData?.subscriber}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Status-only Form */}
-        <div className="mt-7">
-          <div className="mb-6">
-            <h3 className="text-lg text-[#1D1F2C] font-medium mb-2.5">
-              Update Status
-            </h3>
-            <p className="text-sm text-neutral-600 mb-4">Allowed statuses: Submitted, Complete, Withdraw</p>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => setSelectedStatus("Submitted")}
-                className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${selectedStatus === "Submitted" ? "bg-yellow-100 text-yellow-800 border-yellow-300" : "bg-white text-yellow-700 border-yellow-300 hover:bg-yellow-50"}`}
-              >
-                Submitted
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedStatus("Complete")}
-                className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${selectedStatus === "Complete" ? "bg-green-100 text-green-800 border-green-300" : "bg-white text-green-700 border-green-300 hover:bg-green-50"}`}
-              >
-                Complete
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedStatus("Withdraw")}
-                className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${selectedStatus === "Withdraw" ? "bg-red-100 text-red-800 border-red-300" : "bg-white text-red-700 border-red-300 hover:bg-red-50"}`}
-              >
-                Withdraw
-              </button>
-            </div>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex justify-end gap-4">
-            <button
-              onClick={onClose}
-              className="text-[#1D1F2C] bg-[#E6E6E6] text-sm font-medium py-3 px-12 rounded-xl cursor-pointer hover:bg-gray-300 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="text-white bg-primary text-sm font-medium py-3 px-12 rounded-xl cursor-pointer hover:bg-primary/90 transition-colors"
-            >
-              {saving ? "Saving..." : "Update Status"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
-
-// Dropdown component for the action menu
-import { deleteNomination } from "@/services/nominationService";
-
-const ActionDropdown = ({ rowId, rowData, onDeleted }: { rowId: any; rowData: any; onDeleted?: () => void }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
   const handleAction = (action: string) => {
-    console.log(`Action: ${action} on row: ${rowId}`);
     setIsOpen(false);
-    
-    if (action === 'edit') {
-      setIsEditModalOpen(true);
-    }
-    // Handle other actions here
+    if (action === 'complete') updateStatus('Complete');
+    if (action === 'withdraw') updateStatus('Withdraw');
+    if (action === 'submitted') updateStatus('Submitted');
   };
 
   const handleDelete = async () => {
@@ -234,30 +130,23 @@ const ActionDropdown = ({ rowId, rowData, onDeleted }: { rowId: any; rowData: an
                   Withdraw
                 </button>
                 <button
+                  className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150"
+                  onClick={() => handleAction('submitted')}
+                >
+                  Submitted
+                </button>
+                <button
                   className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150"
                   onClick={handleDelete}
                   disabled={isDeleting}
                 >
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </button>
-                <button
-                  className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150"
-                  onClick={() => handleAction('edit')}
-                >
-                  Edit
-                </button>
               </div>
             </div>
           </>
         )}
       </div>
-
-      {/* Edit Modal */}
-      <EditModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        rowData={rowData}
-      />
     </>
   );
 };

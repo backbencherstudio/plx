@@ -1,13 +1,17 @@
 'use client'
 import CalenderIcon from '@/public/nominations/icons/CalenderIcon';
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import NominationTop from './_components/NominationTop';
 import NominationTable from '../../_components/reusable/NominationTable';
+import NominationModal from '../../_components/reusable/CustomModal';
 
 export default function Page() {
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedNomination, setSelectedNomination] = useState<any | null>(null);
+
   const handleOpenModal = (row: any) => {
-    console.log('Opening modal for row:', row);
-    // Handle modal opening logic here
+    setSelectedNomination(row);
+    setOpenModal(true);
   };
 
   const handleDeleted = () => {
@@ -37,6 +41,9 @@ export default function Page() {
         handleOpenModal={handleOpenModal}
         onDeleted={handleDeleted}
       />
+      {openModal && (
+        <NominationModal open={openModal} onClose={() => { setOpenModal(false); setSelectedNomination(null); }} data={selectedNomination} />
+      )}
     </div>
   )
 }

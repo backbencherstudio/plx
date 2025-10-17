@@ -17,6 +17,8 @@ interface TransportPaginationProps {
     hasPrevPage: boolean;
     onPageChange: (page: number) => void;
     show?: boolean;
+    totalItems?: number;
+    itemsPerPage?: number;
 }
 
 export default function TransportPagination({

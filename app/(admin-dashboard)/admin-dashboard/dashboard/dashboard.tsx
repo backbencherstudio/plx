@@ -24,9 +24,16 @@ export default function Dashboard() {
   const { dashboardStats } = AdminData;
 
   const [openModal, setOpenModal] = useState(false);
+  const [selectedNomination, setSelectedNomination] = useState<any | null>(null);
 
-  const handleOpenModal = () => setOpenModal(true);
-  const handleCloseModal = () => setOpenModal(false);
+  const handleOpenModal = (row: any) => {
+    setSelectedNomination(row);
+    setOpenModal(true);
+  };
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedNomination(null);
+  };
 
   return (
     <div className=" ">
@@ -110,7 +117,7 @@ export default function Dashboard() {
 
       {/* Modal */}
       {openModal && (
-        <NominationModal open={openModal} onClose={handleCloseModal} />
+        <NominationModal open={openModal} onClose={handleCloseModal} data={selectedNomination} />
       )}
     </div>
   );
