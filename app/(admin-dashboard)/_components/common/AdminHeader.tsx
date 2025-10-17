@@ -7,6 +7,7 @@ import { NotificationPopup } from "../NotificationPopup";
 import { usePathname } from "next/navigation"; // ✅ Correct import for App Router
 import { AdminData } from "@/app/lib/admindata";
 import { getCurrentUserProfile } from "@/services/authService";
+import { ApiNotification, getMyNotifications, markAllNotificationsRead } from "@/services/notificationService";
 
 interface AdminHeaderProps {
   onMenuClick: () => void;
@@ -17,6 +18,10 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const [userName, setUserName] = useState<string>("");
   const [userType, setUserType] = useState<string>("");
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(false);
+  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState<boolean>(false);
+  const [isMarkingRead, setIsMarkingRead] = useState<boolean>(false);
+  const [suppressBadge, setSuppressBadge] = useState<boolean>(false);
 
   // ✅ Get current route in App Router
   const currentRoute = usePathname();
@@ -37,22 +42,23 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   // Dynamically change the title based on the base route
   const pageTitle: string = routeToTitle[baseRoute] || "Dashboard"; // Default to "Dashboard"
 
-  // Use admin data for notifications
-  const notificationData = AdminData.notifications;
-  const userInfo =
-    AdminData.users.find((user) => user.role === "admin") ||
-    AdminData.users[5]; // fallback
+  // Helper functions based on API data
+  const hasUnreadNotifications = () => notifications.some((n) => n.read === false);
+  const getUnreadCount = () => notifications.filter((n) => n.read === false).length;
 
-  // Helper function to check if notifications have unread status
-  const hasUnreadNotifications = () => {
-    return notificationData.some((notif: any) => notif.status === "unread");
-  };
-
-  // Helper function to get unread count
-  const getUnreadCount = () => {
-    return notificationData.filter(
-      (notif: any) => notif.status === "unread"
-    ).length;
+  const handleNotificationsClick = async () => {
+    const nextOpen = !isNotificationOpen;
+    setIsNotificationOpen(nextOpen);
+    if (nextOpen && hasUnreadNotifications() && !isMarkingRead) {
+      try {
+        setIsMarkingRead(true);
+        await markAllNotificationsRead();
+        setSuppressBadge(true); // keep highlight in popup, hide badge this session
+      } catch (e) {
+      } finally {
+        setIsMarkingRead(false);
+      }
+    }
   };
 
   // Fetch current user profile for header (authorized via axios interceptor)
@@ -73,6 +79,20 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
       }
     };
     fetchMe();
+    const fetchNotifications = async () => {
+      try {
+        setIsLoadingNotifications(true);
+        const res = await getMyNotifications(1, 10);
+        if (!isMounted) return;
+        setNotifications(Array.isArray(res?.data) ? res.data : []);
+      } catch (e) {
+        if (!isMounted) return;
+        setNotifications([]);
+      } finally {
+        if (isMounted) setIsLoadingNotifications(false);
+      }
+    };
+    fetchNotifications();
     return () => {
       isMounted = false;
     };
@@ -97,11 +117,11 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
           <div className="flex items-center gap-3">
             <div
               className="p-2 cursor-pointer relative"
-              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+              onClick={handleNotificationsClick}
             >
               <NotificationIcon />
               {/* Notification badge */}
-              {hasUnreadNotifications() && (
+              {hasUnreadNotifications() && !suppressBadge && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
                   <span className="text-xs text-white font-semibold">
                     {getUnreadCount()}
@@ -137,7 +157,14 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
           >
             <NotificationPopup
               onClose={() => setIsNotificationOpen(false)}
-              notifications={notificationData}
+              notifications={notifications.map((n) => ({
+                id: n.id,
+                type: n.type,
+                title: n.title,
+                message: n.message,
+                timestamp: new Date(n.createdAt).toLocaleString(),
+                isRecent: !n.read,
+              }))}
             />
           </div>
         </div>
