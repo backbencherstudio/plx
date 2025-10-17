@@ -38,7 +38,7 @@ export const searchUsers = async (query: string, limit = 10) => {
   return res.data.data;
 };
 
-// Upload schedule
+// Upload schedulee
 export const uploadSchedule = async (data: FormData) => {
   const res = await axiosClient.post("/api/v1/schedule", data, {
     headers: { "Content-Type": "multipart/form-data" },
