@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import axiosClient from "../lib/axiosclient";
 
 // *** User type define ***
@@ -117,8 +118,9 @@ export const resetPassword=async (email:string,password:string)=>{
 
 // ======================== logout ============================
 export const logout = () => {
-  // 🧹 1️⃣ Token remove করো
+//   🧹 1️⃣ Token remove করো
   localStorage.removeItem("token");
+  toast.success('successfully logged out')
 
    
 };
