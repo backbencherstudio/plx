@@ -45,7 +45,10 @@ export default function SubscriberLogin() {
     try {
       if (result) {
         const res = await googleLogin(email, displayName, photoURL);
+        const token= res?.data?.token
         console.log(res);
+        localStorage.setItem('token',token);
+        router.push('/s-dashboard')
       }
     } catch (error) {
       console.error("Google login failed:", error);
@@ -157,7 +160,7 @@ export default function SubscriberLogin() {
           <button
             onClick={handleLogin}
             disabled={loading}
-            className={`hover:scale-105 active:scale-95 transition-all ease-in-out duration-300 w-full py-4 px-6 text-center ${
+            className={`  active:opacity-60 cursor-pointer transition-all ease-in-out duration-300 w-full py-4 px-6 text-center ${
               loading ? "bg-gray-400 cursor-not-allowed" : "bg-primary"
             } text-white mt-12 rounded-[8px] text-lg font-bold`}
           >
@@ -170,15 +173,15 @@ export default function SubscriberLogin() {
             <div className="flex-1 h-px bg-[#D2D2D5]" />
           </div>
 
-          <div className="border border-[#E6E8EA] py-4 px-6 rounded-[8px] bg-white cursor-pointer">
-            <button
-              onClick={handleGoogleLogin}
-              className="flex justify-center items-center gap-6"
+          <button  onClick={handleGoogleLogin} className="w-full border border-[#E6E8EA] py-4 px-6 rounded-[8px] bg-white cursor-pointer flex justify-center items-center  active:opacity-60">
+            <div
+             
+              className="flex justify-center items-center gap-6 cursor-pointer"
             >
               <Image src={googleImg} alt="google img" />
               <p>Continue with Google</p>
-            </button>
-          </div>
+            </div>
+          </button>
 
           <p className="text-sm text-[#4A4C56] text-center mt-8">
             Don't have an Account?{" "}
