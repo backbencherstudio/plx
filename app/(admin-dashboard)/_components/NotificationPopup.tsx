@@ -44,14 +44,18 @@ export function NotificationPopup({ onClose, notifications }: NotificationPopupP
       </div>
 
       {/* Notifications List */}
-      <div className="flex flex-col px-2 pb-5">
+      <div className="flex flex-col px-2 pb-5 max-h-[60vh] overflow-y-auto pr-2">
         <div className="flex flex-col gap-3">
           {/* Recent notifications with background (unread/recent notifications) */}
-          <div className="bg-slate-50 rounded-xl overflow-hidden">
+          <div className="rounded-xl overflow-visible">
             {notifications
               .filter((n) => isRecentNotification(n))
               .map((notification) => (
-                <div key={notification.id} className="px-4 py-3 flex items-start gap-4">
+                <div
+                  key={notification.id}
+                  className="px-4 py-3 flex items-start gap-4 rounded-xl"
+                  style={{ backgroundColor: "rgba(0, 122, 255, 0.15)" }}
+                >
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-4">
                       <div className="flex-1">
@@ -74,7 +78,11 @@ export function NotificationPopup({ onClose, notifications }: NotificationPopupP
           {notifications
             .filter((n) => !isRecentNotification(n))
             .map((notification) => (
-              <div key={notification.id} className="px-4 py-3 flex items-start gap-4">
+              <div
+                key={notification.id}
+                className="px-4 py-3 flex items-start gap-4 rounded-xl"
+                style={{ backgroundColor: "rgba(0, 122, 255, 0.05)" }}
+              >
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex-1">
