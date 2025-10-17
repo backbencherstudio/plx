@@ -1,10 +1,12 @@
-import { useState } from "react";
+"use client";
+import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import NotificationIcon from "@/public/header/Icons/NotificationIcon";
 import ProfileIcon from "@/public/header/Icons/ProfileIcon";
 import { NotificationPopup } from "../NotificationPopup";
 import { usePathname } from "next/navigation"; // ✅ Correct import for App Router
 import { AdminData } from "@/app/lib/admindata";
+import { getCurrentUserProfile } from "@/services/authService";
 
 interface AdminHeaderProps {
   onMenuClick: () => void;
@@ -12,6 +14,9 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [userName, setUserName] = useState<string>("");
+  const [userType, setUserType] = useState<string>("");
+  const [isLoadingUser, setIsLoadingUser] = useState<boolean>(false);
 
   // ✅ Get current route in App Router
   const currentRoute = usePathname();
@@ -49,6 +54,29 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
       (notif: any) => notif.status === "unread"
     ).length;
   };
+
+  // Fetch current user profile for header (authorized via axios interceptor)
+  useEffect(() => {
+    let isMounted = true;
+    const fetchMe = async () => {
+      try {
+        setIsLoadingUser(true);
+        const res = await getCurrentUserProfile();
+        const data = res?.data || {};
+        if (!isMounted) return;
+        setUserName(data.fullName || `${data.firstName || ""} ${data.lastName || ""}`.trim());
+        setUserType(data.type || "");
+      } catch (e) {
+        // swallow error for header UI; keep placeholders
+      } finally {
+        if (isMounted) setIsLoadingUser(false);
+      }
+    };
+    fetchMe();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <>
@@ -88,9 +116,9 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
               </div>
               <div>
                 <h3 className="text-sm text-graytext font-semibold">
-                 Miguel Trevino
+                 {isLoadingUser ? "Loading..." : (userName || "—")}
                 </h3>
-                <p className="text-[#777980] text-sm">Admin</p>
+                <p className="text-[#777980] text-sm">{userType ? userType.charAt(0).toUpperCase() + userType.slice(1) : "—"}</p>
               </div>
             </div>
           </div>

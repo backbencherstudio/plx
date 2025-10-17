@@ -122,3 +122,10 @@ export const logout = () => {
 
    
 };
+
+// ======================== Me / Profile ============================
+export const getCurrentUserProfile = async () => {
+  // axiosClient already injects Authorization from localStorage
+  const res = await axiosClient.get("/api/v1/auth/me");
+  return res.data; // { success, message, data }
+};
