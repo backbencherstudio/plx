@@ -102,7 +102,7 @@ export default function SubscriberLogin() {
 //     console.error("Google login failed:", error);
 //   }
 // };
-
+// empty
 
 const handleGoogleLogin = async () => {
   if (isLoggingIn) return; // prevent double popup

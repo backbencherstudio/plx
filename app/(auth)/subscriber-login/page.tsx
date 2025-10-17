@@ -28,32 +28,99 @@ export default function SubscriberLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const router = useRouter();
 
-  const handleGoogleLogin = async () => {
+
+
+//   const handleGoogleLogin = async () => {
+//   try {
+//     // Start sign-in popup
+//     const result = await signInWithPopup(auth, googleProvider);
+
+//     // Extract user info safely
+//     const email = result.user.email ?? "";
+//     const displayName = result.user.displayName ?? "";
+//     const photoURL = result.user.photoURL ?? "";
+
+//     if (!email) {
+//       toast.error("Email not found from Google account!");
+//       return;
+//     }
+
+//     // Send to backend
+//     const res = await googleLogin(email, displayName, photoURL);
+//     const token = res?.data?.token;
+
+//     if (token) {
+//       localStorage.setItem("token", token);
+//       toast.success("Google login successful!");
+//       router.push("/s-dashboard");
+//     } else {
+//       toast.error("Login failed! Token not found.");
+//     }
+//   } catch (error: any) {
+//     // Handle specific Firebase errors
+//     if (error.code === "auth/popup-closed-by-user") {
+//       toast("Popup was closed before completing sign-in.", {
+//         icon: "⚠️",
+//       });
+//     } else if (error.code === "auth/cancelled-popup-request") {
+//       console.warn("Popup request was canceled.");
+//     } else {
+//       console.error("Google login error:", error);
+//       toast.error(error?.message || "Something went wrong!");
+//     }
+//   }
+// };
+
+
+//  const handleGoogleLogin = async () => {
+//   const result = await signInWithPopup(auth, googleProvider);
+
+//   const email = result.user.email ?? "";
+//   const displayName = result.user.displayName ?? "Unknown User";
+//   const photoURL = result.user.photoURL ?? "";
+ 
+
+//   console.log(displayName);
+//   console.log(photoURL);
+//   console.log(email);
+
+//   try {
+//     if (result) {
+//       const res = await googleLogin(email, displayName, photoURL);
+      
+//       const token= res.data.token;
+//       console.log(token);
+      
+
+//       console.log(res);
+//     }
+//   } catch (error) {
+//     console.error("Google login failed:", error);
+//   }
+// };
+
+
+const handleGoogleLogin = async () => {
+  if (isLoggingIn) return; // prevent double popup
+  setIsLoggingIn(true);
+  try {
     const result = await signInWithPopup(auth, googleProvider);
-
-    const email = result.user.email ?? "";
-    const displayName = result.user.displayName ?? "";
-    const photoURL = result.user.photoURL ?? "";
-
-    // console.log(displayName);
-    // console.log(photoURL);
-    // console.log(email);
-
-    try {
-      if (result) {
-        const res = await googleLogin(email, displayName, photoURL);
-        const token= res?.data?.token
-        console.log(res);
-        localStorage.setItem('token',token);
-        router.push('/s-dashboard')
-      }
-    } catch (error) {
-      console.error("Google login failed:", error);
+    // ... your login logic
+  } catch (error: any) {
+    if (error.code === "auth/popup-closed-by-user") {
+      toast("Popup closed before signing in.");
+    } else {
+      console.error("Google login error:", error);
+      toast.error(error.message || "Something went wrong!");
     }
-  };
+  } finally {
+    setIsLoggingIn(false);
+  }
+};
 
   const handleLogin = async () => {
     if (!email || !password) {
