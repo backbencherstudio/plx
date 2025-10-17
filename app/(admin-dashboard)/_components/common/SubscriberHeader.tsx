@@ -1,12 +1,15 @@
+"use client";
 import profileImg from "@/public/header/images/profileImg.png";
 import Image from "next/image";
 import { Menu } from 'lucide-react';
 import NotificationIcon from "@/public/header/Icons/NotificationIcon";
 import ProfileIcon from "@/public/header/Icons/ProfileIcon";
 import { NotificationPopup } from "../NotificationPopup";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { userData } from "@/app/lib/userdata";
 import { usePathname } from "next/navigation"; // ✅ Correct import for App Router
+import { getCurrentUserProfile } from "@/services/authService";
+import { getMyNotifications, ApiNotification, markAllNotificationsRead } from "@/services/notificationService";
 
 interface SubscriberHeaderProps {
   onMenuClick: () => void;
@@ -14,6 +17,13 @@ interface SubscriberHeaderProps {
 
 export default function SubscriberHeader({ onMenuClick }: SubscriberHeaderProps) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [userName, setUserName] = useState<string>("");
+  const [userType, setUserType] = useState<string>("");
+  const [isLoadingUser, setIsLoadingUser] = useState<boolean>(false);
+  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState<boolean>(false);
+  const [isMarkingRead, setIsMarkingRead] = useState<boolean>(false);
+  const [suppressBadge, setSuppressBadge] = useState<boolean>(false);
 
   // ✅ Get current route in App Router
   const currentRoute = usePathname();
@@ -39,19 +49,67 @@ export default function SubscriberHeader({ onMenuClick }: SubscriberHeaderProps)
   console.log("Base route:", baseRoute);
   console.log("Page title:", pageTitle);
 
-  // Use user data for notifications
-  const notificationData = userData.notifications.data;
-  const userInfo = userData.user;
+  // Helper functions derived from API data
+  const hasUnreadNotifications = () => notifications.some((n) => n.read === false);
+  const getUnreadCount = () => notifications.filter((n) => n.read === false).length;
 
-  // Helper function to check if notifications have unread status
-  const hasUnreadNotifications = () => {
-    return userData.notifications.hasUnread;
+  const handleNotificationsClick = async () => {
+    const nextOpen = !isNotificationOpen;
+    setIsNotificationOpen(nextOpen);
+    // When user opens the notifications panel, mark all as read
+    if (nextOpen && hasUnreadNotifications() && !isMarkingRead) {
+      try {
+        setIsMarkingRead(true);
+        await markAllNotificationsRead();
+        // Do NOT flip local items to read immediately so the popup can
+        // still highlight newly received notifications in this open session.
+        // Instead, suppress the badge until next fetch/open.
+        setSuppressBadge(true);
+      } catch (e) {
+        // swallow error in header UI
+      } finally {
+        setIsMarkingRead(false);
+      }
+    }
   };
 
-  // Helper function to get unread count
-  const getUnreadCount = () => {
-    return userData.notifications.count;
-  };
+  // Fetch current user profile for header
+  useEffect(() => {
+    let isMounted = true;
+    const fetchMe = async () => {
+      try {
+        setIsLoadingUser(true);
+        const res = await getCurrentUserProfile();
+        const data = res?.data || {};
+        if (!isMounted) return;
+        setUserName(data.fullName || "");
+        setUserType(data.type || "");
+      } catch (e) {
+        // ignore error in header UI
+      } finally {
+        if (isMounted) setIsLoadingUser(false);
+      }
+    };
+    fetchMe();
+    // Fetch notifications using exact API path
+    const fetchNotifications = async () => {
+      try {
+        setIsLoadingNotifications(true);
+        const res = await getMyNotifications(1, 10);
+        if (!isMounted) return;
+        setNotifications(Array.isArray(res?.data) ? res.data : []);
+      } catch (e) {
+        if (!isMounted) return;
+        setNotifications([]);
+      } finally {
+        if (isMounted) setIsLoadingNotifications(false);
+      }
+    };
+    fetchNotifications();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <>
@@ -70,10 +128,10 @@ export default function SubscriberHeader({ onMenuClick }: SubscriberHeaderProps)
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="p-2 cursor-pointer relative" onClick={() => setIsNotificationOpen(!isNotificationOpen)}>
+            <div className="p-2 cursor-pointer relative" onClick={handleNotificationsClick}>
               <NotificationIcon/>
               {/* Notification badge */}
-              {hasUnreadNotifications() && (
+              {hasUnreadNotifications() && !suppressBadge && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
                   <span className="text-xs text-white font-semibold">{getUnreadCount()}</span>
                 </div>
@@ -85,8 +143,8 @@ export default function SubscriberHeader({ onMenuClick }: SubscriberHeaderProps)
                 <ProfileIcon/>
               </div>
               <div>
-                <h3 className="text-sm text-graytext font-semibold">{userInfo.name}</h3>
-                <p className="text-[#777980] text-sm">{userInfo.company}</p>
+                <h3 className="text-sm text-graytext font-semibold">{isLoadingUser ? "Loading..." : (userName || "—")}</h3>
+                <p className="text-[#777980] text-sm">{userType ? userType.charAt(0).toUpperCase() + userType.slice(1) : "—"}</p>
               </div>
             </div>
           </div>
@@ -100,7 +158,17 @@ export default function SubscriberHeader({ onMenuClick }: SubscriberHeaderProps)
           onClick={() => setIsNotificationOpen(false)}
         >
           <div className="fixed top-20 right-4 sm:right-8 flex justify-end" onClick={(e) => e.stopPropagation()}>
-            <NotificationPopup onClose={() => setIsNotificationOpen(false)} notifications={notificationData} />
+            <NotificationPopup
+              onClose={() => setIsNotificationOpen(false)}
+              notifications={notifications.map((n) => ({
+                id: n.id,
+                type: n.type,
+                title: n.title,
+                message: n.message,
+                timestamp: new Date(n.createdAt).toLocaleString(),
+                isRecent: !n.read,
+              }))}
+            />
           </div>
         </div>
       )}
