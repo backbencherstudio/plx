@@ -238,7 +238,7 @@ export default function ChatPage() {
       <div className="flex justify-between px-6 pt-5 pb-7 border-b border-[#E9E9EA] flex-shrink-0">
         <div className=" flex items-center gap-3">
           <div>
-             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 shadow-lg">
+             <div className="w-10 h-10 rounded-full overflow-hidden">
                <Image
                  src="/sidebar/images/logo.png"
                  alt="PLX Support Team"
@@ -275,13 +275,13 @@ export default function ChatPage() {
               <div className={`flex gap-3`}>
                 <div className={`${msg.isFromUser && "order-2"}`}>
                      {msg.isFromUser ? (
-                      <div className="w-10 h-10 bg-[#E7ECF4] rounded-full flex items-center justify-center shadow-lg border-2 border-gray-200">
+                      <div className="w-10 h-10 bg-[#E7ECF4] rounded-full flex items-center justify-center border-2 border-gray-200">
                         <span className="text-gray-700 text-sm font-semibold">
                           {getInitials(msg.originalSenderName)}
                         </span>
                       </div>
                    ) : (
-                     <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 shadow-lg">
+                     <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200">
                        <Image
                          src="/sidebar/images/logo.png"
                          alt="PLX Support Team"

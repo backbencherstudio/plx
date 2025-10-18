@@ -59,17 +59,17 @@ export default function ChatCard({
     >
       <div className="rounded-full relative">
         {data.customer_name === "PLX Support Team" ? (
-          <div className="w-[60px] h-[60px] rounded-full overflow-hidden border-2 border-gray-200 shadow-lg">
-            <Image
-              src="/sidebar/images/logo.png"
-              alt="PLX Support Team"
-              width={60}
-              height={60}
-              className="w-full h-full object-contain"
-            />
-          </div>
+           <div className="w-[60px] h-[60px] rounded-full overflow-hidden">
+             <Image
+               src="/sidebar/images/logo.png"
+               alt="PLX Support Team"
+               width={60}
+               height={60}
+               className="w-full h-full object-contain"
+             />
+           </div>
          ) : (
-           <div className="w-[60px] h-[60px] bg-[#E7ECF4] rounded-full flex items-center justify-center shadow-lg border-2 border-gray-200">
+           <div className="w-[60px] h-[60px] bg-[#E7ECF4] rounded-full flex items-center justify-center border-2 border-gray-200">
              <span className="text-gray-700 text-lg font-semibold">
                {getInitials(data.customer_name)}
              </span>
