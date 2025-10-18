@@ -48,6 +48,7 @@ export interface MessagesResponse {
       fullName: string;
       email: string;
     };
+    messages?: Message[]; // Add optional messages in data
   };
   messages: Message[];
   pagination: {

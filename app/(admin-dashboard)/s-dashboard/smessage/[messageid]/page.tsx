@@ -101,7 +101,7 @@ export default function ChatPage() {
             try {
               // Convert API messages to ChatMessage format
               // Handle different possible response structures
-              let messagesArray = [];
+              let messagesArray: Message[] = [];
               
               if (messagesResponse.messages && Array.isArray(messagesResponse.messages)) {
                 messagesArray = messagesResponse.messages;
@@ -225,7 +225,7 @@ export default function ChatPage() {
               src={roomData?.user?.avatar || "/sidebar/images/logo.png"}
               width={40}
               height={40}
-              className="rounded-full"
+              className="rounded-full object-contain"
               alt={roomData?.user?.fullName || "PLX Support Team"}
             />
           </div>

@@ -132,7 +132,7 @@ export default function ChatPage() {
               "https://randomuser.me/api/portraits/women/30.jpg"
             }
             alt="Receiver"
-            className="w-[46px] h-[46px] rounded-full mr-3"
+            className="w-[46px] h-[46px] rounded-full mr-3 object-contain"
           />
           <div>
             <h2 className="text-lg text-[#4A4C56] font-medium">

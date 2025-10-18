@@ -47,14 +47,14 @@ export default function MessagesSidebar() {
 
   // Get selected user ID from URL
   const selectedUserId = useMemo(() => {
-    const matches = pathname.match(/\/smessage\/(\d+)/);
-    return matches ? parseInt(matches[1]) : undefined;
+    const matches = pathname.match(/\/smessage\/(.+)/);
+    return matches ? matches[1] : undefined;
   }, [pathname]);
 
   // Convert conversations to the format expected by ChatCard
   const data = useMemo(() => {
     return conversations.map((conv) => ({
-      user_id: parseInt(conv.contact.id),
+      user_id: conv.contact.id, // Keep as string
       customer_name: conv.contact.name,
       customer_image: conv.contact.avatar,
       last_seen: conv.lastActivity,
@@ -86,9 +86,8 @@ export default function MessagesSidebar() {
     }
   }, [filteredChats, selectedUserId, router]);
 
-  const handleChatClick = (userid: number) => {
+  const handleChatClick = (userid: string) => {
     router.push(`/s-dashboard/smessage/${userid}`);
-    
   };
 
   return (

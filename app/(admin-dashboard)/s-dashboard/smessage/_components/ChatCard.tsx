@@ -62,7 +62,7 @@ export default function ChatCard({
           alt={`${data.customer_name} avatar`}
           width={60}
           height={60}
-          className="w-[60px] h-[60px] object-cover rounded-full"
+          className="w-[60px] h-[60px] object-contain rounded-full"
         />
         {/* Active dot removed */}
       </div>
