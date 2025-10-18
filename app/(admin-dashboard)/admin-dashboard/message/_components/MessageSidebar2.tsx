@@ -34,6 +34,8 @@ export default function MessagesSidebar2() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usersWithChats, setUsersWithChats] = useState<string[]>([]);
+  const [chatRoomsData, setChatRoomsData] = useState<any[]>([]);
 
   // Fetch all users from API
   useEffect(() => {
@@ -68,19 +70,64 @@ export default function MessagesSidebar2() {
 
   // Convert API users to the format expected by ChatCard
   const data: Message[] = useMemo(() => {
-    return users.map((user) => ({
-      user_id: user.id, // Use user ID as string
-      customer_name: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-      customer_image: user.avatar || "/sidebar/images/logo.png",
-      last_seen: user.updatedAt || user.createdAt || new Date().toISOString(),
-      last_message: "Click to start conversation", // Default message since we don't have chat history yet
-      isRead: true, // All users start as read
-      isActive: user.active,
-    }));
-  }, [users]);
+    return users.map((user) => {
+      // Check if this user has a chat room with actual messages
+      const userChatRoom = chatRoomsData.find(room => room.user.id === user.id);
+      
+      return {
+        user_id: user.id, // Use user ID as string
+        customer_name: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        customer_image: user.avatar || "/sidebar/images/logo.png",
+        last_seen: userChatRoom?.updatedAt || user.updatedAt || user.createdAt || new Date().toISOString(),
+        last_message: userChatRoom?.lastMessage?.content || "Click to start conversation",
+        isRead: userChatRoom ? userChatRoom.unreadCount === 0 : true,
+        isActive: user.active,
+      };
+    });
+  }, [users, chatRoomsData]);
+
+
+  // Fetch users who have existing chat rooms with actual messages
+  useEffect(() => {
+    const fetchUsersWithChats = async () => {
+      try {
+        // Import the function to get chat rooms
+        const { getAllAdminChatRooms } = await import("@/services/adminMessageService");
+        const chatRoomsResponse = await getAllAdminChatRooms(1, 100);
+        
+        if (chatRoomsResponse.success) {
+          // Filter rooms that have actual messages (not just empty rooms)
+          const roomsWithMessages = chatRoomsResponse.data.rooms.filter(room => 
+            room.lastMessage && room.lastMessage.content && room.lastMessage.content.trim() !== ""
+          );
+          
+          const userIdsWithChats = roomsWithMessages.map(room => room.user.id);
+          setUsersWithChats(userIdsWithChats);
+          setChatRoomsData(roomsWithMessages);
+          console.log("👥 Users with actual conversations:", userIdsWithChats);
+          console.log("💬 Rooms with messages:", roomsWithMessages);
+        }
+      } catch (error) {
+        console.error("❌ Error fetching users with chats:", error);
+        setUsersWithChats([]);
+        setChatRoomsData([]);
+      }
+    };
+
+    fetchUsersWithChats();
+  }, []);
 
   const filteredChats = useMemo(() => {
-    return tab === "unread" ? data.filter((c) => !c.isRead) : data;
+    if (tab === "unread") {
+      // "All Users" tab shows ALL users
+      return data;
+    } else {
+      // "All Chats" tab shows only users who have actual conversations (not "Click to start conversation")
+      return data.filter((user) => 
+        user.last_message !== "Click to start conversation" && 
+        user.last_message.trim() !== ""
+      );
+    }
   }, [data, tab]);
 
   // Get selected room ID from URL
@@ -149,11 +196,17 @@ export default function MessagesSidebar2() {
       </div>
 
       <div className="space-y-5 w-full md:max-w-[400px] hidden md:block">
-        {/* tabs: All / Unread */}
+        {/* tabs: All Chats / All Users */}
         <div className="flex gap-3 px-6">
           {(["all", "unread"] as ChatTab[]).map((t) => {
             const isOn = tab === t;
-            const label = t === "all" ? `All Chats  ` : `Unread  `;
+            const label = t === "all" ? `All Chats` : `All Users`;
+            // Calculate actual counts based on filtered data
+            const allChatsCount = data.filter(user => 
+              user.last_message !== "Click to start conversation" && 
+              user.last_message.trim() !== ""
+            ).length;
+            const count = t === "all" ? allChatsCount : data.length;
             return (
               <button
                 key={t}
@@ -166,7 +219,7 @@ export default function MessagesSidebar2() {
                 }`}
                 onClick={() => setTab(t)}
               >
-                {label}
+                {label} ({count})
               </button>
             );
           })}

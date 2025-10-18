@@ -84,8 +84,15 @@ export default function MessagesSidebar2() {
     }];
   }, [chatRoom]);
 
+  // For subscriber, we only have one chat room, so logic is simpler
   const filteredChats = useMemo(() => {
-    return tab === "unread" ? data.filter((c) => !c.isRead) : data;
+    if (tab === "unread") {
+      // "Unread" tab shows the chat room (if it exists)
+      return data;
+    } else {
+      // "All Chats" tab shows the chat room (if it exists)
+      return data;
+    }
   }, [data, tab]);
 
   // Get selected room ID from URL
@@ -152,11 +159,12 @@ export default function MessagesSidebar2() {
       </div>
 
       <div className="space-y-5 w-full md:max-w-[400px] hidden md:block">
-        {/* tabs: All / Unread */}
+        {/* tabs: All Chats / All Users */}
         <div className="flex gap-3 px-6">
           {(["all", "unread"] as ChatTab[]).map((t) => {
             const isOn = tab === t;
-            const label = t === "all" ? `All Chats  ` : `Unread  `;
+            const label = t === "all" ? `All Chats` : `All Users`;
+            const count = data.length; // For subscriber, both tabs show the same count
             return (
               <button
                 key={t}
@@ -169,7 +177,7 @@ export default function MessagesSidebar2() {
                 }`}
                 onClick={() => setTab(t)}
               >
-                {label}
+                {label} ({count})
               </button>
             );
           })}
