@@ -99,7 +99,7 @@ export default function ChatPage() {
           
           if (messagesResponse.success) {
             try {
-              // Convert API messages to ChatMessage format
+              // Convert API messages to ChatMessage formatt
               // Handle different possible response structures
               let messagesArray: Message[] = [];
               
