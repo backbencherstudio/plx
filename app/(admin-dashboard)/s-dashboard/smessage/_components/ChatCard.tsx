@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { getInitials, getGradientBackground } from "@/utils/avatarUtils";
 
 interface ChatData {
   user_id: string; // Changed from number to string
@@ -42,6 +42,7 @@ export default function ChatCard({
     return `${diffMinutes} min`;
   }
 
+
   const isUnread = data.isRead === false;
   const trimmedMsg =
     data.last_message.length > 30
@@ -56,14 +57,11 @@ export default function ChatCard({
       onClick={() => handleChatClick(data.user_id)}
     >
       <div className="rounded-full relative">
-        <Image
-          unoptimized
-          src={data.customer_name === "PLX Support Team" ? "/sidebar/images/logo.png" : data.customer_image}
-          alt={`${data.customer_name} avatar`}
-          width={60}
-          height={60}
-          className="w-[60px] h-[60px] object-contain rounded-full"
-        />
+        <div className={`w-[60px] h-[60px] ${getGradientBackground(data.user_id)} rounded-full flex items-center justify-center shadow-lg`}>
+          <span className="text-gray-700 text-lg font-semibold">
+            {getInitials(data.customer_name)}
+          </span>
+        </div>
         {/* Active dot removed */}
       </div>
 

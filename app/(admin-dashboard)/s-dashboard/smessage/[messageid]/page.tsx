@@ -5,6 +5,7 @@ import Dot3Icon from "@/public/nominations/icons/Dot3Icon";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { getRoomMessages, sendMessage, Message, SendMessageRequest, getMyChatRoom } from "@/services/messageService";
+import { getInitials, getGradientBackground } from "@/utils/avatarUtils";
 
 // Type definitions for conversation structure
 interface ChatMessage {
@@ -221,13 +222,11 @@ export default function ChatPage() {
       <div className="flex justify-between px-6 pt-5 pb-7 border-b border-[#E9E9EA] flex-shrink-0">
         <div className=" flex items-center gap-3">
           <div>
-            <Image
-              src={roomData?.user?.avatar || "/sidebar/images/logo.png"}
-              width={40}
-              height={40}
-              className="rounded-full object-contain"
-              alt={roomData?.user?.fullName || "PLX Support Team"}
-            />
+            <div className={`w-10 h-10 ${getGradientBackground(roomData?.user?.id || 'default')} rounded-full flex items-center justify-center shadow-lg`}>
+              <span className="text-gray-700 text-sm font-semibold">
+                {getInitials(roomData?.user?.fullName || 'PLX Support Team')}
+              </span>
+            </div>
           </div>
           <div>
             <h2 className="text-lg text-[#4A4C56] font-medium">
@@ -262,13 +261,11 @@ export default function ChatPage() {
                       </span>
                     </div>
                   ) : (
-                    <Image
-                      src={roomData?.user?.avatar || "/sidebar/images/logo.png"}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                      alt={roomData?.user?.fullName || "PLX Support Team"}
-                    />
+                    <div className={`w-10 h-10 ${getGradientBackground(roomData?.user?.id || 'default')} rounded-full flex items-center justify-center shadow-lg`}>
+                      <span className="text-gray-700 text-sm font-semibold">
+                        {getInitials(roomData?.user?.fullName || 'PLX Support Team')}
+                      </span>
+                    </div>
                   )}
                 </div>
 
