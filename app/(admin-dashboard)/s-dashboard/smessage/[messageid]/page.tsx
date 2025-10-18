@@ -1,14 +1,13 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { userData } from "../../../../lib/userdata";
 import { usePathname } from "next/navigation";
 import Dot3Icon from "@/public/nominations/icons/Dot3Icon";
 import Image from "next/image";
-import youImg from "@/public/sender_img.png";
-import { formatDistanceToNow } from "date-fns"; // Import date-fns function
+import { formatDistanceToNow } from "date-fns";
+import { getRoomMessages, sendMessage, Message, SendMessageRequest, getMyChatRoom } from "@/services/messageService";
 
 // Type definitions for conversation structure
-interface Message {
+interface ChatMessage {
   id: string;
   content: string;
   timestamp: string;
@@ -55,71 +54,139 @@ const generateRandomMessage = (): string => {
 };
 
 export default function ChatPage() {
-  // Get the list of conversations from userData
-  const conversations = userData.messagePage.chatInterface.conversations;
   const pathname = usePathname();
-
-  // Extract the dynamic user_id from the pathname
-  const userId = pathname.split("/").pop(); // Assuming the user_id is at the end of the pathname
-  console.log("Extracted userId from pathname:", userId);
-
-  // Ensure the userId is a valid string
-  const userIdString = userId || "";
-  console.log("Parsed userIdString:", userIdString);
-
-  // Filter the conversation based on the user_id
-  const filteredConversation = conversations.filter(
-    (conversation: Conversation) => conversation.contact.id === userIdString
-  );
-
-  // Log the filtered conversation to inspect it
-  console.log("Filtered Conversation: ", filteredConversation);
-
-  // Get messages from the current chat in userData
-  const currentChat = userData.messagePage.chatInterface.currentChat;
-  const initialMessages = currentChat.messages || [];
-  console.log("Initial messages:", initialMessages);
-
-  // Convert userData messages to the format expected by the component
-  const convertMessages = (userDataMessages: any[]): Message[] => {
-    return userDataMessages.map((msg, index) => ({
-      id: msg.id || index.toString(),
-      content: msg.content,
-      timestamp: msg.timestamp,
-      senderId: msg.senderId,
-      senderName: msg.senderName,
-      type: msg.type,
-      status: msg.status,
-      isFromUser: msg.isFromUser,
-      timeAgo: msg.timeAgo,
-    }));
-  };
-
-  // Set the initial messages state
-  const [messages, setMessages] = useState<Message[]>(
-    convertMessages(initialMessages)
-  );
-
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [roomData, setRoomData] = useState<any>(null);
+  const [actualRoomId, setActualRoomId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = () => {
-    if (newMessage.trim() === "") return;
+  // Extract the room ID from the pathname
+  const roomIdFromUrl = pathname.split("/").pop();
+  console.log("Room ID from URL:", roomIdFromUrl);
 
-    const newMsg: Message = {
-      id: (messages.length + 1).toString(),
-      content: newMessage,
-      timestamp: new Date().toISOString(),
-      senderId: "user",
-      senderName: "You",
-      type: "text",
-      status: "sent",
-      isFromUser: true,
-      timeAgo: "now",
+  // Fetch messages from API
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // First get the chat room info to get the actual room ID
+        const roomResponse = await getMyChatRoom();
+        console.log("Room response:", roomResponse);
+        
+        if (roomResponse.success) {
+          const room = roomResponse.data.room;
+          console.log("Room data:", room);
+          setRoomData(room);
+          setActualRoomId(room.id);
+          
+          // Now get messages for this room using the actual room ID
+          const messagesResponse = await getRoomMessages(room.id);
+          console.log("Messages response:", messagesResponse);
+          console.log("Messages response structure:", {
+            success: messagesResponse.success,
+            message: messagesResponse.message,
+            data: messagesResponse.data,
+            messages: messagesResponse.messages,
+            messagesType: typeof messagesResponse.messages,
+            messagesIsArray: Array.isArray(messagesResponse.messages)
+          });
+          
+          if (messagesResponse.success) {
+            try {
+              // Convert API messages to ChatMessage format
+              // Handle different possible response structures
+              let messagesArray = [];
+              
+              if (messagesResponse.messages && Array.isArray(messagesResponse.messages)) {
+                messagesArray = messagesResponse.messages;
+              } else if (messagesResponse.data && messagesResponse.data.messages && Array.isArray(messagesResponse.data.messages)) {
+                messagesArray = messagesResponse.data.messages;
+              } else {
+                console.warn("No messages array found in response:", messagesResponse);
+                messagesArray = [];
+              }
+              
+              console.log("Messages array:", messagesArray);
+              
+              const convertedMessages: ChatMessage[] = messagesArray.map((msg: Message) => ({
+                id: msg.id,
+                content: msg.content,
+                timestamp: msg.createdAt,
+                senderId: msg.sender.id,
+                senderName: msg.sender.fullName,
+                type: "text",
+                status: "sent",
+                isFromUser: msg.sender.type === "user",
+                timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
+              }));
+              
+              console.log("Converted messages:", convertedMessages);
+              setMessages(convertedMessages);
+            } catch (msgError) {
+              console.error("Error processing messages:", msgError);
+              setError(`Error processing messages: ${msgError}`);
+              setMessages([]); // Set empty array as fallback
+            }
+          } else {
+            setError(`Messages API Error: ${messagesResponse.message}`);
+          }
+        } else {
+          setError(`Room API Error: ${roomResponse.message}`);
+        }
+      } catch (err) {
+        setError(`Failed to fetch data: ${err}`);
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setMessages([...messages, newMsg]);
-    setNewMessage("");
+    fetchMessages();
+  }, [roomIdFromUrl]);
+
+  const handleSend = async () => {
+    if (newMessage.trim() === "" || !actualRoomId) return;
+
+    setSending(true);
+    try {
+      const messageData: SendMessageRequest = {
+        chatRoomId: actualRoomId,
+        senderId: actualRoomId, // Using actual room ID as senderId
+        content: newMessage.trim()
+      };
+
+      const response = await sendMessage(messageData);
+      if (response.success) {
+        // Add the new message to the messages list
+        const newMsg: ChatMessage = {
+          id: response.data.id,
+          content: response.data.content,
+          timestamp: response.data.createdAt,
+          senderId: response.data.sender.id,
+          senderName: response.data.sender.fullName,
+          type: "text",
+          status: "sent",
+          isFromUser: response.data.sender.type === "user",
+          timeAgo: "now"
+        };
+
+        setMessages(prev => [...prev, newMsg]);
+        setNewMessage("");
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      setError("Failed to send message");
+      console.error("Error sending message:", err);
+    } finally {
+      setSending(false);
+    }
   };
 
   // Handle Enter key press
@@ -128,6 +195,22 @@ export default function ChatPage() {
       handleSend();
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col bg-white rounded-[12px] h-full items-center justify-center" style={{ height: "calc(100vh - 150px)" }}>
+        <div className="text-gray-500">Loading messages...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col bg-white rounded-[12px] h-full items-center justify-center" style={{ height: "calc(100vh - 150px)" }}>
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -139,19 +222,19 @@ export default function ChatPage() {
         <div className=" flex items-center gap-3">
           <div>
             <Image
-              src="/sidebar/images/logo.png"
+              src={roomData?.user?.avatar || "/sidebar/images/logo.png"}
               width={40}
               height={40}
               className="rounded-full"
-              alt="PLX Support Team"
+              alt={roomData?.user?.fullName || "PLX Support Team"}
             />
           </div>
           <div>
             <h2 className="text-lg text-[#4A4C56] font-medium">
-              {filteredConversation[0]?.contact.name || currentChat.contact.name || "PLX Support Team"}
+              {roomData?.user?.fullName || "PLX Support Team"}
             </h2>
             <p className=" text-xs text-[#A5A5AB]">
-              {filteredConversation[0]?.contact.status === "online" ? "Active now" : "Last seen recently"}
+              Active now
             </p>
           </div>
         </div>
@@ -175,16 +258,16 @@ export default function ChatPage() {
                   {msg.isFromUser ? (
                     <div className="rounded-full bg-[#E7ECF4] w-10 h-10 flex justify-center items-center">
                       <span className="text-sm font-semibold text-[#4A4C56]">
-                        {userData.user.name.substring(0, 2).toUpperCase()}
+                        {msg.senderName.substring(0, 2).toUpperCase()}
                       </span>
                     </div>
                   ) : (
                     <Image
-                      src="/sidebar/images/logo.png"
+                      src={roomData?.user?.avatar || "/sidebar/images/logo.png"}
                       width={40}
                       height={40}
                       className="rounded-full"
-                      alt="PLX Support Team"
+                      alt={roomData?.user?.fullName || "PLX Support Team"}
                     />
                   )}
                 </div>
@@ -205,7 +288,7 @@ export default function ChatPage() {
                       </p>
                     ) : (
                       <p className="   text-sm font-semibold text-[#4A4C56]">
-                        {filteredConversation[0]?.contact.name || currentChat.contact.name || "PLX Support Team"}
+                        {roomData?.user?.fullName || "PLX Support Team"}
                       </p>
                     )}
                     </div>
@@ -231,7 +314,12 @@ export default function ChatPage() {
             </div>
           ))
         ) : (
-          <div>No messages found.</div>
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="text-center">
+              <p className="text-lg font-medium">No messages yet</p>
+              <p className="text-sm">Start a conversation!</p>
+            </div>
+          </div>
         )}
         {/* This div acts as a scroll anchor */}
         <div />
@@ -245,13 +333,15 @@ export default function ChatPage() {
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Type a message..."
-          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={sending}
+          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
         />
         <button
           onClick={handleSend}
-          className="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={sending || !newMessage.trim()}
+          className="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Send
+          {sending ? "Sending..." : "Send"}
         </button>
       </div>
     </div>
