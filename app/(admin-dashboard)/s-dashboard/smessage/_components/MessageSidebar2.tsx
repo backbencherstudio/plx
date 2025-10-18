@@ -41,7 +41,6 @@ export default function MessagesSidebar2() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [tab, setTab] = useState<ChatTab>("all");
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
   const [chatRoom, setChatRoom] = useState<ChatRoom | null>(null);
   const [loading, setLoading] = useState(true);
@@ -75,7 +74,7 @@ export default function MessagesSidebar2() {
     
     return [{
       user_id: chatRoom.id, // Use the room ID, not user ID
-      customer_name: chatRoom.user.fullName,
+      customer_name: "PLX Support Team", // Always show PLX Support Team for subscriber
       customer_image: chatRoom.user.avatar || "/sidebar/images/logo.png",
       last_seen: chatRoom.updatedAt,
       last_message: chatRoom.lastMessage?.content || "No messages yet",
@@ -84,16 +83,8 @@ export default function MessagesSidebar2() {
     }];
   }, [chatRoom]);
 
-  // For subscriber, we only have one chat room, so logic is simpler
-  const filteredChats = useMemo(() => {
-    if (tab === "unread") {
-      // "Unread" tab shows the chat room (if it exists)
-      return data;
-    } else {
-      // "All Chats" tab shows the chat room (if it exists)
-      return data;
-    }
-  }, [data, tab]);
+  // For subscriber, we only have one chat room, so no filtering needed
+  const filteredChats = data;
 
   // Get selected room ID from URL
   const selectedRoomIdFromUrl = useMemo(() => {
@@ -159,28 +150,14 @@ export default function MessagesSidebar2() {
       </div>
 
       <div className="space-y-5 w-full md:max-w-[400px] hidden md:block">
-        {/* tabs: All Chats / All Users */}
+        {/* Single tab: All Chats */}
         <div className="flex gap-3 px-6">
-          {(["all", "unread"] as ChatTab[]).map((t) => {
-            const isOn = tab === t;
-            const label = t === "all" ? `All Chats` : `All Users`;
-            const count = data.length; // For subscriber, both tabs show the same count
-            return (
-              <button
-                key={t}
-                type="button"
-                aria-current={isOn ? "page" : undefined}
-                className={`px-4 py-2 cursor-pointer flex items-center justify-center font-semibold ${
-                  isOn
-                    ? "text-primary border-b-[3px] border-primary "
-                    : "text-[#4A4C56]"
-                }`}
-                onClick={() => setTab(t)}
-              >
-                {label} ({count})
-              </button>
-            );
-          })}
+          <button
+            type="button"
+            className="px-4 py-2 cursor-pointer flex items-center justify-center font-semibold text-primary border-b-[3px] border-primary"
+          >
+            All Chats ({data.length})
+          </button>
         </div>
 
         {/* list */}

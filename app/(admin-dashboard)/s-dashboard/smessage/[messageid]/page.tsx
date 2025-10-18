@@ -7,6 +7,10 @@ import { formatDistanceToNow } from "date-fns";
 import { getRoomMessages, sendMessage, Message, SendMessageRequest, getMyChatRoom } from "@/services/messageService";
 import { getInitials, getGradientBackground } from "@/utils/avatarUtils";
 
+// Constants for consistent naming and IDs
+const PLX_SUPPORT_NAME = "PLX Support Team";
+const PLX_SUPPORT_ID = "plx-support-team-id"; // Consistent ID for support team
+
 // Type definitions for conversation structure
 interface ChatMessage {
   id: string;
@@ -14,6 +18,8 @@ interface ChatMessage {
   timestamp: string;
   senderId: string;
   senderName: string;
+  originalSenderId: string; // Original sender ID from API
+  originalSenderName: string; // Original sender name from API
   type: string;
   status: string;
   isFromUser: boolean;
@@ -115,17 +121,24 @@ export default function ChatPage() {
               
               console.log("Messages array:", messagesArray);
               
-              const convertedMessages: ChatMessage[] = messagesArray.map((msg: Message) => ({
-                id: msg.id,
-                content: msg.content,
-                timestamp: msg.createdAt,
-                senderId: msg.sender.id,
-                senderName: msg.sender.fullName,
-                type: "text",
-                status: "sent",
-                isFromUser: msg.sender.type === "user",
-                timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
-              }));
+               const convertedMessages: ChatMessage[] = messagesArray.map((msg: Message) => {
+                 // Determine if this message is from the subscriber (current user) or admin/support
+                 const isFromSubscriber = msg.sender.type === "user";
+                 
+                 return {
+                   id: msg.id,
+                   content: msg.content,
+                   timestamp: msg.createdAt,
+                   senderId: isFromSubscriber ? msg.sender.id : PLX_SUPPORT_ID,
+                   senderName: isFromSubscriber ? "You" : PLX_SUPPORT_NAME,
+                   originalSenderId: msg.sender.id,
+                   originalSenderName: msg.sender.fullName,
+                   type: "text",
+                   status: "sent",
+                   isFromUser: isFromSubscriber,
+                   timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
+                 };
+               });
               
               console.log("Converted messages:", convertedMessages);
               setMessages(convertedMessages);
@@ -164,18 +177,21 @@ export default function ChatPage() {
 
       const response = await sendMessage(messageData);
       if (response.success) {
-        // Add the new message to the messages list
-        const newMsg: ChatMessage = {
-          id: response.data.id,
-          content: response.data.content,
-          timestamp: response.data.createdAt,
-          senderId: response.data.sender.id,
-          senderName: response.data.sender.fullName,
-          type: "text",
-          status: "sent",
-          isFromUser: response.data.sender.type === "user",
-          timeAgo: "now"
-        };
+         // Add the new message to the messages list
+         const isFromSubscriber = response.data.sender.type === "user";
+         const newMsg: ChatMessage = {
+           id: response.data.id,
+           content: response.data.content,
+           timestamp: response.data.createdAt,
+           senderId: isFromSubscriber ? response.data.sender.id : PLX_SUPPORT_ID,
+           senderName: isFromSubscriber ? "You" : PLX_SUPPORT_NAME,
+           originalSenderId: response.data.sender.id,
+           originalSenderName: response.data.sender.fullName,
+           type: "text",
+           status: "sent",
+           isFromUser: isFromSubscriber,
+           timeAgo: "now"
+         };
 
         setMessages(prev => [...prev, newMsg]);
         setNewMessage("");
@@ -222,15 +238,19 @@ export default function ChatPage() {
       <div className="flex justify-between px-6 pt-5 pb-7 border-b border-[#E9E9EA] flex-shrink-0">
         <div className=" flex items-center gap-3">
           <div>
-            <div className={`w-10 h-10 ${getGradientBackground(roomData?.user?.id || 'default')} rounded-full flex items-center justify-center shadow-lg`}>
-              <span className="text-gray-700 text-sm font-semibold">
-                {getInitials(roomData?.user?.fullName || 'PLX Support Team')}
-              </span>
-            </div>
+             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 shadow-lg">
+               <Image
+                 src="/sidebar/images/logo.png"
+                 alt="PLX Support Team"
+                 width={40}
+                 height={40}
+                 className="w-full h-full object-contain"
+               />
+             </div>
           </div>
           <div>
             <h2 className="text-lg text-[#4A4C56] font-medium">
-              {roomData?.user?.fullName || "PLX Support Team"}
+              {PLX_SUPPORT_NAME}
             </h2>
             <p className=" text-xs text-[#A5A5AB]">
               Active now
@@ -254,19 +274,23 @@ export default function ChatPage() {
             >
               <div className={`flex gap-3`}>
                 <div className={`${msg.isFromUser && "order-2"}`}>
-                  {msg.isFromUser ? (
-                    <div className="rounded-full bg-[#E7ECF4] w-10 h-10 flex justify-center items-center">
-                      <span className="text-sm font-semibold text-[#4A4C56]">
-                        {msg.senderName.substring(0, 2).toUpperCase()}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className={`w-10 h-10 ${getGradientBackground(roomData?.user?.id || 'default')} rounded-full flex items-center justify-center shadow-lg`}>
-                      <span className="text-gray-700 text-sm font-semibold">
-                        {getInitials(roomData?.user?.fullName || 'PLX Support Team')}
-                      </span>
-                    </div>
-                  )}
+                     {msg.isFromUser ? (
+                      <div className="w-10 h-10 bg-[#E7ECF4] rounded-full flex items-center justify-center shadow-lg border-2 border-gray-200">
+                        <span className="text-gray-700 text-sm font-semibold">
+                          {getInitials(msg.originalSenderName)}
+                        </span>
+                      </div>
+                   ) : (
+                     <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 shadow-lg">
+                       <Image
+                         src="/sidebar/images/logo.png"
+                         alt="PLX Support Team"
+                         width={40}
+                         height={40}
+                         className="w-full h-full object-contain"
+                       />
+                     </div>
+                   )}
                 </div>
 
                 <div>
@@ -285,7 +309,7 @@ export default function ChatPage() {
                       </p>
                     ) : (
                       <p className="   text-sm font-semibold text-[#4A4C56]">
-                        {roomData?.user?.fullName || "PLX Support Team"}
+                        {msg.senderName}
                       </p>
                     )}
                     </div>

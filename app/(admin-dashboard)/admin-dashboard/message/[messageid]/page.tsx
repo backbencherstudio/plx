@@ -64,7 +64,7 @@ export default function ChatPage() {
   const [roomData, setRoomData] = useState<any>(null);
   const [actualRoomId, setActualRoomId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+
   // Debug states for API responses
   const [debugInfo, setDebugInfo] = useState<{
     usersApi: any;
@@ -301,7 +301,7 @@ export default function ChatPage() {
         };
 
         setMessages(prev => [...prev, newMsg]);
-        setNewMessage("");
+    setNewMessage("");
         console.log("✅ Admin message sent successfully");
       } else {
         setError(response.message);
