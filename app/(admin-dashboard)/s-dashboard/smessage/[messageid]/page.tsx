@@ -243,7 +243,7 @@ export default function ChatPage() {
         </button>
       </div>
 
-      {/* Chat Messages - Only this part scrolls */}
+      {/* Chat Messages - Only this part scrolls **/}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide min-h-0">
         {messages.length > 0 ? (
           messages.map((msg) => (
