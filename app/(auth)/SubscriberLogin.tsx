@@ -17,7 +17,7 @@ import {
 } from "@/services/authService";
 import toast from "react-hot-toast";
 import { Spinner } from "@/components/ui/spinner";
-import { ForgotPasswordUI } from "../_components/AdminForgotPassModals";
+import { ForgotPasswordUI } from "./_components/AdminForgotPassModals";
 import { EyeOff, Eye } from "lucide-react";
 import { signInWithPopup, onAuthStateChanged } from "firebase/auth";
 import { auth, googleProvider } from "@/firebase.config";
@@ -102,7 +102,6 @@ export default function SubscriberLogin() {
 //     console.error("Google login failed:", error);
 //   }
 // };
-
 
 const handleGoogleLogin = async () => {
   if (isLoggingIn) return; // prevent double popup
