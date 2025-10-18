@@ -1,22 +1,35 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-// import { useRouter } from "next/navigation"; // ❌ not needed now
 import { useRouter, usePathname } from "next/navigation";
 import ChatCard from "../_components/ChatCard";
-import { AdminData } from "@/app/lib/admindata";
+import { getMessageRooms } from "@/services/messageService"; // ✅ তোমার API call file
 
-type RawMessage = {
-  user_id: number;
-  customer_name: string;
-  customer_image: string;
-  last_seen: string;
-  last_message: string;
-  isActive?: boolean;
-  isRead?: boolean;
+type ChatRoomUser = {
+  id: string;
+  fullName: string;
+  email: string;
+  avatar: string | null;
 };
 
-type Message = RawMessage & { isRead: boolean };
+type ChatRoom = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  user: ChatRoomUser;
+  lastMessage: {
+    id: string;
+    content: string;
+    createdAt: string;
+    sender: {
+      id: string;
+      fullName: string;
+      type: string;
+    };
+  } | null;
+  unreadCount: number;
+};
+
 type ChatTab = "all" | "unread";
 
 function parseDateFlexible(input: string) {
@@ -27,47 +40,65 @@ function parseDateFlexible(input: string) {
 }
 
 export default function MessagesSidebar2() {
- 
-const router = useRouter();
-const pathname = usePathname();
-
-  const { messages: rawMessages = [] } = (AdminData ?? { messages: [] }) as {
-    messages: RawMessage[];
-  };
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [tab, setTab] = useState<ChatTab>("all");
-  const [selectedUserId, setSelectedUserId] = useState<number | undefined>();
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
+  const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const data: Message[] = useMemo(() => {
-    const normalized = rawMessages.map((m) => ({
-      ...m,
-      isRead:
-        typeof m.isRead === "boolean"
-          ? m.isRead
-          : typeof m.isActive === "boolean"
-          ? Boolean(m.isActive)
-          : true,
-    }));
-    return normalized.sort(
-      (a, b) =>
-        parseDateFlexible(b.last_seen).getTime() -
-        parseDateFlexible(a.last_seen).getTime()
-    );
-  }, [rawMessages]);
+  // ✅ Fetch chat rooms from API
+  useEffect(() => {
+    const loadRooms = async () => {
+      try {
+        setLoading(true);
+        const res = await getMessageRooms(); // API call
+        if (res?.data?.rooms) {
+          setChatRooms(res.data.rooms);
+        }
+      } catch (err) {
+        console.error("Failed to fetch chat rooms", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadRooms();
+  }, []);
+
+  // ✅ Transform data for UI (without changing design)
+  const formattedChats = useMemo(() => {
+    return chatRooms
+      .map((room) => ({
+        user_id: room.user.id,
+        customer_name: room.user.fullName,
+        customer_image: room.user.avatar,
+        last_seen: room.updatedAt,
+        last_message: room.lastMessage?.content || "",
+        isRead: room.unreadCount === 0,
+      }))
+      .sort(
+        (a, b) =>
+          parseDateFlexible(b.last_seen).getTime() -
+          parseDateFlexible(a.last_seen).getTime()
+      );
+  }, [chatRooms]);
 
   const filteredChats = useMemo(() => {
-    return tab === "unread" ? data.filter((c) => !c.isRead) : data;
-  }, [data, tab]);
+    return tab === "unread"
+      ? formattedChats.filter((c) => !c.isRead)
+      : formattedChats;
+  }, [formattedChats, tab]);
 
-  // initial select
+  // ✅ Auto select first chat
   useEffect(() => {
     if (!selectedUserId && filteredChats.length > 0) {
       setSelectedUserId(filteredChats[0].user_id);
-       router.push(`/admin-dashboard/message/${filteredChats[0].user_id}`);
+      router.push(`/admin-dashboard/message/${filteredChats[0].user_id}`);
     }
-  }, [filteredChats, selectedUserId,router]);
+  }, [filteredChats, selectedUserId, router]);
 
-  // if current selection not in filtered list, pick first visible
+  // ✅ Handle if selected user not visible in filtered list
   useEffect(() => {
     if (
       selectedUserId &&
@@ -77,30 +108,25 @@ const pathname = usePathname();
       setSelectedUserId(filteredChats[0].user_id);
       router.push(`/admin-dashboard/message/${filteredChats[0].user_id}`);
     }
-  }, [filteredChats, selectedUserId]);
+  }, [filteredChats, selectedUserId, router]);
 
-
-  
-
- 
-  const handleChatClick = (userid: number) => {
+  const handleChatClick = (userid: string) => {
     setSelectedUserId(userid);
-     router.push(`/admin-dashboard/message/${userid}`);
-   
+    router.push(`/admin-dashboard/message/${userid}`);
   };
 
   return (
-    <div className="bg-white rounded-2xl  ">
+    <div className="bg-white rounded-2xl">
       <div className="py-8 px-6 border-b border-[#E7ECF4]">
         <h2 className="text-lg text-[#4A4C56] font-semibold">Message</h2>
       </div>
 
       <div className="space-y-5 w-full md:max-w-[400px] hidden md:block">
-        {/* tabs: All / Unread */}
+        {/* Tabs */}
         <div className="flex gap-3 px-6">
           {(["all", "unread"] as ChatTab[]).map((t) => {
             const isOn = tab === t;
-            const label = t === "all" ? `All Chats  ` : `Unread  `;
+            const label = t === "all" ? `All Chats` : `Unread`;
             return (
               <button
                 key={t}
@@ -108,7 +134,7 @@ const pathname = usePathname();
                 aria-current={isOn ? "page" : undefined}
                 className={`px-4 py-2 cursor-pointer flex items-center justify-center font-semibold ${
                   isOn
-                    ? "text-primary border-b-[3px] border-primary "
+                    ? "text-primary border-b-[3px] border-primary"
                     : "text-[#4A4C56]"
                 }`}
                 onClick={() => setTab(t)}
@@ -119,12 +145,16 @@ const pathname = usePathname();
           })}
         </div>
 
-        {/* list */}
+        {/* Chat list */}
         <div
           className="overflow-y-auto scrollbar-hide"
           style={{ height: "calc(100vh - 280px)" }}
         >
-          {filteredChats.length > 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              Loading...
+            </div>
+          ) : filteredChats.length > 0 ? (
             filteredChats.map((chat) => (
               <ChatCard
                 key={chat.user_id}

@@ -37,6 +37,13 @@ const generateRandomMessage = (): string => {
 };
 
 export default function ChatPage() {
+
+
+
+
+
+
+
   // Get the list of conversations
   const { conversations } = AdminData;
   const pathname = usePathname();
