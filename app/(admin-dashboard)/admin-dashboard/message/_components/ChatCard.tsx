@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 interface ChatData {
-  user_id: number;
+  user_id: string; // Changed from number to string
   customer_name: string;
   customer_image: string;
   last_seen: string;
@@ -15,7 +15,7 @@ interface ChatData {
 
 interface ChatCardProps {
   data: ChatData;
-  handleChatClick: (id: number) => void;
+  handleChatClick: (id: string) => void; // Changed from number to string
   isSelected: boolean;
 }
 

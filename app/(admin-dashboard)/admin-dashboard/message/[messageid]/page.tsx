@@ -1,28 +1,45 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { AdminData } from "../../../../lib/admindata";
 import { usePathname } from "next/navigation";
 import Dot3Icon from "@/public/nominations/icons/Dot3Icon";
 import Image from "next/image";
-import youImg from "@/public/sender_img.png";
-import { formatDistanceToNow } from "date-fns"; // Import date-fns function
-import SendIcon from "@/public/commonIcons/SendIcon";
+import { formatDistanceToNow } from "date-fns";
+import { getAdminUserMessages, sendAdminMessage, AdminMessage, AdminSendMessageRequest, getAllAdminUsers } from "@/services/adminMessageService";
 
 // Type definitions for conversation structure
-interface Message {
-  message_id: number;
-  sender: string;
+interface ChatMessage {
+  id: string;
+  content: string;
   timestamp: string;
-  message: string;
+  senderId: string;
+  senderName: string;
+  type: string;
+  status: string;
+  isFromUser: boolean;
+  timeAgo: string;
 }
 
 interface Conversation {
-  user_id: number;
-  customer_name: string;
-  customer_image: string;
+  id: string;
+  contact: {
+    id: string;
+    name: string;
+    avatar: string;
+    status: string;
+    lastSeen: string | null;
+    isVerified: boolean;
+  };
+  lastMessage: {
+    id: string;
+    content: string;
+    timestamp: string;
+    senderId: string;
+    type: string;
+    status: string;
+  };
+  unreadCount: number;
   isActive: boolean;
-  last_seen: string;
-  conversation: Message[];
+  lastActivity: string;
 }
 
 const generateRandomMessage = (): string => {
@@ -37,78 +54,277 @@ const generateRandomMessage = (): string => {
 };
 
 export default function ChatPage() {
-  // Get the list of conversations
-  const { conversations } = AdminData;
   const pathname = usePathname();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [roomData, setRoomData] = useState<any>(null);
+  const [actualRoomId, setActualRoomId] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Debug states for API responses
+  const [debugInfo, setDebugInfo] = useState<{
+    usersApi: any;
+    messagesApi: any;
+    sendMessageApi: any;
+    lastAction: string;
+    timestamp: string;
+  }>({
+    usersApi: null,
+    messagesApi: null,
+    sendMessageApi: null,
+    lastAction: "",
+    timestamp: ""
+  });
+  const [showDebugger, setShowDebugger] = useState(false);
 
-  // Extract the dynamic user_id from the pathname
-  const userId = pathname.split("/").pop(); // Assuming the user_id is at the end of the pathname
-  console.log("Extracted userId from pathname:", userId);
+  // Extract the room ID from the pathname
+  const roomIdFromUrl = pathname.split("/").pop();
+  console.log("🔍 Admin Room ID from URL:", roomIdFromUrl);
 
-  // Ensure the userId is a valid number
-  const userIdNumber = userId ? parseInt(userId) : NaN;
-  console.log("Parsed userIdNumber:", userIdNumber);
+  // Fetch messages from API
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log("🔍 Fetching admin messages for user:", roomIdFromUrl);
+        
+        // Get user information first
+        let userInfo = null;
+        try {
+          console.log("🔍 API Debug: Fetching users...");
+          const usersResponse = await getAllAdminUsers(1, 100);
+          
+          // Update debug info
+          setDebugInfo(prev => ({
+            ...prev,
+            usersApi: {
+              success: usersResponse.success,
+              message: usersResponse.message,
+              dataLength: usersResponse.data?.length || 0,
+              pagination: usersResponse.pagination,
+              timestamp: new Date().toLocaleTimeString(),
+              fullResponse: usersResponse
+            },
+            lastAction: "Users API Call",
+            timestamp: new Date().toLocaleTimeString()
+          }));
+          
+          if (usersResponse.success) {
+            userInfo = usersResponse.data.find(user => user.id === roomIdFromUrl);
+            console.log("👤 Found user info:", userInfo);
+          }
+        } catch (userError) {
+          console.log("⚠️ Could not fetch user info:", userError);
+          setDebugInfo(prev => ({
+            ...prev,
+            usersApi: {
+              error: userError,
+              timestamp: new Date().toLocaleTimeString()
+            },
+            lastAction: "Users API Error",
+            timestamp: new Date().toLocaleTimeString()
+          }));
+        }
+        
+        // Get messages for this user using the user ID from URL
+        console.log("🔍 API Debug: Fetching messages...");
+        const messagesResponse = await getAdminUserMessages(roomIdFromUrl!);
+        
+        // Update debug info for messages API
+        setDebugInfo(prev => ({
+          ...prev,
+          messagesApi: {
+            success: messagesResponse.success,
+            message: messagesResponse.message,
+            messagesCount: messagesResponse.messages?.length || 0,
+            data: messagesResponse.data,
+            pagination: messagesResponse.pagination,
+            timestamp: new Date().toLocaleTimeString(),
+            fullResponse: messagesResponse
+          },
+          lastAction: "Messages API Call",
+          timestamp: new Date().toLocaleTimeString()
+        }));
+        
+        console.log("📨 Admin messages response:", messagesResponse);
+        console.log("📨 Admin messages response structure:", {
+          success: messagesResponse.success,
+          message: messagesResponse.message,
+          data: messagesResponse.data,
+          messages: messagesResponse.messages,
+          messagesType: typeof messagesResponse.messages,
+          messagesIsArray: Array.isArray(messagesResponse.messages)
+        });
+        
+        if (messagesResponse.success) {
+          try {
+            // Convert API messages to ChatMessage format
+            let messagesArray: AdminMessage[] = [];
+            
+            // Handle different possible response structures from API
+            if (messagesResponse.messages && Array.isArray(messagesResponse.messages)) {
+              messagesArray = messagesResponse.messages;
+            } else if (messagesResponse.data && (messagesResponse.data as any).messages && Array.isArray((messagesResponse.data as any).messages)) {
+              messagesArray = (messagesResponse.data as any).messages;
+            } else {
+              console.warn("No messages array found in response:", messagesResponse);
+              messagesArray = [];
+            }
+            
+            console.log("📨 Admin messages array:", messagesArray);
+            
+            const convertedMessages: ChatMessage[] = messagesArray.map((msg: AdminMessage) => ({
+              id: msg.id,
+              content: msg.content,
+              timestamp: msg.createdAt,
+              senderId: msg.sender.id,
+              senderName: msg.sender.fullName,
+              type: "text",
+              status: "sent",
+              isFromUser: msg.sender.type === "admin", // Admin is the sender
+              timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
+            }));
+            
+            console.log("✅ Converted admin messages:", convertedMessages);
+            setMessages(convertedMessages);
+            
+            // Use user info if available, otherwise use API response data
+            const roomDataToSet = userInfo ? {
+              user: {
+                id: userInfo.id,
+                fullName: userInfo.fullName || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
+                email: userInfo.email,
+                avatar: userInfo.avatar,
+                type: "user"
+              }
+            } : messagesResponse.data;
+            
+            setRoomData(roomDataToSet);
+            setActualRoomId(roomIdFromUrl!);
+          } catch (msgError) {
+            console.error("❌ Error processing admin messages:", msgError);
+            setError(`Error processing messages: ${msgError}`);
+            setMessages([]);
+          }
+        } else {
+          console.log("⚠️ API returned success=false, but continuing with empty messages");
+          // Even if API fails, we should still show the chat interface
+          setMessages([]);
+          
+          // Use user info if available
+          const roomDataToSet = userInfo ? {
+            user: {
+              id: userInfo.id,
+              fullName: userInfo.fullName || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
+              email: userInfo.email,
+              avatar: userInfo.avatar,
+              type: "user"
+            }
+          } : { user: { fullName: "User", avatar: null } };
+          
+          setRoomData(roomDataToSet);
+          setActualRoomId(roomIdFromUrl!);
+        }
+      } catch (err) {
+        setError(`Failed to fetch data: ${err}`);
+        console.error("❌ Error fetching admin data:", err);
+        
+        // Update debug info for general error
+        setDebugInfo(prev => ({
+          ...prev,
+          messagesApi: {
+            success: false,
+            error: err,
+            timestamp: new Date().toLocaleTimeString(),
+            fullResponse: null
+          },
+          lastAction: "General Fetch Error",
+          timestamp: new Date().toLocaleTimeString()
+        }));
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Filter the conversation based on the user_id
-  const filteredConversation = conversations.filter(
-    (conversation: Conversation) => conversation.user_id === userIdNumber
-  );
+    if (roomIdFromUrl) {
+      fetchMessages();
+    }
+  }, [roomIdFromUrl]);
 
-  // Log the filtered conversation to inspect it
-  console.log("Filtered Conversation: ", filteredConversation);
+  const handleSend = async () => {
+    if (newMessage.trim() === "" || !actualRoomId) return;
 
-  // If there is no matching conversation, set an empty array to avoid errors
-  const initialMessages =
-    filteredConversation.length > 0 ? filteredConversation[0].conversation : [];
-  console.log("Initial messages:", initialMessages);
-
-  // Function to insert random sender message at random positions
-  const insertRandomSenderMessages = (messages: Message[]): Message[] => {
-    const updatedMessages = [...messages];
-    const numberOfRandomMessages = Math.floor(Math.random() * 3) + 1; // Random number between 1 and 3
-
-    for (let i = 0; i < numberOfRandomMessages; i++) {
-      const randomMessage = {
-        message_id: updatedMessages.length + 1,
-        sender: "sender",
-        timestamp: new Date().toISOString(),
-        message: generateRandomMessage(),
+    setSending(true);
+    try {
+      const messageData: AdminSendMessageRequest = {
+        chatRoomId: actualRoomId, // This is now the user ID
+        content: newMessage.trim()
       };
 
-      // Insert the random message at a random position in the array
-      const randomIndex = Math.floor(Math.random() * updatedMessages.length);
-      updatedMessages.splice(randomIndex, 0, randomMessage);
+      console.log("📤 Sending admin message:", messageData);
+      const response = await sendAdminMessage(messageData);
+      
+      // Update debug info for send message API
+      setDebugInfo(prev => ({
+        ...prev,
+        sendMessageApi: {
+          success: response.success,
+          message: response.message,
+          data: response.data,
+          timestamp: new Date().toLocaleTimeString(),
+          fullResponse: response
+        },
+        lastAction: "Send Message API Call",
+        timestamp: new Date().toLocaleTimeString()
+      }));
+      
+      console.log("📨 Admin send response:", response);
+      
+      if (response.success) {
+        // Add the new message to the messages list
+        const newMsg: ChatMessage = {
+          id: response.data.id,
+          content: response.data.content,
+          timestamp: response.data.createdAt,
+          senderId: response.data.sender.id,
+          senderName: response.data.sender.fullName,
+          type: "text",
+          status: "sent",
+          isFromUser: response.data.sender.type === "admin",
+          timeAgo: "now"
+        };
+
+        setMessages(prev => [...prev, newMsg]);
+        setNewMessage("");
+        console.log("✅ Admin message sent successfully");
+      } else {
+        setError(response.message);
+        console.error("❌ Admin send error:", response.message);
+      }
+    } catch (err) {
+      setError("Failed to send message");
+      console.error("❌ Error sending admin message:", err);
+      
+      // Update debug info for send message API error
+      setDebugInfo(prev => ({
+        ...prev,
+        sendMessageApi: {
+          success: false,
+          error: err,
+          timestamp: new Date().toLocaleTimeString(),
+          fullResponse: null
+        },
+        lastAction: "Send Message API Error",
+        timestamp: new Date().toLocaleTimeString()
+      }));
+    } finally {
+      setSending(false);
     }
-
-    return updatedMessages;
-  };
-
-  // Set the initial messages state dynamically and insert random messages
-  const [messages, setMessages] = useState<Message[]>(
-    insertRandomSenderMessages(initialMessages)
-  );
-
-  const [newMessage, setNewMessage] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleSend = () => {
-    if (newMessage.trim() === "") return;
-
-    setMessages([
-      ...messages,
-      {
-        message_id: messages.length + 1,
-        sender: "sender",
-        timestamp: new Date().toISOString(),
-        message: newMessage,
-      },
-    ]);
-    setNewMessage("");
   };
 
   // Handle Enter key press
@@ -118,6 +334,27 @@ export default function ChatPage() {
     }
   };
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col bg-white rounded-[12px] h-full items-center justify-center" style={{ height: "calc(100vh - 150px)" }}>
+        <div className="text-gray-500">Loading messages...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col bg-white rounded-[12px] h-full items-center justify-center" style={{ height: "calc(100vh - 150px)" }}>
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="flex flex-col bg-white rounded-[12px] h-full"
@@ -126,20 +363,21 @@ export default function ChatPage() {
       {/* Header - Always visible, never scrolls */}
       <div className="flex justify-between px-6 pt-5 pb-7 border-b border-[#E9E9EA] flex-shrink-0">
         <div className=" flex items-center gap-3">
-          <img
-            src={
-              filteredConversation[0]?.customer_image ||
-              "https://randomuser.me/api/portraits/women/30.jpg"
-            }
-            alt="Receiver"
-            className="w-[46px] h-[46px] rounded-full mr-3 object-contain"
-          />
+          <div>
+            <Image
+              src={roomData?.user?.avatar || "/sidebar/images/logo.png"}
+              width={40}
+              height={40}
+              className="rounded-full object-contain"
+              alt={roomData?.user?.fullName || "Customer"}
+            />
+          </div>
           <div>
             <h2 className="text-lg text-[#4A4C56] font-medium">
-              {filteredConversation[0]?.customer_name || "Jane Smith"}
+              {roomData?.user?.fullName || "Customer"}
             </h2>
             <p className=" text-xs text-[#A5A5AB]">
-              Lorem ipsum dolor sit amet
+              Active now
             </p>
           </div>
         </div>
@@ -153,24 +391,26 @@ export default function ChatPage() {
         {messages.length > 0 ? (
           messages.map((msg) => (
             <div
-              key={msg.message_id}
+              key={msg.id}
               className={`flex ${
-                msg.sender === "sender" ? "justify-end" : "justify-start"
+                msg.isFromUser ? "justify-end" : "justify-start"
               }`}
             >
               <div className={`flex gap-3`}>
-                <div className={`${msg.sender === "sender" && "order-2"}`}>
-                  {msg.sender == "sender" ? (
-                    <div className=" rounded-full   bg-[#E7ECF4]  w-10 h-10 flex justify-center items-center">
-                      <Image src={youImg} className="" alt="customer img" />
+                <div className={`${msg.isFromUser && "order-2"}`}>
+                  {msg.isFromUser ? (
+                    <div className="rounded-full bg-[#E7ECF4] w-10 h-10 flex justify-center items-center">
+                      <span className="text-sm font-semibold text-[#4A4C56]">
+                        {msg.senderName.substring(0, 2).toUpperCase()}
+                      </span>
                     </div>
                   ) : (
                     <Image
-                      src={filteredConversation[0]?.customer_image}
+                      src={roomData?.user?.avatar || "/sidebar/images/logo.png"}
                       width={40}
                       height={40}
-                      className=" rounded-full"
-                      alt="customer img"
+                      className="rounded-full"
+                      alt={roomData?.user?.fullName || "Customer"}
                     />
                   )}
                 </div>
@@ -178,27 +418,25 @@ export default function ChatPage() {
                 <div>
                   <div
                     className={` flex items-center gap-4 mb-2${
-                      msg.sender === "sender"
+                      msg.isFromUser
                         ? " justify-end"
                         : " justify-start"
                     }`}
                   >
-                    <div
-                      className={`${msg.sender === "sender" ? "order-2" : ""}`}
-                    >
-                      {msg.sender == "sender" ? (
-                        <p className="  text-sm font-semibold text-[#4A4C56]  ">
-                          you
-                        </p>
-                      ) : (
-                        <p className="   text-sm font-semibold text-[#4A4C56]">
-                          {filteredConversation[0]?.customer_name ||
-                            "Jane Smith"}
-                        </p>
-                      )}
+                    <div className={`${msg.isFromUser?'order-2':''}`}>
+
+                    {msg.isFromUser ? (
+                      <p className="  text-sm font-semibold text-[#4A4C56]  ">
+                        {msg.senderName}
+                      </p>
+                    ) : (
+                      <p className="   text-sm font-semibold text-[#4A4C56]">
+                        {roomData?.user?.fullName || "Customer"}
+                      </p>
+                    )}
                     </div>
                     <p className="text-xs  text-[#A5A5AB]">
-                      {formatDistanceToNow(new Date(msg.timestamp), {
+                      {msg.timeAgo || formatDistanceToNow(new Date(msg.timestamp), {
                         addSuffix: true,
                       })
                         .replace(/^about /, "")
@@ -206,41 +444,149 @@ export default function ChatPage() {
                     </p>
                   </div>
                   <p
-                    className={`max-w-[680px]   p-3  overflow-wrap  break-words   ${
-                      msg.sender === "sender"
+                    className={`max-w-[680px] flex flex-wrap p-3   ${
+                      msg.isFromUser
                         ? "bg-primary text-white rounded-b-[12px] rounded-tl-[12px]"
                         : "bg-[#E7ECF4] text-black  rounded-b-[12px] rounded-tr-[12px]"
                     }`}
                   >
-                    {msg.message}
+                    {msg.content}
                   </p>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <div>No messages found.</div>
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="text-center">
+              <p className="text-lg font-medium">No messages yet</p>
+              <p className="text-sm">Start a conversation!</p>
+            </div>
+          </div>
         )}
         {/* This div acts as a scroll anchor */}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Box - Always visible, never scrolls */}
-      <div className=" py-5 px-6 flex flex-shrink-0 border-t border-[#E9E9EA]">
+      <div className="p-4 bg-white border-t border-gray-300 flex flex-shrink-0">
         <input
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Type a message..."
-          className="flex-1  py-2 px-3 border border-[#E9E9EA] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+          disabled={sending}
+          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
         />
         <button
           onClick={handleSend}
-          className="ml-2 bg-primary text-white   p-[10px] rounded-[8px] cursor-pointer  hover:bg-blue-700 transition-colors"
+          disabled={sending || !newMessage.trim()}
+          className="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-         <SendIcon/>
+          {sending ? "Sending..." : "Send"}
         </button>
+      </div>
+      
+      {/* API Response Debugger */}
+      <div className="mt-4 p-4 bg-gray-100 border-t border-gray-300">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-gray-700">🔍 API Response Debugger</h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowDebugger(!showDebugger)}
+              className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+            >
+              {showDebugger ? 'Hide' : 'Show'} Debugger
+            </button>
+            <span className="text-xs text-gray-500">Last Action: {debugInfo.lastAction} at {debugInfo.timestamp}</span>
+          </div>
+        </div>
+        
+        {showDebugger && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Users API */}
+              <div className="bg-white p-3 rounded border">
+                <h4 className="text-xs font-semibold text-blue-600 mb-2">👥 Users API</h4>
+                {debugInfo.usersApi ? (
+                  <div className="text-xs space-y-1">
+                    <div className={`p-1 rounded ${debugInfo.usersApi.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      Status: {debugInfo.usersApi.success ? '✅ Success' : '❌ Failed'}
+                    </div>
+                    <div className="text-gray-600">Count: {debugInfo.usersApi.dataLength || 0}</div>
+                    <div className="text-gray-600">Time: {debugInfo.usersApi.timestamp}</div>
+                    {debugInfo.usersApi.error && (
+                      <div className="text-red-600 text-xs">Error: {debugInfo.usersApi.error.message}</div>
+                    )}
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-blue-600">View Full Response</summary>
+                      <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-auto max-h-32">
+                        {JSON.stringify(debugInfo.usersApi.fullResponse, null, 2)}
+                      </pre>
+                    </details>
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500">No data yet</div>
+                )}
+              </div>
+              
+              {/* Messages API */}
+              <div className="bg-white p-3 rounded border">
+                <h4 className="text-xs font-semibold text-green-600 mb-2">💬 Messages API</h4>
+                {debugInfo.messagesApi ? (
+                  <div className="text-xs space-y-1">
+                    <div className={`p-1 rounded ${debugInfo.messagesApi.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      Status: {debugInfo.messagesApi.success ? '✅ Success' : '❌ Failed'}
+                    </div>
+                    <div className="text-gray-600">Messages: {debugInfo.messagesApi.messagesCount || 0}</div>
+                    <div className="text-gray-600">Time: {debugInfo.messagesApi.timestamp}</div>
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-blue-600">View Full Response</summary>
+                      <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-auto max-h-32">
+                        {JSON.stringify(debugInfo.messagesApi.fullResponse, null, 2)}
+                      </pre>
+                    </details>
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500">No data yet</div>
+                )}
+              </div>
+              
+              {/* Send Message API */}
+              <div className="bg-white p-3 rounded border">
+                <h4 className="text-xs font-semibold text-purple-600 mb-2">📤 Send Message API</h4>
+                {debugInfo.sendMessageApi ? (
+                  <div className="text-xs space-y-1">
+                    <div className={`p-1 rounded ${debugInfo.sendMessageApi.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      Status: {debugInfo.sendMessageApi.success ? '✅ Success' : '❌ Failed'}
+                    </div>
+                    <div className="text-gray-600">Time: {debugInfo.sendMessageApi.timestamp}</div>
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-blue-600">View Full Response</summary>
+                      <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-auto max-h-32">
+                        {JSON.stringify(debugInfo.sendMessageApi.fullResponse, null, 2)}
+                      </pre>
+                    </details>
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500">No data yet</div>
+                )}
+              </div>
+            </div>
+            
+            {/* Current State Info */}
+            <div className="mt-3 p-2 bg-blue-50 rounded">
+              <h4 className="text-xs font-semibold text-blue-800 mb-1">📊 Current State</h4>
+              <div className="text-xs text-blue-700 grid grid-cols-2 gap-2">
+                <div>Room ID: {actualRoomId || 'None'}</div>
+                <div>Messages Count: {messages.length}</div>
+                <div>Loading: {loading ? 'Yes' : 'No'}</div>
+                <div>Sending: {sending ? 'Yes' : 'No'}</div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ import ChatCard from "../_components/ChatCard";
 import { AdminData } from "@/app/lib/admindata";
 
 type RawMessage = {
-  user_id: number;
+  user_id: string; // Changed to string
   customer_name: string;
   customer_image: string;
   last_seen: string;
@@ -30,20 +30,21 @@ export default function MessagesSidebar() {
   const pathname = usePathname();
 
   const { messages: rawMessages = [] } = (AdminData ?? { messages: [] }) as {
-    messages: RawMessage[];
+    messages: any[];
   };
 
   const [tab, setTab] = useState<ChatTab>("all");
 
   // Get selected user ID from URL
   const selectedUserId = useMemo(() => {
-    const matches = pathname.match(/\/messages\/(\d+)/);
-    return matches ? parseInt(matches[1]) : undefined;
+    const matches = pathname.match(/\/messages\/(.+)/);
+    return matches ? matches[1] : undefined;
   }, [pathname]);
 
   const data: Message[] = useMemo(() => {
     const normalized = rawMessages.map((m) => ({
       ...m,
+      user_id: m.user_id.toString(), // Convert to string
       isRead:
         typeof m.isRead === "boolean"
           ? m.isRead
@@ -80,7 +81,7 @@ export default function MessagesSidebar() {
     }
   }, [filteredChats, selectedUserId, router]);
 
-  const handleChatClick = (userid: number) => {
+  const handleChatClick = (userid: string) => {
     router.push(`/admin-dashboard/message/${userid}`);
     
   };
