@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import logo from "@/public/sidebar/images/logo.png";
 import sImg from "@/public/subscriber-login.png";
 import googleImg from "@/public/google-login.png";
@@ -8,19 +8,15 @@ import EmailIcon from "@/public/commonIcons/EmailIcon";
 import LockIcon from "@/public/commonIcons/LockIcon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  forgotPasswordSendOtp,
-  googleLogin,
-  resetPassword,
-  subscriberLogin,
-  verifyForgotPasswordOtp,
-} from "@/services/authService";
+
+import { signInWithPopup, getRedirectResult } from "firebase/auth";
+import { auth, googleProvider } from "@/firebase.config";
+
+import { googleLogin, subscriberLogin } from "@/services/authService";
 import toast from "react-hot-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { ForgotPasswordUI } from "./_components/AdminForgotPassModals";
 import { EyeOff, Eye } from "lucide-react";
-import { signInWithPopup, onAuthStateChanged } from "firebase/auth";
-import { auth, googleProvider } from "@/firebase.config";
 
 export default function SubscriberLogin() {
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -32,95 +28,50 @@ export default function SubscriberLogin() {
 
   const router = useRouter();
 
+  // ✅ Handle Google redirect result (after redirect login)
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          const email = result.user.email ?? "";
+          const displayName = result.user.displayName ?? "Unknown User";
+          const photoURL = result.user.photoURL ?? "";
 
+          const res = await googleLogin(email, displayName, photoURL);
+          const token = res?.data?.token;
 
-//   const handleGoogleLogin = async () => {
-//   try {
-//     // Start sign-in popup
-//     const result = await signInWithPopup(auth, googleProvider);
+          if (token) {
+            localStorage.setItem("token", token);
+            toast.success("Google login successful!");
+            router.push("/s-dashboard");
+          } else {
+            toast.error("Login failed! Token not found.");
+          }
+        }
+      } catch (error: any) {
+        console.error("Google redirect result error:", error);
+        toast.error(error.message || "Google login failed!");
+      }
+    };
 
-//     // Extract user info safely
-//     const email = result.user.email ?? "";
-//     const displayName = result.user.displayName ?? "";
-//     const photoURL = result.user.photoURL ?? "";
+    handleRedirectResult();
+  }, [router]);
 
-//     if (!email) {
-//       toast.error("Email not found from Google account!");
-//       return;
-//     }
-
-//     // Send to backend
-//     const res = await googleLogin(email, displayName, photoURL);
-//     const token = res?.data?.token;
-
-//     if (token) {
-//       localStorage.setItem("token", token);
-//       toast.success("Google login successful!");
-//       router.push("/s-dashboard");
-//     } else {
-//       toast.error("Login failed! Token not found.");
-//     }
-//   } catch (error: any) {
-//     // Handle specific Firebase errors
-//     if (error.code === "auth/popup-closed-by-user") {
-//       toast("Popup was closed before completing sign-in.", {
-//         icon: "⚠️",
-//       });
-//     } else if (error.code === "auth/cancelled-popup-request") {
-//       console.warn("Popup request was canceled.");
-//     } else {
-//       console.error("Google login error:", error);
-//       toast.error(error?.message || "Something went wrong!");
-//     }
-//   }
-// };
-
-
-//  const handleGoogleLogin = async () => {
-//   const result = await signInWithPopup(auth, googleProvider);
-
-//   const email = result.user.email ?? "";
-//   const displayName = result.user.displayName ?? "Unknown User";
-//   const photoURL = result.user.photoURL ?? "";
- 
-
-//   console.log(displayName);
-//   console.log(photoURL);
-//   console.log(email);
-
-//   try {
-//     if (result) {
-//       const res = await googleLogin(email, displayName, photoURL);
-      
-//       const token= res.data.token;
-//       console.log(token);
-      
-
-//       console.log(res);
-//     }
-//   } catch (error) {
-//     console.error("Google login failed:", error);
-//   }
-// };
-
-const handleGoogleLogin = async () => {
-  if (isLoggingIn) return; // prevent double popup
-  setIsLoggingIn(true);
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    // ... your login logic
-  } catch (error: any) {
-    if (error.code === "auth/popup-closed-by-user") {
-      toast("Popup closed before signing in.");
-    } else {
+  // ✅ Google login (redirect-based)
+  const handleGoogleLogin = async () => {
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error: any) {
       console.error("Google login error:", error);
       toast.error(error.message || "Something went wrong!");
+      setIsLoggingIn(false);
     }
-  } finally {
-    setIsLoggingIn(false);
-  }
-};
+  };
 
+  // ✅ Regular email/password login
   const handleLogin = async () => {
     if (!email || !password) {
       toast.error("Please enter both email and password!");
@@ -203,7 +154,7 @@ const handleGoogleLogin = async () => {
                 <LockIcon />
               </div>
               <button
-                className=" absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -226,7 +177,7 @@ const handleGoogleLogin = async () => {
           <button
             onClick={handleLogin}
             disabled={loading}
-            className={`  active:opacity-60 cursor-pointer transition-all ease-in-out duration-300 w-full py-4 px-6 text-center ${
+            className={`active:opacity-60 transition-all w-full py-4 px-6 text-center ${
               loading ? "bg-gray-400 cursor-not-allowed" : "bg-primary"
             } text-white mt-12 rounded-[8px] text-lg font-bold`}
           >
@@ -239,13 +190,15 @@ const handleGoogleLogin = async () => {
             <div className="flex-1 h-px bg-[#D2D2D5]" />
           </div>
 
-          <button  onClick={handleGoogleLogin} className="w-full border border-[#E6E8EA] py-4 px-6 rounded-[8px] bg-white cursor-pointer flex justify-center items-center  active:opacity-60">
-            <div
-             
-              className="flex justify-center items-center gap-6 cursor-pointer"
-            >
+          {/* Google Login */}
+          <button
+            onClick={handleGoogleLogin}
+            disabled={isLoggingIn}
+            className="w-full border border-[#E6E8EA] py-4 px-6 rounded-[8px] bg-white flex justify-center items-center active:opacity-60"
+          >
+            <div className="flex justify-center items-center gap-6">
               <Image src={googleImg} alt="google img" />
-              <p>Continue with Google</p>
+              <p>{isLoggingIn ? "Redirecting..." : "Continue with Google"}</p>
             </div>
           </button>
 
@@ -285,7 +238,7 @@ const handleGoogleLogin = async () => {
 
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
-          <Spinner className=" animate-spin-slow text-[#123F93]" size={50} />
+          <Spinner className="animate-spin-slow text-[#123F93]" size={50} />
         </div>
       )}
     </>

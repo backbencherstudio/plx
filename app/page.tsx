@@ -1,10 +1,10 @@
-import Image from "next/image";
-import AdminLogin from "./(auth)/AdminLogin";
+ 
+import SubscriberLogin from "./(auth)/SubscriberLogin";
 
 export default function Home() {
   return (
      <div>
-      <AdminLogin/>
+       <SubscriberLogin/>
      </div>
   );
 }
