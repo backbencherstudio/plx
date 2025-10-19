@@ -6,6 +6,7 @@ import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { getRoomMessages, sendMessage, Message, SendMessageRequest, getMyChatRoom } from "@/services/messageService";
 import { getInitials, getGradientBackground } from "@/utils/avatarUtils";
+import SendIcon from "@/public/commonIcons/SendIcon";
 
 // Type definitions for conversation structure
 interface ChatMessage {
@@ -323,7 +324,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input Box - Always visible, never scrolls */}
-      <div className="p-4 bg-white border-t border-gray-300 flex flex-shrink-0">
+      <div className="p-4 bg-white border-t border-gray-300 flex flex-shrink-0 gap-4">
         <input
           type="text"
           value={newMessage}
@@ -333,13 +334,16 @@ export default function ChatPage() {
           disabled={sending}
           className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
         />
-        <button
+        {/* <button
           onClick={handleSend}
           disabled={sending || !newMessage.trim()}
           className="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {sending ? "Sending..." : "Send"}
-        </button>
+        </button> */}
+          <button onClick={handleSend}    disabled={sending || !newMessage.trim()} className=" bg-[#0E2F6E] p-2.5 rounded-xl cursor-pointer">
+                  <SendIcon/>
+                </button>
       </div>
     </div>
   );

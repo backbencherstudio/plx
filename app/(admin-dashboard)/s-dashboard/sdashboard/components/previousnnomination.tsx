@@ -419,73 +419,7 @@ export default function Previousnnomination() {
           </div>
         </div>
 
-        {/* Debug Box */}
-        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Debug Console</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowDebugBox(!showDebugBox)}
-                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-              >
-                {showDebugBox ? 'Hide' : 'Show'} Debug
-              </button>
-              <button
-                onClick={() => {
-                  setDebugSteps([])
-                  setDebugData(null)
-                  test()
-                }}
-                className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
-
-          {showDebugBox && (
-            <div className="space-y-4">
-              {/* Debug Steps */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Debug Steps:</h4>
-                <div className="bg-black text-green-400 p-3 rounded font-mono text-sm max-h-40 overflow-y-auto">
-                  {debugSteps.length === 0 ? (
-                    <div className="text-gray-500">No debug steps yet...</div>
-                  ) : (
-                    debugSteps.map((step, index) => (
-                      <div key={index} className="mb-1">
-                        {step}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* API Response Data */}
-              {debugData && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">API Response Data:</h4>
-                  <div className="bg-gray-900 text-gray-100 p-3 rounded font-mono text-xs min-h-60 overflow-y-auto">
-                    <pre>{JSON.stringify(debugData, null, 2)}</pre>
-                  </div>
-                </div>
-              )}
-
-              {/* Token Info */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Token Information:</h4>
-                <div className="bg-yellow-50 border border-yellow-200 p-3 rounded text-sm">
-                      <div className="font-mono break-all">
-                    <strong>Token:</strong> {authToken || 'No token found'}
-                  </div>
-                  <div className="mt-2">
-                    <strong>Token Length:</strong> {authToken ? authToken.length : 0} characters
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+     
       </div>
 
       {/* Modal */}

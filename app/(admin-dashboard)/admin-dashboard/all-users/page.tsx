@@ -212,47 +212,7 @@ export default function AllUsersPage() {
           </div>
         </div>
         {/* Debug Box */}
-        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Debug Console</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowDebugBox(!showDebugBox)}
-                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-              >
-                {showDebugBox ? 'Hide' : 'Show'} Debug
-              </button>
-              <button
-                onClick={() => { setDebugSteps([]); setDebugData(null); fetchUsers() }}
-                className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
-          {showDebugBox && (
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Steps</h4>
-                <div className="bg-black text-green-400 p-3 rounded font-mono text-sm max-h-40 overflow-y-auto">
-                  {debugSteps.length === 0 ? (
-                    <div className="text-gray-500">No debug steps yet...</div>
-                  ) : (
-                    debugSteps.map((s, i) => (<div key={i} className="mb-1">{s}</div>))
-                  )}
-                </div>
-              </div>
-              {debugData && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">API Response</h4>
-                  <div className="bg-gray-900 text-gray-100 p-3 rounded font-mono text-xs min-h-60 overflow-y-auto">
-                    <pre>{JSON.stringify(debugData, null, 2)}</pre>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        
       </div>
     </div>
   )

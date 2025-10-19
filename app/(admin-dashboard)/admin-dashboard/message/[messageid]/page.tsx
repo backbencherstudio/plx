@@ -5,7 +5,7 @@ import Dot3Icon from "@/public/nominations/icons/Dot3Icon";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { getAdminUserMessages, sendAdminMessage, AdminMessage, AdminSendMessageRequest, getAllAdminUsers } from "@/services/adminMessageService";
-import { getInitials, getGradientBackground } from "@/utils/avatarUtils";
+import SendIcon from "@/public/commonIcons/SendIcon";
 
 // Type definitions for conversation structure
 interface ChatMessage {
@@ -365,11 +365,13 @@ export default function ChatPage() {
       <div className="flex justify-between px-6 pt-5 pb-7 border-b border-[#E9E9EA] flex-shrink-0">
         <div className=" flex items-center gap-3">
           <div>
-            <div className={`w-10 h-10 ${getGradientBackground(roomData?.user?.id || 'default')} rounded-full flex items-center justify-center shadow-lg`}>
-              <span className="text-gray-700 text-sm font-semibold">
-                {getInitials(roomData?.user?.fullName || 'Customer')}
-              </span>
-            </div>
+            <Image
+              src={roomData?.user?.avatar || "/sidebar/images/logo.png"}
+              width={40}
+              height={40}
+              className="rounded-full object-contain"
+              alt={roomData?.user?.fullName || "Customer"}
+            />
           </div>
           <div>
             <h2 className="text-lg text-[#4A4C56] font-medium">
@@ -404,11 +406,13 @@ export default function ChatPage() {
                       </span>
                     </div>
                   ) : (
-                    <div className={`w-10 h-10 ${getGradientBackground(roomData?.user?.id || 'default')} rounded-full flex items-center justify-center shadow-lg`}>
-                      <span className="text-gray-700 text-sm font-semibold">
-                        {getInitials(roomData?.user?.fullName || 'Customer')}
-                      </span>
-                    </div>
+                    <Image
+                      src={roomData?.user?.avatar || "/sidebar/images/logo.png"}
+                      width={40}
+                      height={40}
+                      className="rounded-full"
+                      alt={roomData?.user?.fullName || "Customer"}
+                    />
                   )}
                 </div>
 
@@ -423,14 +427,14 @@ export default function ChatPage() {
                     <div className={`${msg.isFromUser?'order-2':''}`}>
 
                     {msg.isFromUser ? (
-                        <p className="  text-sm font-semibold text-[#4A4C56]  ">
+                      <p className="  text-sm font-semibold text-[#4A4C56]  ">
                         {msg.senderName}
-                        </p>
-                      ) : (
-                        <p className="   text-sm font-semibold text-[#4A4C56]">
+                      </p>
+                    ) : (
+                      <p className="   text-sm font-semibold text-[#4A4C56]">
                         {roomData?.user?.fullName || "Customer"}
-                        </p>
-                      )}
+                      </p>
+                    )}
                     </div>
                     <p className="text-xs  text-[#A5A5AB]">
                       {msg.timeAgo || formatDistanceToNow(new Date(msg.timestamp), {
@@ -466,7 +470,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input Box - Always visible, never scrolls */}
-      <div className="p-4 bg-white border-t border-gray-300 flex flex-shrink-0">
+      <div className="p-4 bg-white border-t border-gray-300 flex flex-shrink-0 gap-4">
         <input
           type="text"
           value={newMessage}
@@ -474,117 +478,22 @@ export default function ChatPage() {
           onKeyPress={handleKeyPress}
           placeholder="Type a message..."
           disabled={sending}
-          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0E2F6E] disabled:opacity-50"
         />
-        <button
-          onClick={handleSend}
-          disabled={sending || !newMessage.trim()}
+        {/* <button
+          
+       
           className="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {sending ? "Sending..." : "Send"}
+        </button> */}
+        <button onClick={handleSend}    disabled={sending || !newMessage.trim()} className=" bg-[#0E2F6E] p-2.5 rounded-xl cursor-pointer">
+          <SendIcon/>
         </button>
       </div>
       
       {/* API Response Debugger */}
-      <div className="mt-4 p-4 bg-gray-100 border-t border-gray-300">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-700">🔍 API Response Debugger</h3>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowDebugger(!showDebugger)}
-              className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
-            >
-              {showDebugger ? 'Hide' : 'Show'} Debugger
-            </button>
-            <span className="text-xs text-gray-500">Last Action: {debugInfo.lastAction} at {debugInfo.timestamp}</span>
-          </div>
-        </div>
-        
-        {showDebugger && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Users API */}
-              <div className="bg-white p-3 rounded border">
-                <h4 className="text-xs font-semibold text-blue-600 mb-2">👥 Users API</h4>
-                {debugInfo.usersApi ? (
-                  <div className="text-xs space-y-1">
-                    <div className={`p-1 rounded ${debugInfo.usersApi.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      Status: {debugInfo.usersApi.success ? '✅ Success' : '❌ Failed'}
-                    </div>
-                    <div className="text-gray-600">Count: {debugInfo.usersApi.dataLength || 0}</div>
-                    <div className="text-gray-600">Time: {debugInfo.usersApi.timestamp}</div>
-                    {debugInfo.usersApi.error && (
-                      <div className="text-red-600 text-xs">Error: {debugInfo.usersApi.error.message}</div>
-                    )}
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-blue-600">View Full Response</summary>
-                      <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-auto max-h-32">
-                        {JSON.stringify(debugInfo.usersApi.fullResponse, null, 2)}
-                      </pre>
-                    </details>
-                  </div>
-                ) : (
-                  <div className="text-xs text-gray-500">No data yet</div>
-                )}
-              </div>
-              
-              {/* Messages API */}
-              <div className="bg-white p-3 rounded border">
-                <h4 className="text-xs font-semibold text-green-600 mb-2">💬 Messages API</h4>
-                {debugInfo.messagesApi ? (
-                  <div className="text-xs space-y-1">
-                    <div className={`p-1 rounded ${debugInfo.messagesApi.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      Status: {debugInfo.messagesApi.success ? '✅ Success' : '❌ Failed'}
-                    </div>
-                    <div className="text-gray-600">Messages: {debugInfo.messagesApi.messagesCount || 0}</div>
-                    <div className="text-gray-600">Time: {debugInfo.messagesApi.timestamp}</div>
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-blue-600">View Full Response</summary>
-                      <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-auto max-h-32">
-                        {JSON.stringify(debugInfo.messagesApi.fullResponse, null, 2)}
-                      </pre>
-                    </details>
-                  </div>
-                ) : (
-                  <div className="text-xs text-gray-500">No data yet</div>
-                )}
-              </div>
-              
-              {/* Send Message API */}
-              <div className="bg-white p-3 rounded border">
-                <h4 className="text-xs font-semibold text-purple-600 mb-2">📤 Send Message API</h4>
-                {debugInfo.sendMessageApi ? (
-                  <div className="text-xs space-y-1">
-                    <div className={`p-1 rounded ${debugInfo.sendMessageApi.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      Status: {debugInfo.sendMessageApi.success ? '✅ Success' : '❌ Failed'}
-                    </div>
-                    <div className="text-gray-600">Time: {debugInfo.sendMessageApi.timestamp}</div>
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-blue-600">View Full Response</summary>
-                      <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-auto max-h-32">
-                        {JSON.stringify(debugInfo.sendMessageApi.fullResponse, null, 2)}
-                      </pre>
-                    </details>
-                  </div>
-                ) : (
-                  <div className="text-xs text-gray-500">No data yet</div>
-                )}
-              </div>
-            </div>
-            
-            {/* Current State Info */}
-            <div className="mt-3 p-2 bg-blue-50 rounded">
-              <h4 className="text-xs font-semibold text-blue-800 mb-1">📊 Current State</h4>
-              <div className="text-xs text-blue-700 grid grid-cols-2 gap-2">
-                <div>Room ID: {actualRoomId || 'None'}</div>
-                <div>Messages Count: {messages.length}</div>
-                <div>Loading: {loading ? 'Yes' : 'No'}</div>
-                <div>Sending: {sending ? 'Yes' : 'No'}</div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+      
     </div>
   );
 }

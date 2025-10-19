@@ -115,14 +115,7 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
       <div className="px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2.5">
           <h1 className="text-neutral-600 text-lg font-medium font-sans">Schedules</h1>
-          <button
-            type="button"
-            className="ml-3 inline-flex items-center gap-2 text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded cursor-pointer"
-            onClick={() => setDebugOpen(v => !v)}
-            title="Toggle API Debugger"
-          >
-            <Bug className="w-4 h-4" /> Debug
-          </button>
+          
         </div>
         <div className="flex items-center gap-6">
           {/* Commodity Filter */}

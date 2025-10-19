@@ -4,6 +4,7 @@ const nextConfig = {
   images: {
     // Allow external avatars served from backend with port
     remotePatterns: [
+      
       {
         protocol: 'http',
         hostname: '192.168.7.12',
