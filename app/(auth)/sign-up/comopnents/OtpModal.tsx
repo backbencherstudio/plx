@@ -61,7 +61,7 @@ export default function OtpModal({ isOpen, onClose }: OtpModalProps) {
         setTimeout(() => {
           setShowSuccessModal(false);
           onClose();
-          router.push("/subscriber-login");
+          router.push("/");
         }, 5000);
       } else {
         alert("OTP doesn't match!");
