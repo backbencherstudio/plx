@@ -174,7 +174,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <button
          onClick={()=>{
            logout()
-           router.push('/');
+           router.push('/admin-login');
            
         }}
           className={`flex items-center ${
