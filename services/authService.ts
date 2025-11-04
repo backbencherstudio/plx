@@ -123,7 +123,7 @@ export const googleLogin =async (email:string,name:string,image:string)=>{
 
 // ======================== logout ============================
 export const logout = () => {
-//   🧹 1️⃣ Token remove করো
+ 
   localStorage.removeItem("token");
   toast.success('successfully logged out')
 

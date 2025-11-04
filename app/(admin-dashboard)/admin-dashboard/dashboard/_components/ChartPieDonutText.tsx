@@ -100,7 +100,7 @@ export function ChartPieDonutText() {
               nameKey="category"
               innerRadius={90}
               outerRadius={120}
-              strokeWidth={0}
+              strokeWidth={1}
               cornerRadius={4}
               paddingAngle={5}
             >
