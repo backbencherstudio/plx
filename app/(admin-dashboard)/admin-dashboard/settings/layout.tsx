@@ -17,9 +17,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
             Manage platform configuration and preferences
           </p>
         </div>
-        <button className=" text-primary text-base font-medium border border-primary py-2 px-4 rounded-xl cursor-pointer">
-          Save Changes
-        </button>
+         
       </div>
       <div className="flex  flex-col xl:flex-row  gap-6 ">
         <div className="">

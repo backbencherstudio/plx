@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import MessageIcon from "@/public/security/MessageIcon";
 import Link from "next/link";
-import { send2FEmailOtp, verify2Fotp } from "@/services/AdminSettings";
+import { disable2FA, send2FEmailOtp, verify2Fotp } from "@/services/AdminSettings";
 import { log } from "console";
 
 export default function TwoFactorSwitch() {
@@ -104,7 +104,7 @@ export default function TwoFactorSwitch() {
       setOtp("");
       setEmail("");
       
-      // Optional: Clear the stored email if you don't need it anymore
+      //  Clear the stored email  
       localStorage.removeItem("2F_email");
       
     } catch (error: any) {
@@ -119,10 +119,31 @@ export default function TwoFactorSwitch() {
   }
 };
 
-  const handleOffConfirm = () => {
+const handleOffConfirm = async () => {
+  try {
+ 
+    const res = await disable2FA();
+    
+    // If API call is successful, turn off the switch
     setIsSwitchOn(false);
     setShowOffConfirmModal(false);
-  };
+    
+    alert("Two-Factor Authentication disabled successfully!");
+    console.log(res);
+    
+  } catch (error: any) {
+    console.error("Error disabling 2FA:", error.response?.data || error.message);
+    alert(
+      error.response?.data?.message ||
+        "Failed to disable 2FA. Please try again."
+    );
+  }
+};
+
+  // const handleOffConfirm = () => {
+  //   setIsSwitchOn(false);
+  //   setShowOffConfirmModal(false);
+  // };
 
    
 

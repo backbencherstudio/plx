@@ -12,7 +12,7 @@ const axiosClient: AxiosInstance = axios.create({
 
 
 // *** Request Interceptorrrrr ***
-
+// before =============================================
 axiosClient.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
       const token =
@@ -24,6 +24,9 @@ axiosClient.interceptors.request.use(
     },
     (error) => Promise.reject(error)
   );
+
+
+ 
 
   // *** Response Interceptor ***
 
