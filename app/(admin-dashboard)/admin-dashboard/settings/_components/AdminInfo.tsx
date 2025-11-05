@@ -78,7 +78,7 @@ export default function AdminInfo() {
 
   const handleSave = async () => {
     try {
-      // Prepare the data for the API call
+       
       const updateData: UpdateProfileData = {
         firstName: formData.firstName || undefined,
         lastName: formData.lastName || undefined,
@@ -87,7 +87,7 @@ export default function AdminInfo() {
         dateFormat: formData.dateFormat || undefined
       };
 
-      // Call the update profile API
+      // call update api
       const response = await updateProfile(updateData);
 
       console.log("Profile updated successfully:", response);
