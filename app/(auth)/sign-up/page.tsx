@@ -12,13 +12,16 @@ import Link from "next/link";
 import { signup } from "@/services/authService";
 import { useRouter } from "next/navigation";
 import OtpModal from "./comopnents/OtpModal";
+import toast from "react-hot-toast";
 import { set } from "date-fns";
+import { Spinner } from "@/components/ui/spinner";
+ 
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
    const [showOtpModal, setShowOtpModal] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -38,22 +41,36 @@ export default function SignUp() {
     console.log("Signup payload:", formData);
    
     try {
+      setLoading(true);
       const res = await signup(formData);
+      setLoading(false);
 
       if (formData.email) {
       localStorage.setItem("user_email", formData.email);
     }
-
-      console.log("Signup success:", res);
+      toast.success( res.message, {
+       duration: 3000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     });
+      console.log("Signup success:", res.message);
       setShowOtpModal(true);
   
       // router.push("/subscriber-login");
     } catch (err: any) {
-    
+    setLoading(false);
       console.log("Signup failed:", err.response?.data || err.message);
-      alert(
+      // alert(
+      //   err.response?.data?.message ||
+      //     "Signup failed. Please check your input and try again."
+      // );
+
+      toast.error(
         err.response?.data?.message ||
-          "Signup failed. Please check your input and try again."
+          err.message ||
+          "Signup failed. Please try again."
       );
     } 
   };
@@ -240,6 +257,14 @@ export default function SignUp() {
       <div className="px-6 py-7">
         <Image src={sImg} alt="admin img" width={750} height={893} />
       </div>
+         {
+                    loading &&(
+                      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+                       <Spinner className=" animate-spin-slow text-[#123F93]" size={50}  />
+            
+                      </div>
+                    )
+                  }
     </div>
   );
 }

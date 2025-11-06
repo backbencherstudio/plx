@@ -11,18 +11,27 @@ import {
 import BoxIcon from "@/public/nominations/icons/BoxIcon";
 import CalenderIcon from "@/public/nominations/icons/CalenderIcon";
 import LocationIcon from "@/public/nominations/icons/LocationIcon";
- 
-import { ChevronDown, ChevronUp, Plus } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
+
+import { ChevronDown, Plus } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import axiosClient from "@/lib/axiosclient";
+import { set } from "date-fns";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function NominationTop() {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [loading, setLoading] = useState(false);
   // subscriber search state
   const [subscriberQuery, setSubscriberQuery] = useState("");
-  const [subscriberResults, setSubscriberResults] = useState<Array<{ id: string; label: string }>>([]);
+  const [subscriberResults, setSubscriberResults] = useState<
+    Array<{ id: string; label: string }>
+  >([]);
   const [subscriberLoading, setSubscriberLoading] = useState(false);
-  const [selectedSubscriber, setSelectedSubscriber] = useState<{ id: string; label: string } | null>(null);
+  const [selectedSubscriber, setSelectedSubscriber] = useState<{
+    id: string;
+    label: string;
+  } | null>(null);
   const [showSubscriberDropdown, setShowSubscriberDropdown] = useState(false);
   // commodity state
   const [commodityType, setCommodityType] = useState<string>("");
@@ -40,6 +49,7 @@ export default function NominationTop() {
   const [endDate, setEndDate] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -55,11 +65,22 @@ export default function NominationTop() {
           return;
         }
         setSubscriberLoading(true);
-        const params: any = { page: 1, limit: 10, active: true, query: subscriberQuery.trim() };
-        const res = await axiosClient.get(`/api/v1/users/search`, { params, signal: controller.signal });
+        const params: any = {
+          page: 1,
+          limit: 10,
+          active: true,
+          query: subscriberQuery.trim(),
+        };
+        const res = await axiosClient.get(`/api/v1/users/search`, {
+          params,
+          signal: controller.signal,
+        });
         const data = (res.data?.data || []).map((u: any) => ({
           id: u.id,
-          label: u.fullName || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.email,
+          label:
+            u.fullName ||
+            `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
+            u.email,
         }));
         setSubscriberResults(data);
       } catch (e) {
@@ -73,6 +94,59 @@ export default function NominationTop() {
       controller.abort();
     };
   }, [subscriberQuery]);
+
+
+  const handleSubmitNomination = async () => {
+  try {
+    setSubmitting(true);
+    
+    // Validation checks
+    if (!selectedSubscriber) {
+       
+      toast.error('Please select a subscriber first.');
+      return;
+    }
+    
+    if (!commodityType) {
+   
+      toast.error('Please choose a commodity type.');
+      return;
+    }
+
+    // Prepare payload
+    const payload = {
+      commodityType: commodityType === 'crude_oil' && crudeSubType ? crudeSubType.replaceAll('_', ' ') : commodityType.replaceAll('_', ' '),
+      assetGroup: assetGroup,
+      origin,
+      volume,
+      destination,
+      unit,
+      transportMode,
+      beginningDate: beginningDate ? new Date(beginningDate).toISOString() : null,
+      endDate: endDate ? new Date(endDate).toISOString() : null,
+      notes,
+      connection,
+      userId: selectedSubscriber.id,
+    } as any;
+
+    // Submit nomination
+    setLoading(true);
+    await axiosClient.post('/api/v1/nomination/create', payload);
+    setLoading(false);
+   
+    toast.success('Nomination submitted successfully!')
+    
+    // Optionally reset form here
+    // resetForm();
+    
+  } catch (e: any) {
+    setLoading(false);
+    console.error('Submission error:', e);
+    toast.error(e?.response?.data?.message || 'Failed to submit nomination');
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
     <div className=" bg-white p-6 rounded-md mt-6  w-full mx-auto  ">
@@ -123,21 +197,32 @@ export default function NominationTop() {
                 <div className="relative">
                   <input
                     value={subscriberQuery}
-                    onChange={(e) => { setSubscriberQuery(e.target.value); setShowSubscriberDropdown(true); }}
+                    onChange={(e) => {
+                      setSubscriberQuery(e.target.value);
+                      setShowSubscriberDropdown(true);
+                    }}
                     placeholder="Search by name or email..."
                     className="w-full py-4 px-4 rounded-[10px] border border-[#E6E6E6] text-sm font-medium text-graytext"
                   />
-                  {(subscriberQuery && showSubscriberDropdown) && (
+                  {subscriberQuery && showSubscriberDropdown && (
                     <div className="absolute z-10 mt-2 w-full bg-white rounded-xl border border-gray-200 shadow-[0px_10px_30px_rgba(0,0,0,0.08)] max-h-64 overflow-y-auto">
                       {subscriberLoading ? (
-                        <div className="px-4 py-3 text-sm text-gray-500">Searching...</div>
+                        <div className="px-4 py-3 text-sm text-gray-500">
+                          Searching...
+                        </div>
                       ) : subscriberResults.length === 0 ? (
-                        <div className="px-4 py-3 text-sm text-gray-500">No results</div>
+                        <div className="px-4 py-3 text-sm text-gray-500">
+                          No results
+                        </div>
                       ) : (
                         subscriberResults.map((u) => (
                           <button
                             key={u.id}
-                            onClick={() => { setSelectedSubscriber(u); setSubscriberQuery(u.label); setShowSubscriberDropdown(false); }}
+                            onClick={() => {
+                              setSelectedSubscriber(u);
+                              setSubscriberQuery(u.label);
+                              setShowSubscriberDropdown(false);
+                            }}
                             className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-neutral-700"
                           >
                             {u.label}
@@ -147,7 +232,9 @@ export default function NominationTop() {
                     </div>
                   )}
                   {selectedSubscriber && (
-                    <div className="mt-2 text-xs text-gray-500">Selected ID: {selectedSubscriber.id}</div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      Selected ID: {selectedSubscriber.id}
+                    </div>
                   )}
                 </div>
               </div>
@@ -164,8 +251,7 @@ export default function NominationTop() {
                   </h3>
                 </div>
                 <div className=" space-y-6">
-
-                <div>
+                  <div>
                     <p className="  text-xs text-graytext mb-2">Asset Group</p>
                     <input
                       type="text"
@@ -173,56 +259,86 @@ export default function NominationTop() {
                       id=""
                       placeholder="Enter Asset Group"
                       value={assetGroup}
-                      onChange={(e)=>setAssetGroup(e.target.value)}
+                      onChange={(e) => setAssetGroup(e.target.value)}
                       className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
                     />
                   </div>
 
                   <div className="relative">
-                    <p className=" text-xs text-graytext mb-2">Commodity Type</p>
+                    <p className=" text-xs text-graytext mb-2">
+                      Commodity Type
+                    </p>
                     <button
                       type="button"
-                      onClick={() => setShowCommodityPanel(v => !v)}
+                      onClick={() => setShowCommodityPanel((v) => !v)}
                       className="w-full py-5 px-4 text-left rounded-[10px] border border-[#E6E6E6] text-sm font-medium text-graytext"
                     >
-                      {commodityType ? commodityType.replaceAll('_',' ') : 'Select commodity type.'}
-                      {commodityType === 'crude_oil' && crudeSubType ? ` • ${crudeSubType.replaceAll('_',' ')}` : ''}
+                      {commodityType
+                        ? commodityType.replaceAll("_", " ")
+                        : "Select commodity type."}
+                      {commodityType === "crude_oil" && crudeSubType
+                        ? ` • ${crudeSubType.replaceAll("_", " ")}`
+                        : ""}
                     </button>
                     {showCommodityPanel && (
                       <div className="absolute z-20 mt-2 w-full bg-white rounded-xl border border-gray-200 shadow-[0px_10px_30px_rgba(0,0,0,0.08)] p-0">
                         <div className="grid grid-cols-2 gap-0">
                           <div className="p-0">
-                            <div className="px-4 py-2 bg-primary text-white rounded-tl-xl rounded-tr-none text-sm font-semibold">Select commodity type</div>
+                            <div className="px-4 py-2 bg-primary text-white rounded-tl-xl rounded-tr-none text-sm font-semibold">
+                              Select commodity type
+                            </div>
                             {[
-                              {v:'ngls',l:'NGLs'},
-                              {v:'refined_products',l:'Refined Products'},
-                              {v:'natural_gas',l:'Natural Gas'},
-                              {v:'petrochemicals',l:'Petrochemicals'},
-                              {v:'crude_oil',l:'Crude Oil'},
-                            ].map(opt => (
+                              { v: "ngls", l: "NGLs" },
+                              { v: "refined_products", l: "Refined Products" },
+                              { v: "natural_gas", l: "Natural Gas" },
+                              { v: "petrochemicals", l: "Petrochemicals" },
+                              { v: "crude_oil", l: "Crude Oil" },
+                            ].map((opt) => (
                               <button
                                 key={opt.v}
-                                onClick={() => { setCommodityType(opt.v); if(opt.v !== 'crude_oil'){ setCrudeSubType(''); setShowCommodityPanel(false);} }}
-                                className={`w-full text-left px-4 py-3 hover:bg-gray-50 text-sm ${commodityType===opt.v? 'bg-gray-50':''}`}
-                              >{opt.l}</button>
+                                onClick={() => {
+                                  setCommodityType(opt.v);
+                                  if (opt.v !== "crude_oil") {
+                                    setCrudeSubType("");
+                                    setShowCommodityPanel(false);
+                                  }
+                                }}
+                                className={`w-full text-left px-4 py-3 hover:bg-gray-50 text-sm ${
+                                  commodityType === opt.v ? "bg-gray-50" : ""
+                                }`}
+                              >
+                                {opt.l}
+                              </button>
                             ))}
                           </div>
                           <div className="p-0">
-                            {commodityType === 'crude_oil' && (
+                            {commodityType === "crude_oil" && (
                               <div className="bg-white rounded-r-xl h-full">
-                                <div className="px-4 py-2 text-sm font-semibold text-neutral-700">Crude Oil</div>
+                                <div className="px-4 py-2 text-sm font-semibold text-neutral-700">
+                                  Crude Oil
+                                </div>
                                 {[
                                   // Exclude base 'Crude Oil' here to avoid duplicate selection
-                                  {v:'light_sweet_crude',l:'Light Sweet Crude'},
-                                  {v:'medium_crude',l:'Medium Crude'},
-                                  {v:'heavy_crude',l:'Heavy Crude'},
-                                  {v:'petrochemicals',l:'Petrochemicals'},
-                                ].map(opt => (
+                                  {
+                                    v: "light_sweet_crude",
+                                    l: "Light Sweet Crude",
+                                  },
+                                  { v: "medium_crude", l: "Medium Crude" },
+                                  { v: "heavy_crude", l: "Heavy Crude" },
+                                  { v: "petrochemicals", l: "Petrochemicals" },
+                                ].map((opt) => (
                                   <button
                                     key={opt.v}
-                                    onClick={() => { setCrudeSubType(opt.v); setShowCommodityPanel(false); }}
-                                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 text-sm ${crudeSubType===opt.v? 'bg-gray-50':''}`}
-                                  >{opt.l}</button>
+                                    onClick={() => {
+                                      setCrudeSubType(opt.v);
+                                      setShowCommodityPanel(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 text-sm ${
+                                      crudeSubType === opt.v ? "bg-gray-50" : ""
+                                    }`}
+                                  >
+                                    {opt.l}
+                                  </button>
                                 ))}
                               </div>
                             )}
@@ -232,8 +348,6 @@ export default function NominationTop() {
                     )}
                   </div>
 
-                  
-
                   <div>
                     <p className="  text-xs text-graytext mb-2">Volume</p>
                     <input
@@ -242,13 +356,13 @@ export default function NominationTop() {
                       id=""
                       placeholder="Enter Volume"
                       value={volume}
-                      onChange={(e)=>setVolume(e.target.value)}
+                      onChange={(e) => setVolume(e.target.value)}
                       className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
                     />
                   </div>
                   <div>
                     <p className="  text-xs text-graytext mb-2">Unit</p>
-                    <Select onValueChange={(v)=>setUnit(v)}>
+                    <Select onValueChange={(v) => setUnit(v)}>
                       <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
                         <SelectValue placeholder={unit} className=" " />
                       </SelectTrigger>
@@ -268,15 +382,14 @@ export default function NominationTop() {
               </div>
 
               {/* right side */}
-             <div className=" block md:flex-1 ">
+              <div className=" block md:flex-1 ">
                 <div className=" flex items-center gap-3 mb-8">
-                   <LocationIcon/>
+                  <LocationIcon />
                   <h3 className=" text-lg text-[#1D1F2C] font-medium">
-                   Location & Transport
+                    Location & Transport
                   </h3>
                 </div>
                 <div className=" space-y-6">
-                  
                   <div>
                     <p className="  text-xs text-graytext mb-2">Origin</p>
                     <input
@@ -285,7 +398,7 @@ export default function NominationTop() {
                       id=""
                       placeholder="Enter origin location"
                       value={origin}
-                      onChange={(e)=>setOrigin(e.target.value)}
+                      onChange={(e) => setOrigin(e.target.value)}
                       className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
                     />
                   </div>
@@ -297,15 +410,20 @@ export default function NominationTop() {
                       id=""
                       placeholder="Enter destination location"
                       value={destination}
-                      onChange={(e)=>setDestination(e.target.value)}
+                      onChange={(e) => setDestination(e.target.value)}
                       className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
                     />
                   </div>
                   <div>
-                    <p className="  text-xs text-graytext mb-2">Transport Mode</p>
-                    <Select onValueChange={(v)=>setTransportMode(v)}>
+                    <p className="  text-xs text-graytext mb-2">
+                      Transport Mode
+                    </p>
+                    <Select onValueChange={(v) => setTransportMode(v)}>
                       <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
-                        <SelectValue placeholder={transportMode || "Select transport mode"} className=" " />
+                        <SelectValue
+                          placeholder={transportMode || "Select transport mode"}
+                          className=" "
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
@@ -320,7 +438,7 @@ export default function NominationTop() {
                     </Select>
                   </div>
 
- <div>
+                  <div>
                     <p className="  text-xs text-graytext mb-2">Connection</p>
                     <input
                       type="text"
@@ -328,80 +446,82 @@ export default function NominationTop() {
                       id=""
                       placeholder="Remarks"
                       value={connection}
-                      onChange={(e)=>setConnection(e.target.value)}
+                      onChange={(e) => setConnection(e.target.value)}
                       className=" py-3 px-4 w-full text-sm font-medium text-graytext border border-[#E6E6E6]  rounded-[10px]"
                     />
                   </div>
-
                 </div>
               </div>
             </div>
 
             {/* flex form seconnd */}
             <div className=" mb-6">
-                <div className=" flex items-center gap-3 mb-8">
-                  <CalenderIcon/>
-                  <h3 className=" text-lg text-[#1D1F2C] font-medium">
-                    Scheduling & Additional Information
-                  </h3>
-                </div>
+              <div className=" flex items-center gap-3 mb-8">
+                <CalenderIcon />
+                <h3 className=" text-lg text-[#1D1F2C] font-medium">
+                  Scheduling & Additional Information
+                </h3>
+              </div>
 
-                <div className=" flex flex-col md:flex-row items-center gap-14 ">
-                    <div className=" block md:flex-1 ">
-                    <p className="  text-xs text-[#4A4C56] mb-2">Beginning Date</p>
-                     <input type="date" value={beginningDate} onChange={(e)=>setBeginningDate(e.target.value)} className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"/>
-                  </div>
-                     <div className=" block md:flex-1 ">
-                    <p className="  text-xs text-[#4A4C56] mb-2">End Date</p>
-                     <input type="date" value={endDate} onChange={(e)=>setEndDate(e.target.value)} className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"/>
-                  </div>
-            </div>
+              <div className=" flex flex-col md:flex-row items-center gap-14 ">
+                <div className=" block md:flex-1 ">
+                  <p className="  text-xs text-[#4A4C56] mb-2">
+                    Beginning Date
+                  </p>
+                  <input
+                    type="date"
+                    value={beginningDate}
+                    onChange={(e) => setBeginningDate(e.target.value)}
+                    className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"
+                  />
+                </div>
+                <div className=" block md:flex-1 ">
+                  <p className="  text-xs text-[#4A4C56] mb-2">End Date</p>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6] cursor-pointer"
+                  />
+                </div>
+              </div>
             </div>
             {/* textarea */}
             <div className=" mb-10">
-                <p className="   text-xs text-[#4A4C56] mb-2">Notes (Optional)</p>
-                 <textarea value={notes} onChange={(e)=>setNotes(e.target.value)} className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6]   h-36" placeholder=" Additional information, special requirements, or comments..."/>
+              <p className="   text-xs text-[#4A4C56] mb-2">Notes (Optional)</p>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className=" w-full py-3 px-4 rounded-[10px] border border-[#E6E6E6]   h-36"
+                placeholder=" Additional information, special requirements, or comments..."
+              />
             </div>
             {/* buttons  */}
             <div className=" flex justify-end gap-4">
-                <button className=" text-[#1D1F2C] bg-[#E6E6E6]   text-sm font-medium py-3 px-12 rounded-xl cursor-pointer">Cancel</button>
-                <button type="button" disabled={submitting} onClick={async ()=>{
-                  try{
-                    setSubmitting(true);
-                    if(!selectedSubscriber){
-                      alert('Please select a subscriber first.');
-                      return;
-                    }
-                    if(!commodityType){
-                      alert('Please choose a commodity type.');
-                      return;
-                    }
-                    const payload = {
-                      commodityType: commodityType === 'crude_oil' && crudeSubType ? crudeSubType.replaceAll('_',' ') : commodityType.replaceAll('_',' '),
-                      assetGroup: assetGroup,
-                      origin,
-                      volume,
-                      destination,
-                      unit,
-                      transportMode,
-                      beginningDate: beginningDate ? new Date(beginningDate).toISOString() : null,
-                      endDate: endDate ? new Date(endDate).toISOString() : null,
-                      notes,
-                      connection,
-                      userId: selectedSubscriber.id,
-                    } as any;
-                    await axiosClient.post('/api/v1/nomination/create', payload);
-                    alert('Nomination submitted');
-                  }catch(e:any){
-                    alert(e?.response?.data?.message || 'Failed to submit');
-                  }finally{
-                    setSubmitting(false);
-                  }
-                }} className={` text-white ${submitting?'bg-primary/60':'bg-primary'}   text-sm font-medium py-3 px-12 rounded-xl cursor-pointer ${submitting?'opacity-60 cursor-not-allowed':''}`}>Submit Nomination</button>
+              <button className=" text-[#1D1F2C] bg-[#E6E6E6]   text-sm font-medium py-3 px-12 rounded-xl cursor-pointer">
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={ handleSubmitNomination }
+                className={` text-white ${
+                  submitting ? "bg-primary/60" : "bg-primary"
+                }   text-sm font-medium py-3 px-12 rounded-xl cursor-pointer ${
+                  submitting ? "opacity-60 cursor-not-allowed" : ""
+                }`}
+              >
+                Submit Nomination
+              </button>
             </div>
           </div>
         )}
       </div>
+        {loading && (
+                    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+                      <Spinner className=" animate-spin-slow text-[#123F93]" size={50} />
+                    </div>
+                  )}
     </div>
   );
 }

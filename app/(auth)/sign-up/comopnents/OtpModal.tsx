@@ -2,7 +2,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X } from "lucide-react";
 import { verifyOtp } from "../../../../services/authService";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { Spinner } from "@/components/ui/spinner";
 
 interface OtpModalProps {
   isOpen: boolean;
@@ -13,8 +15,9 @@ export default function OtpModal({ isOpen, onClose }: OtpModalProps) {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const router=useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) {
@@ -43,37 +46,46 @@ export default function OtpModal({ isOpen, onClose }: OtpModalProps) {
     const email = localStorage.getItem("user_email");
 
     if (!email) {
-      alert("No email found. Please register again.");
+      toast.error("Email not found. Please sign up again.");
       return;
     }
 
     if (fullOtp.length !== 4) {
-      alert("Please enter 4 digits.");
+      toast.error("Please enter a valid 4-digit OTP.");
       return;
     }
 
     try {
+      setLoading(true);
       const res = await verifyOtp({ email, otp: fullOtp });
+      setLoading(false);
+      console.log(res.message)
+      
 
       if (res.success) {
-        setShowSuccessModal(true);
-        // success এর পর 5 সেকেন্ড পরে modal বন্ধ করে parent onClose call করছি
-        setTimeout(() => {
-          setShowSuccessModal(false);
-          onClose();
-          router.push("/");
-        }, 5000);
+        toast.success(res.message, {
+          duration: 3000,
+          iconTheme: {
+            primary: "#123F93",
+            secondary: "#FFFFFF",
+          },
+        });
+         setShowConfirmClose(false)
+        router.push("/");
       } else {
-        alert("OTP doesn't match!");
+        setLoading(false);
+        toast.error("OTP verification failed. Please try again.");
       }
     } catch (err) {
-      alert("OTP doesn't match!");
+      setLoading(false);
+      toast.error("An error occurred during OTP verification.");
+      return;
     }
   };
 
   return (
     <>
-      {/* OTP Modal: এটা শুধু তখনই দেখাবে যখন Confirm/Success modal off থাকবে */}
+      {/* OTP Modal  */}
       {!showConfirmClose && !showSuccessModal && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
@@ -89,7 +101,9 @@ export default function OtpModal({ isOpen, onClose }: OtpModalProps) {
               <X size={20} />
             </button>
 
-            <h2 className="text-2xl font-semibold text-center mb-6">Enter OTP</h2>
+            <h2 className="text-2xl font-semibold text-center mb-6">
+              Enter OTP
+            </h2>
             <p className="text-center text-gray-500 mb-6">
               Please enter the 4-digit code sent to your email.
             </p>
@@ -156,16 +170,28 @@ export default function OtpModal({ isOpen, onClose }: OtpModalProps) {
 
       {/* Success Modal: OTP সফল হলে শুধুই এইটা দেখা যাবে */}
       {showSuccessModal && (
-         <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-[12px] p-8 w-full max-w-[450px] mx-4 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-8 h-8 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
             <h2 className="text-2xl font-semibold text-black mb-2">Success!</h2>
-            <p className="text-[#777980] mb-6">You have successfully changed your password</p>
-            
+            <p className="text-[#777980] mb-6">
+              You have successfully changed your password
+            </p>
+
             {/* <button 
               className="w-full py-3 px-6 bg-primary text-white rounded-[8px] font-medium"
              
@@ -173,6 +199,11 @@ export default function OtpModal({ isOpen, onClose }: OtpModalProps) {
               Back to Login
             </button> */}
           </div>
+        </div>
+      )}
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+          <Spinner className=" animate-spin-slow text-[#123F93]" size={50} />
         </div>
       )}
     </>

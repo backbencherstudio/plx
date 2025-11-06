@@ -5,6 +5,7 @@ import DynamicTable from "../../_components/reusable/DynamicTable";
 import { scheduleColumn } from "../../_components/columns/scheduleColumn";
 import TransportPagination from "../../_components/reusable/TransportPagination";
 import Footer from "../../_components/footer";
+import toast from "react-hot-toast";
 import { ChevronDown } from "lucide-react";
 import {
   Select,
@@ -24,6 +25,8 @@ import {
   SchedulePagination,
   deleteSchedule,
 } from "@/services/scheduleService";
+import { set } from "date-fns";
+import { Spinner } from "@/components/ui/spinner";
 
 interface User {
   id: string;
@@ -37,6 +40,8 @@ export default function ScheduleList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [loading, setLoading] = useState(false);
+  const [loading2, setLoading2] = useState(false);
+
 
   // Form states
   const [assignTo, setAssignTo] = useState("");
@@ -48,6 +53,7 @@ export default function ScheduleList() {
   const [scheduleMonth, setScheduleMonth] = useState("");
   const [scheduleFile, setScheduleFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+
   const [transportMode, setTransportMode] = useState("");
 
   // User search suggestions
@@ -106,7 +112,14 @@ export default function ScheduleList() {
   // Upload schedule
   const handleUpload = async () => {
     if (!assignTo || !commodityType || !assetGroup || !scheduleMonth || !scheduleFile) {
-      alert("Please fill all fields and select a file");
+   
+         toast.success('Please fill all fields and select a file', {
+       duration: 3000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     })
       return;
     }
 
@@ -120,8 +133,17 @@ export default function ScheduleList() {
 
     setUploading(true);
     try {
+      setLoading2(true);
       const res = await uploadSchedule(formData);
-      alert(res.message || "Schedule uploaded successfully!");
+      setLoading2(false);
+       
+         toast.success( res.message || "Schedule uploaded successfully!", {
+       duration: 3000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     });
       setAssignTo("");
       setAssignToName("");
       setCommodityType("");
@@ -131,6 +153,7 @@ export default function ScheduleList() {
       setUserSuggestions([]);
       fetchSchedules(currentPage, itemsPerPage);
     } catch (error: any) {
+      setLoading2(false); 
       console.error("Upload failed:", error);
       alert(error.response?.data?.message || "Upload failed!");
     } finally {
@@ -144,11 +167,20 @@ export default function ScheduleList() {
 
   try {
     const res = await deleteSchedule(id);
-    alert(res.message || "Schedule deleted successfully!");
+   
+       toast.success( res.message || "Schedule deleted successfully!", {
+       duration: 3000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     });
     fetchSchedules(currentPage, itemsPerPage); // refresh table
   } catch (error: any) {
-    console.error("Delete failed:", error);
-    alert(error.response?.data?.message || "Delete failed!");
+    setLoading2(false);
+    
+     
+    toast.error( error.response?.data?.message || "Delete failed. Please try again.");
   }
 };
 
@@ -392,6 +424,11 @@ export default function ScheduleList() {
       </div>
 
       <Footer />
+       {loading2 && (
+              <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+                <Spinner className=" animate-spin-slow text-[#123F93]" size={50} />
+              </div>
+            )}
     </div>
   );
 }
