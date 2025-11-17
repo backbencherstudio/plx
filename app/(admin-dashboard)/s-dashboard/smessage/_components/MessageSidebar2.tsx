@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import ChatCard from "../_components/ChatCard";
-import { getMyChatRoom, ChatRoom } from "@/services/messageService";
+import { getMyChatRoom, ChatRoom } from "@/services/subscriberService";
 
 type Conversation = {
   id: string;
