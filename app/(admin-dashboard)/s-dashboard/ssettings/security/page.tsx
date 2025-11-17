@@ -7,12 +7,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import MessageIcon from "@/public/security/MessageIcon";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import {
+  disable2FA,
+  getUserProfile,
+  send2FEmailOtp,
+  verify2Fotp,
+} from "@/services/AdminSettings";
 import { useSettingsContext } from "../_components/SettingsContext";
 
 export default function TwoFactorSwitch() {
@@ -21,12 +27,20 @@ export default function TwoFactorSwitch() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [showOffConfirmModal, setShowOffConfirmModal] = useState(false);
-  const [otp, setOtp] = useState("");
   const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState<string>("");
   const [passwordExpiryDays, setPasswordExpiryDays] = useState<string>("");
+  const [email, setEmail] = useState("");
+  const [otpDigits, setOtpDigits] = useState<string[]>(["", "", "", ""]);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isDisablingTwoFa, setIsDisablingTwoFa] = useState(false);
 
   const sessionTimerRef = useRef<number | null>(null);
   const passwordTimerRef = useRef<number | null>(null);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const hasSessionHydratedRef = useRef(false);
+  const hasPasswordHydratedRef = useRef(false);
 
   const STORAGE_KEYS = {
     sessionDeadline: "security.sessionTimeoutDeadlineMs",
@@ -68,7 +82,7 @@ export default function TwoFactorSwitch() {
     }, days * 24 * 60 * 60 * 1000);
   };
 
-  // Enforce stored deadlines on load
+  // hydrate timers from storage
   useEffect(() => {
     try {
       const sessionDeadline = Number(localStorage.getItem(STORAGE_KEYS.sessionDeadline) || "");
@@ -89,49 +103,149 @@ export default function TwoFactorSwitch() {
 
       const savedMinutes = localStorage.getItem(STORAGE_KEYS.sessionMinutes) || "";
       const savedDays = localStorage.getItem(STORAGE_KEYS.passwordDays) || "";
-      if (savedMinutes) setSessionTimeoutMinutes(savedMinutes);
-      if (savedDays) setPasswordExpiryDays(savedDays);
+      if (savedMinutes) {
+        setSessionTimeoutMinutes(savedMinutes);
+        hasSessionHydratedRef.current = true;
+      }
+      if (savedDays) {
+        setPasswordExpiryDays(savedDays);
+        hasPasswordHydratedRef.current = true;
+      }
     } catch {}
+
     return () => {
       if (sessionTimerRef.current) window.clearTimeout(sessionTimerRef.current);
       if (passwordTimerRef.current) window.clearTimeout(passwordTimerRef.current);
     };
   }, []);
 
-  const handleSwitchClick = () => {
-    if (!isSwitchOn) {
-      // switch currently OFF → show OTP flow
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await getUserProfile();
+        if (profile.success && profile.data) {
+          setEmail(profile.data.email || "");
+          setIsSwitchOn(Boolean(profile.data.two_factor_authentication));
+          if (!hasSessionHydratedRef.current && profile.data.sessionTimeout) {
+            setSessionTimeoutMinutes(String(profile.data.sessionTimeout));
+          }
+          if (!hasPasswordHydratedRef.current && profile.data.passwordExpiry) {
+            setPasswordExpiryDays(String(profile.data.passwordExpiry));
+          }
+        }
+      } catch (error: any) {
+        console.error("Failed to load security profile", error?.response?.data || error);
+        toast.error(error?.response?.data?.message || "Failed to load security settings");
+      } finally {
+        setIsProfileLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleSwitchToggle = (nextChecked: boolean) => {
+    if (nextChecked) {
       setShowInfoModal(true);
     } else {
-      // switch currently ON → show OFF confirmation
       setShowOffConfirmModal(true);
     }
   };
 
-  const handleContinue = () => {
-    setShowInfoModal(false);
-    setShowOtpModal(true);
-  };
+  const resetOtpDigits = () => setOtpDigits(["", "", "", ""]);
 
-  const handleOtpConfirm = () => {
-    if (otp.length === 6) {
-      setIsSwitchOn(true);
-      setShowOtpModal(false);
-      setOtp("");
-      setDirty(true);
-    } else {
-      alert("Enter valid OTP");
+  const requestOtp = async () => {
+    if (!email) {
+      toast.error("No email found for this account. Please update your profile.");
+      return;
+    }
+
+    setIsSendingOtp(true);
+    try {
+      await send2FEmailOtp(email);
+      resetOtpDigits();
+      setShowOtpModal(true);
+      toast.success("Verification code sent to your email");
+    } catch (error: any) {
+      console.error("Error sending OTP", error?.response?.data || error);
+      toast.error(error?.response?.data?.message || "Failed to send verification code");
+    } finally {
+      setIsSendingOtp(false);
     }
   };
 
-  const handleOffConfirm = () => {
-    setIsSwitchOn(false);
-    setShowOffConfirmModal(false);
-    setDirty(true);
+  const handleContinue = async () => {
+    setShowInfoModal(false);
+    await requestOtp();
+  };
+
+  const handleResendOtp = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    if (!isSendingOtp) requestOtp();
+  };
+
+  const handleOtpModalOpenChange = (open: boolean) => {
+    setShowOtpModal(open);
+    if (!open) resetOtpDigits();
+  };
+
+  const handleOtpInputChange = (value: string, index: number) => {
+    const digit = value.replace(/[^0-9]/g, "").slice(-1);
+    const updated = [...otpDigits];
+    updated[index] = digit;
+    setOtpDigits(updated);
+
+    if (digit && index < otpDigits.length - 1) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (event: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (event.key === "Backspace" && !otpDigits[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const otpValue = otpDigits.join("");
+
+  const handleOtpConfirm = async () => {
+    if (otpValue.length !== 4) {
+      toast.error("Enter the 4-digit code");
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    try {
+      await verify2Fotp(email, otpValue);
+      toast.success("Two-Factor Authentication enabled");
+      setIsSwitchOn(true);
+      setShowOtpModal(false);
+      resetOtpDigits();
+    } catch (error: any) {
+      console.error("Error verifying OTP", error?.response?.data || error);
+      toast.error(error?.response?.data?.message || "Invalid code, please try again");
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const handleOffConfirm = async () => {
+    setIsDisablingTwoFa(true);
+    try {
+      await disable2FA();
+      toast.success("Two-Factor Authentication disabled");
+      setIsSwitchOn(false);
+      setShowOffConfirmModal(false);
+    } catch (error: any) {
+      console.error("Error disabling 2FA", error?.response?.data || error);
+      toast.error(error?.response?.data?.message || "Failed to disable Two-Factor Authentication");
+    } finally {
+      setIsDisablingTwoFa(false);
+    }
   };
 
   // register global save action
-  React.useEffect(() => {
+  useEffect(() => {
     registerSubmit(async () => {
       const minutes = Number(sessionTimeoutMinutes);
       const days = Number(passwordExpiryDays);
@@ -157,8 +271,13 @@ export default function TwoFactorSwitch() {
               id="session"
               placeholder="30"
               value={sessionTimeoutMinutes}
-              onChange={(e) => { setSessionTimeoutMinutes(e.target.value); setDirty(true); }}
+              onChange={(e) => {
+                setSessionTimeoutMinutes(e.target.value);
+                setDirty(true);
+              }}
               className="border border-[#E6E8EA] py-3 px-4 rounded-[10px] placeholder:text-xs placeholder:text-[#4A4C56] placeholder:font-medium mt-1.5"
+              min={0}
+              disabled={isProfileLoading}
             />
           </div>
 
@@ -171,8 +290,13 @@ export default function TwoFactorSwitch() {
               id="expiry"
               placeholder="500"
               value={passwordExpiryDays}
-              onChange={(e) => { setPasswordExpiryDays(e.target.value); setDirty(true); }}
+              onChange={(e) => {
+                setPasswordExpiryDays(e.target.value);
+                setDirty(true);
+              }}
               className="border border-[#E6E8EA] py-3 px-4 rounded-[10px] placeholder:text-xs placeholder:text-[#4A4C56] placeholder:font-medium mt-1.5"
+              min={0}
+              disabled={isProfileLoading}
             />
           </div>
         </div>
@@ -190,8 +314,9 @@ export default function TwoFactorSwitch() {
 
             <Switch
               checked={isSwitchOn}
-              onClick={handleSwitchClick}
-              className="h-6 w-[44px] [&>[data-slot=switch-thumb]]:h-5 [&>[data-slot=switch-thumb]]:w-5 [&>[data-slot=switch-thumb]]:data-[state=checked]:translate-x-[20px] cursor-pointer"
+              onCheckedChange={handleSwitchToggle}
+              disabled={isSendingOtp || isVerifyingOtp || isDisablingTwoFa}
+              className="h-6 w-[44px] [&>[data-slot=switch-thumb]]:h-5 [&>[data-slot=switch-thumb]]:w-5 [&>[data-slot=switch-thumb]]:data-[state=checked]:translate-x-[20px] cursor-pointer disabled:cursor-not-allowed"
             />
           </div>
           {/*  otp intro modal */}
@@ -231,15 +356,15 @@ export default function TwoFactorSwitch() {
                     Cancel
                   </Button>
                 </DialogClose>
-                <Button className=" cursor-pointer" onClick={handleContinue}>
-                  Continue
+                <Button className=" cursor-pointer" onClick={handleContinue} disabled={isSendingOtp}>
+                  {isSendingOtp ? "Sending..." : "Continue"}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
 
           {/* OTP Modal */}
-          <Dialog open={showOtpModal} onOpenChange={setShowOtpModal}>
+          <Dialog open={showOtpModal} onOpenChange={handleOtpModalOpenChange}>
             <DialogContent className="w-full  lg:max-w-[510px] p-10 sm:p-6 xs:p-4">
               <DialogHeader>
                 <DialogTitle className="text-lg font-semibold lg:text-lg md:text-base sm:text-sm xs:text-sm">
@@ -248,45 +373,20 @@ export default function TwoFactorSwitch() {
               </DialogHeader>
 
               <p className="text-sm text-[#777980] mt-2 lg:text-sm md:text-xs sm:text-xs xs:text-xs">
-                Enter the 6-digit code sent in your email.
+                Enter the 4-digit code sent to {email || "your email"}.
               </p>
 
               <div className="flex justify-center mt-4 gap-3 flex-nowrap">
-                {Array.from({ length: 6 }).map((_, index) => (
+                {Array.from({ length: 4 }).map((_, index) => (
                   <input
                     key={index}
+                    ref={(el) => (otpInputRefs.current[index] = el)}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
-                    value={otp[index] || ""}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9]/g, "");
-                      if (!val) return;
-                      const newOtp = otp.split("");
-                      newOtp[index] = val;
-                      setOtp(newOtp.join(""));
-
-                      if (index < 5) {
-                        const next = document.getElementById(
-                          `otp-${index + 1}`
-                        );
-                        next?.focus();
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Backspace") {
-                        const newOtp = otp.split("");
-                        newOtp[index] = "";
-                        setOtp(newOtp.join(""));
-
-                        if (index > 0 && !otp[index]) {
-                          const prev = document.getElementById(
-                            `otp-${index - 1}`
-                          );
-                          prev?.focus();
-                        }
-                      }
-                    }}
+                    value={otpDigits[index]}
+                    onChange={(e) => handleOtpInputChange(e.target.value, index)}
+                    onKeyDown={(e) => handleOtpKeyDown(e, index)}
                     id={`otp-${index}`}
                     className="w-4 h-[40px]  bg-[#EDF2F7] text-center rounded-xl text-lg  lg:text-lg md:w-12 md:h-14 md:text-base sm:w-10 sm:h-12 sm:text-base xs:w-8 xs:h-10 xs:text-sm"
                   />
@@ -301,13 +401,18 @@ export default function TwoFactorSwitch() {
               <button
                 className="text-center mt-10 text-sm text-[#4A4C56] py-3 bg-[#EDF2F7] rounded-[8px]   cursor-pointer  "
                 onClick={handleOtpConfirm}
+                disabled={isVerifyingOtp}
               >
-                Continue
+                {isVerifyingOtp ? "Verifying..." : "Continue"}
               </button>
 
               <p className="text-center mt-6 text-[#777980] text-sm lg:text-sm md:text-xs sm:mt-4 sm:text-xs xs:text-xs">
                 Didn’t get the code?{" "}
-                <Link href="#" className="text-primary font-medium underline">
+                <Link
+                  href="#"
+                  className="text-primary font-medium underline"
+                  onClick={handleResendOtp}
+                >
                   Resend the code
                 </Link>
               </p>
@@ -330,10 +435,13 @@ export default function TwoFactorSwitch() {
                 <Button
                   variant="outline"
                   onClick={() => setShowOffConfirmModal(false)}
+                  disabled={isDisablingTwoFa}
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleOffConfirm}>Confirm</Button>
+                <Button onClick={handleOffConfirm} disabled={isDisablingTwoFa}>
+                  {isDisablingTwoFa ? "Disabling..." : "Confirm"}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
