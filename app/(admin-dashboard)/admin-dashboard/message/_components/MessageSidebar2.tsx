@@ -73,15 +73,12 @@ export default function MessagesSidebar2() {
     fetchData();
   }, []);
 
-  const BRAND_NAME = "PLX Energy Transport";
-  const BRAND_LOGO = "/sidebar/images/logo.png";
-
   // Convert chat rooms to chat list
   const chatData = useMemo<Message[]>(() => {
     return chatRooms.map((room) => ({
       user_id: room.user.id,
-      customer_name: BRAND_NAME,
-      customer_image: room.user.avatar || BRAND_LOGO,
+      customer_name: room.user.fullName || "User",
+      customer_image: room.user.avatar || "/sidebar/images/logo.png",
       last_seen: room.updatedAt,
       last_message: room.lastMessage?.content || "No messages yet",
       isRead: room.unreadCount === 0,
@@ -98,8 +95,8 @@ export default function MessagesSidebar2() {
   const allUsersData = useMemo<Message[]>(() => {
     return users.map((user) => ({
       user_id: user.id,
-      customer_name: BRAND_NAME,
-      customer_image: user.avatar || BRAND_LOGO,
+      customer_name: user.fullName || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      customer_image: user.avatar || "/sidebar/images/logo.png",
       last_seen: user.updatedAt || user.createdAt || new Date().toISOString(),
       last_message: "Click to start conversation",
       isRead: true,
@@ -220,7 +217,7 @@ export default function MessagesSidebar2() {
                 key={chat.user_id}
                 data={chat}
                 handleChatClick={handleChatClick}
-                isSelected={selectedUserId && selectedUserId === chat.user_id}
+                isSelected={selectedUserId === chat.user_id}
               />
             ))
           ) : (
