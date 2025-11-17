@@ -90,6 +90,10 @@ export default function MessagesSidebar2() {
     () => chatData.filter((chat) => !chat.isRead),
     [chatData]
   );
+  const repliedChatsData = useMemo(
+    () => chatData.filter((chat) => chat.isRead),
+    [chatData]
+  );
 
   // All active users list
   const allUsersData = useMemo<Message[]>(() => {
@@ -112,9 +116,9 @@ export default function MessagesSidebar2() {
         return allUsersData;
       case "all":
       default:
-        return chatData;
+        return repliedChatsData;
     }
-  }, [tab, unreadData, allUsersData, chatData]);
+  }, [tab, unreadData, allUsersData, repliedChatsData]);
 
   // Get selected room ID from URL
   const selectedRoomIdFromUrl = useMemo(() => {
