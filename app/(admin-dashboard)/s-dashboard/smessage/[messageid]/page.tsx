@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { getRoomMessages, sendMessage, Message, SendMessageRequest, getMyChatRoom } from "@/services/subscriberService";
 import { getInitials, getGradientBackground } from "@/utils/avatarUtils";
 import SendIcon from "@/public/commonIcons/SendIcon";
+import { useCurrentUser } from "@/utils/useCurrentUser";
 
 // Type definitions for conversation structure
 interface ChatMessage {
@@ -57,6 +58,7 @@ const generateRandomMessage = (): string => {
 
 export default function ChatPage() {
   const pathname = usePathname();
+  const { user: currentUser, loading: userLoading } = useCurrentUser();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -64,6 +66,7 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [roomData, setRoomData] = useState<any>(null);
   const [actualRoomId, setActualRoomId] = useState<string | null>(null);
+  const [adminProfile, setAdminProfile] = useState<{ id: string; fullName: string; avatar: string | null } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Extract the room ID from the pathname
@@ -86,6 +89,17 @@ export default function ChatPage() {
           console.log("Room data:", room);
           setRoomData(room);
           setActualRoomId(room.id);
+          
+          // For customer view: room.user is the admin they're chatting with
+          // Extract admin profile from room data - this is who the customer chats with
+          if (room.user) {
+            // room.user is the admin in customer's chat room
+            setAdminProfile({
+              id: room.user.id,
+              fullName: room.user.fullName || "Support Team",
+              avatar: room.user.avatar
+            });
+          }
           
           // Now get messages for this room using the actual room ID
           const messagesResponse = await getRoomMessages(room.id);
@@ -116,6 +130,19 @@ export default function ChatPage() {
               
               console.log("Messages array:", messagesArray);
               
+              // Extract admin profile from messages if room data didn't have it
+              // Admin messages have sender.type === "admin"
+              const adminMsg = messagesArray.find((m: Message) => m.sender.type === "admin");
+              if (adminMsg && (!room.user || !room.user.id)) {
+                // Only set from messages if room data doesn't have admin info
+                setAdminProfile({
+                  id: adminMsg.sender.id,
+                  fullName: adminMsg.sender.fullName,
+                  avatar: adminMsg.sender.avatar
+                });
+              }
+              
+              // For customer view: admin messages on left (under admin profile), customer messages on right (under customer profile)
               const convertedMessages: ChatMessage[] = messagesArray.map((msg: Message) => ({
                 id: msg.id,
                 content: msg.content,
@@ -124,7 +151,7 @@ export default function ChatPage() {
                 senderName: msg.sender.fullName,
                 type: "text",
                 status: "sent",
-                isFromUser: msg.sender.type === "user",
+                isFromUser: msg.sender.type === "user", // Customer messages on right, admin messages on left
                 timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
               }));
               
@@ -138,8 +165,26 @@ export default function ChatPage() {
           } else {
             setError(`Messages API Error: ${messagesResponse.message}`);
           }
+          
+          // Ensure admin profile is set even if no messages yet
+          if (!adminProfile && room.user) {
+            setAdminProfile({
+              id: room.user.id,
+              fullName: room.user.fullName || "Support Team",
+              avatar: room.user.avatar
+            });
+          }
         } else {
           setError(`Room API Error: ${roomResponse.message}`);
+          
+          // Try to set admin profile from room data even on error
+          if (roomResponse.data?.room?.user) {
+            setAdminProfile({
+              id: roomResponse.data.room.user.id,
+              fullName: roomResponse.data.room.user.fullName || "Support Team",
+              avatar: roomResponse.data.room.user.avatar
+            });
+          }
         }
       } catch (err) {
         setError(`Failed to fetch data: ${err}`);
@@ -198,6 +243,17 @@ export default function ChatPage() {
     }
   };
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const ADMIN_BRAND_NAME = "PLX Energy Transport";
+  const ADMIN_BRAND_LOGO = "/sidebar/images/logo.png";
+  const adminName = ADMIN_BRAND_NAME;
+  const adminAvatarSrc = ADMIN_BRAND_LOGO;
+  const adminAvatarId = ADMIN_BRAND_NAME;
+
   if (loading) {
     return (
       <div className="flex flex-col bg-white rounded-[12px] h-full items-center justify-center" style={{ height: "calc(100vh - 150px)" }}>
@@ -219,19 +275,29 @@ export default function ChatPage() {
       className="flex flex-col bg-white rounded-[12px] h-full"
       style={{ height: "calc(100vh - 150px)" }}
     >
-      {/* Header - Always visible, never scrolls */}
+      {/* Header - Always visible, never scrolls - Shows Admin Profile (who customer is chatting with) */}
       <div className="flex justify-between px-6 pt-5 pb-7 border-b border-[#E9E9EA] flex-shrink-0">
         <div className=" flex items-center gap-3">
           <div>
-            <div className={`w-10 h-10 ${getGradientBackground(roomData?.user?.id || 'default')} rounded-full flex items-center justify-center shadow-lg`}>
-              <span className="text-gray-700 text-sm font-semibold">
-                {getInitials(roomData?.user?.fullName || 'PLX Support Team')}
-              </span>
-            </div>
+            {adminAvatarSrc ? (
+              <Image
+                src={adminAvatarSrc}
+                width={40}
+                height={40}
+                className="rounded-full object-contain"
+                alt={adminName}
+              />
+            ) : (
+              <div className={`w-10 h-10 ${getGradientBackground(adminAvatarId || 'admin-default')} rounded-full flex items-center justify-center shadow-lg`}>
+                <span className="text-gray-700 text-sm font-semibold">
+                  {getInitials(adminName)}
+                </span>
+              </div>
+            )}
           </div>
           <div>
             <h2 className="text-lg text-[#4A4C56] font-medium">
-              {roomData?.user?.fullName || "PLX Support Team"}
+              {adminName}
             </h2>
             <p className=" text-xs text-[#A5A5AB]">
               Active now
@@ -255,18 +321,41 @@ export default function ChatPage() {
             >
               <div className={`flex gap-3`}>
                 <div className={`${msg.isFromUser && "order-2"}`}>
+                  {/* Customer view: Admin messages show admin profile, customer messages show customer profile */}
                   {msg.isFromUser ? (
-                    <div className="rounded-full bg-[#E7ECF4] w-10 h-10 flex justify-center items-center">
-                      <span className="text-sm font-semibold text-[#4A4C56]">
-                        {msg.senderName.substring(0, 2).toUpperCase()}
-                      </span>
-                    </div>
+                    // Customer's own messages - show customer profile
+                    currentUser?.avatar ? (
+                      <Image
+                        src={currentUser.avatar}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-contain"
+                        alt={currentUser.fullName || "You"}
+                      />
+                    ) : (
+                      <div className={`w-10 h-10 ${getGradientBackground(currentUser?.id || 'default')} rounded-full flex items-center justify-center shadow-lg`}>
+                        <span className="text-gray-700 text-sm font-semibold">
+                          {getInitials(currentUser?.fullName || 'You')}
+                        </span>
+                      </div>
+                    )
                   ) : (
-                    <div className={`w-10 h-10 ${getGradientBackground(roomData?.user?.id || 'default')} rounded-full flex items-center justify-center shadow-lg`}>
-                      <span className="text-gray-700 text-sm font-semibold">
-                        {getInitials(roomData?.user?.fullName || 'PLX Support Team')}
-                      </span>
-                    </div>
+                    // Admin messages - show admin profile
+                    adminAvatarSrc ? (
+                      <Image
+                        src={adminAvatarSrc}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-contain"
+                        alt={adminName}
+                      />
+                    ) : (
+                      <div className={`w-10 h-10 ${getGradientBackground(adminAvatarId || 'admin-default')} rounded-full flex items-center justify-center shadow-lg`}>
+                        <span className="text-gray-700 text-sm font-semibold">
+                          {getInitials(adminName)}
+                        </span>
+                      </div>
+                    )
                   )}
                 </div>
 
@@ -279,16 +368,16 @@ export default function ChatPage() {
                     }`}
                   >
                     <div className={`${msg.isFromUser?'order-2':''}`}>
-
-                    {msg.isFromUser ? (
-                      <p className="  text-sm font-semibold text-[#4A4C56]  ">
-                        {msg.senderName}
-                      </p>
-                    ) : (
-                      <p className="   text-sm font-semibold text-[#4A4C56]">
-                        {roomData?.user?.fullName || "PLX Support Team"}
-                      </p>
-                    )}
+                      {/* Customer view: Show customer name for customer messages, admin name for admin messages */}
+                      {msg.isFromUser ? (
+                        <p className="  text-sm font-semibold text-[#4A4C56]  ">
+                          {currentUser?.fullName || "You"}
+                        </p>
+                      ) : (
+                        <p className="   text-sm font-semibold text-[#4A4C56]">
+                          {adminName}
+                        </p>
+                      )}
                     </div>
                     <p className="text-xs  text-[#A5A5AB]">
                       {msg.timeAgo || formatDistanceToNow(new Date(msg.timestamp), {
@@ -320,7 +409,7 @@ export default function ChatPage() {
           </div>
         )}
         {/* This div acts as a scroll anchor */}
-        <div />
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Box - Always visible, never scrolls */}

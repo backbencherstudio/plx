@@ -6,6 +6,8 @@ import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { getAdminUserMessages, sendAdminMessage, AdminMessage, AdminSendMessageRequest, getAllAdminUsers } from "@/services/adminMessageService";
 import SendIcon from "@/public/commonIcons/SendIcon";
+import { useCurrentUser } from "@/utils/useCurrentUser";
+import { getInitials, getGradientBackground } from "@/utils/avatarUtils";
 
 // Type definitions for conversation structure
 interface ChatMessage {
@@ -14,6 +16,7 @@ interface ChatMessage {
   timestamp: string;
   senderId: string;
   senderName: string;
+  senderType?: string; // "admin" or "user"
   type: string;
   status: string;
   isFromUser: boolean;
@@ -56,6 +59,7 @@ const generateRandomMessage = (): string => {
 
 export default function ChatPage() {
   const pathname = usePathname();
+  const { user: currentUser, loading: userLoading } = useCurrentUser();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -179,15 +183,17 @@ export default function ChatPage() {
             
             console.log("📨 Admin messages array:", messagesArray);
             
+            // For admin view: customer messages appear on left (with customer profile), admin messages appear on right (with admin profile)
             const convertedMessages: ChatMessage[] = messagesArray.map((msg: AdminMessage) => ({
               id: msg.id,
               content: msg.content,
               timestamp: msg.createdAt,
               senderId: msg.sender.id,
               senderName: msg.sender.fullName,
+              senderType: msg.sender.type, // Store sender type to determine which profile to show
               type: "text",
               status: "sent",
-              isFromUser: msg.sender.type === "admin", // Admin is the sender
+              isFromUser: msg.sender.type === "admin", // Admin messages on right, customer messages on left
               timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
             }));
             
@@ -294,6 +300,7 @@ export default function ChatPage() {
           timestamp: response.data.createdAt,
           senderId: response.data.sender.id,
           senderName: response.data.sender.fullName,
+          senderType: response.data.sender.type, // Store sender type
           type: "text",
           status: "sent",
           isFromUser: response.data.sender.type === "admin",
@@ -361,24 +368,32 @@ export default function ChatPage() {
       className="flex flex-col bg-white rounded-[12px] h-full"
       style={{ height: "calc(100vh - 150px)" }}
     >
-      {/* Header - Always visible, never scrolls */}
+      {/* Header - Shows selected customer info while reminding admin account */}
       <div className="flex justify-between px-6 pt-5 pb-7 border-b border-[#E9E9EA] flex-shrink-0">
         <div className=" flex items-center gap-3">
           <div>
-            <Image
-              src={roomData?.user?.avatar || "/sidebar/images/logo.png"}
-              width={40}
-              height={40}
-              className="rounded-full object-contain"
-              alt={roomData?.user?.fullName || "Customer"}
-            />
+            {roomData?.user?.avatar ? (
+              <Image
+                src={roomData.user.avatar}
+                width={40}
+                height={40}
+                className="rounded-full object-contain"
+                alt={roomData.user.fullName || "Customer"}
+              />
+            ) : (
+              <div className={`w-10 h-10 ${getGradientBackground(roomData?.user?.id || 'customer-default')} rounded-full flex items-center justify-center shadow-lg`}>
+                <span className="text-gray-700 text-sm font-semibold">
+                  {getInitials(roomData?.user?.fullName || 'Customer')}
+                </span>
+              </div>
+            )}
           </div>
           <div>
             <h2 className="text-lg text-[#4A4C56] font-medium">
               {roomData?.user?.fullName || "Customer"}
             </h2>
             <p className=" text-xs text-[#A5A5AB]">
-              Active now
+              You are replying as {currentUser?.fullName || "Admin"}
             </p>
           </div>
         </div>
@@ -399,20 +414,41 @@ export default function ChatPage() {
             >
               <div className={`flex gap-3`}>
                 <div className={`${msg.isFromUser && "order-2"}`}>
+                  {/* Admin view: Customer messages show customer profile, admin messages show admin profile */}
                   {msg.isFromUser ? (
-                    <div className="rounded-full bg-[#E7ECF4] w-10 h-10 flex justify-center items-center">
-                      <span className="text-sm font-semibold text-[#4A4C56]">
-                        {msg.senderName.substring(0, 2).toUpperCase()}
-                      </span>
-                    </div>
+                    // Admin's own messages - show admin profile
+                    currentUser?.avatar ? (
+                      <Image
+                        src={currentUser.avatar}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-contain"
+                        alt={currentUser.fullName || "Admin"}
+                      />
+                    ) : (
+                      <div className={`w-10 h-10 ${getGradientBackground(currentUser?.id || 'default')} rounded-full flex items-center justify-center shadow-lg`}>
+                        <span className="text-gray-700 text-sm font-semibold">
+                          {getInitials(currentUser?.fullName || 'Admin')}
+                        </span>
+                      </div>
+                    )
                   ) : (
-                    <Image
-                      src={roomData?.user?.avatar || "/sidebar/images/logo.png"}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                      alt={roomData?.user?.fullName || "Customer"}
-                    />
+                    // Customer messages - show customer profile
+                    roomData?.user?.avatar ? (
+                      <Image
+                        src={roomData.user.avatar}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-contain"
+                        alt={roomData.user.fullName || "Customer"}
+                      />
+                    ) : (
+                      <div className={`w-10 h-10 ${getGradientBackground(roomData?.user?.id || 'customer-default')} rounded-full flex items-center justify-center shadow-lg`}>
+                        <span className="text-gray-700 text-sm font-semibold">
+                          {getInitials(roomData?.user?.fullName || 'Customer')}
+                        </span>
+                      </div>
+                    )
                   )}
                 </div>
 
@@ -425,16 +461,16 @@ export default function ChatPage() {
                     }`}
                   >
                     <div className={`${msg.isFromUser?'order-2':''}`}>
-
-                    {msg.isFromUser ? (
-                      <p className="  text-sm font-semibold text-[#4A4C56]  ">
-                        {msg.senderName}
-                      </p>
-                    ) : (
-                      <p className="   text-sm font-semibold text-[#4A4C56]">
-                        {roomData?.user?.fullName || "Customer"}
-                      </p>
-                    )}
+                      {/* Admin view: Show customer name for customer messages, admin name for admin messages */}
+                      {msg.isFromUser ? (
+                        <p className="  text-sm font-semibold text-[#4A4C56]  ">
+                          {currentUser?.fullName || "Admin"}
+                        </p>
+                      ) : (
+                        <p className="   text-sm font-semibold text-[#4A4C56]">
+                          {roomData?.user?.fullName || "Customer"}
+                        </p>
+                      )}
                     </div>
                     <p className="text-xs  text-[#A5A5AB]">
                       {msg.timeAgo || formatDistanceToNow(new Date(msg.timestamp), {

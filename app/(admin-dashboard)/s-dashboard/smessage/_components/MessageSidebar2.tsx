@@ -69,14 +69,18 @@ export default function MessagesSidebar2() {
     fetchChatRoom();
   }, []);
 
+  const BRAND_NAME = "PLX Energy Transport";
+  const BRAND_LOGO = "/sidebar/images/logo.png";
+
   // Convert API chat room to the format expected by ChatCard
+  // For customer view: always show brand identity
   const data = useMemo(() => {
     if (!chatRoom) return [];
     
     return [{
-      user_id: chatRoom.id, // Use the room ID, not user ID
-      customer_name: chatRoom.user.fullName,
-      customer_image: chatRoom.user.avatar || "/sidebar/images/logo.png",
+      user_id: chatRoom.id, // Use the room ID for navigation
+      customer_name: BRAND_NAME,
+      customer_image: BRAND_LOGO,
       last_seen: chatRoom.updatedAt,
       last_message: chatRoom.lastMessage?.content || "No messages yet",
       isRead: chatRoom.unreadCount === 0,
