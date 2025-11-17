@@ -380,7 +380,9 @@ export default function TwoFactorSwitch() {
                 {Array.from({ length: 4 }).map((_, index) => (
                   <input
                     key={index}
-                    ref={(el) => (otpInputRefs.current[index] = el)}
+                    ref={(el) => {
+                      otpInputRefs.current[index] = el;
+                    }}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
