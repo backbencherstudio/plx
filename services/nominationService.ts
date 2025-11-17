@@ -150,14 +150,14 @@ export const updateNomination = async (id: string, payload: Partial<CreateNomina
 };
 
 // *** Update Nomination Status ***
-export const updateNominationStatus = async (id: string, status: string) => {
+export const updateNominationStatus = async (subscriberId: string, status: "Submitted" | "Complete" | "Withdraw") => {
   try {
-    const res = await axiosClient.patch(`/api/v1/nomination/status/${id}`, { status });
-    console.log("Nomination status updated successfully:", res.data);
-    return res.data;
+    const response = await axiosClient.patch(`/nomination/status/${subscriberId}`, {
+      status: status
+    });
+    return response.data;
   } catch (error: any) {
-    console.error("Error updating nomination status:", error.response?.data || error.message);
-    throw error;
+    throw new Error(error.response?.data?.message || "Failed to update nomination status");
   }
 };
 

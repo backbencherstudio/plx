@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "lucide-react";
 
 // Transform API data to match table structure
 type TransformedNomination = {
@@ -64,10 +63,11 @@ export default function NominationTable({
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [filtersApplied, setFiltersApplied] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Add refresh trigger for immediate updates
+
   const hasPrevPage = currentPage > 1;
   const hasNextPage = currentPage < totalPages;
 
- 
   const transformNominationData = (apiData: NominationResponse[]): TransformedNomination[] => {
     return apiData.map((item) => ({
       id: item.id,
@@ -130,15 +130,36 @@ export default function NominationTable({
 
   useEffect(() => {
     fetchNominations();
-  }, [currentPage, itemsPerPage, filtersApplied]); // filtersApplied add kora hoyeche
+  }, [currentPage, itemsPerPage, filtersApplied, refreshTrigger]); // Add refreshTrigger to dependencies
 
-  // Separate useEffect for date filter changes
-  useEffect(() => {
-    if (filtersApplied && (fromDate || toDate)) {
-      setCurrentPage(1);
-      fetchNominations();
+  // Handle immediate status update
+  const handleStatusUpdate = (nominationId: string, newStatus: string) => {
+    setNominations(prevNominations => 
+      prevNominations.map(nomination => 
+        nomination.id === nominationId 
+          ? { ...nomination, status: newStatus, statusCode: newStatus.toUpperCase() }
+          : nomination
+      )
+    );
+  };
+
+  // Handle delete callback - refresh data immediately
+  const handleDeleted = () => {
+    setRefreshTrigger(prev => prev + 1); // Trigger refresh
+    if (onDeleted) {
+      onDeleted(); // Call parent callback if provided
     }
-  }, [fromDate, toDate]); // Only run when date filters change
+  };
+
+  // Handle status update with refresh
+  const handleStatusUpdateWithRefresh = (nominationId: string, newStatus: string) => {
+    // First update locally for immediate UI feedback
+    handleStatusUpdate(nominationId, newStatus);
+    // Then refresh data from server after a short delay
+    setTimeout(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, 500);
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -158,10 +179,18 @@ export default function NominationTable({
     setToDate("");
     setFiltersApplied(false);
     setCurrentPage(1);
-    // fetchNominations() ekhon automatic call hobe useEffect er maddhome
   };
 
-  const columns = nominationColumn(handleOpenModal, onDeleted);
+  // Pass all necessary callbacks to nominationColumn
+  const columns = nominationColumn(
+    handleOpenModal, 
+    handleDeleted, 
+    // nominationColumn expects a no-arg callback; wrap the status updater so it can receive forwarded args
+    ((...args: any[]) => {
+      // args expected: [nominationId, newStatus]
+      handleStatusUpdateWithRefresh(args[0], args[1]);
+    }) as unknown as () => void
+  );
 
   return (
     <div>
@@ -181,7 +210,7 @@ export default function NominationTable({
                     type="date"
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
-                    className="text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none  "
+                    className="text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none"
                     placeholder="mm/dd/yyyy"
                   />
                 </div>
@@ -195,7 +224,7 @@ export default function NominationTable({
                     type="date"
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
-                    className="text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none "
+                    className="text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none"
                     placeholder="mm/dd/yyyy"
                   />
                 </div>

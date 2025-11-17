@@ -3,46 +3,62 @@ import Image from "next/image";
 import rightArrow from "@/public/nominations/Frame.svg";
 import EyeIcon from "@/public/nominations/icons/EyeIcon";
 import Dot3Icon from "@/public/nominations/icons/Dot3Icon";
- 
- 
- 
 import { updateNominationStatus } from "@/services/nominationService";
-
-// Dropdown component for the action menu
 import { deleteNomination } from "@/services/nominationService";
 
-const ActionDropdown = ({ rowId, rowData, onDeleted }: { rowId: string; rowData: any; onDeleted?: () => void }) => {
+const ActionDropdown = ({ 
+  rowId, 
+  rowData, 
+  onDeleted, 
+  onStatusUpdate 
+}: { 
+  rowId: string; 
+  rowData: any; 
+  onDeleted?: () => void;
+  onStatusUpdate?: () => void;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const normalizeStatus = (value: string | undefined | null): "Submitted" | "Complete" | "Withdraw" => {
-    const v = (value || "").trim().toLowerCase();
-    if (v === "submitted") return "Submitted";
-    if (v === "complete") return "Complete";
-    if (v === "withdraw") return "Withdraw";
-    return "Submitted";
-  };
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [localStatus, setLocalStatus] = useState(rowData.status); // Local state for immediate update
 
   const updateStatus = async (status: "Submitted" | "Complete" | "Withdraw") => {
     try {
       const confirmed = window.confirm(`Are you sure you want to set status to ${status}?`);
       if (!confirmed) return;
-      const res = await updateNominationStatus(String(rowId), status);
+      
+      setIsUpdating(true);
+      
+      // IMMEDIATE UI UPDATE - Update local state first
+      setLocalStatus(status);
+      
+      const subscriberId = rowData.id;
+      const res = await updateNominationStatus(subscriberId, status);
+      
+      // Show success message
       alert(res?.message || `Status updated to ${status}`);
-      // simple refresh to reflect changes
-      if (typeof window !== 'undefined') {
-        window.location.reload();
+      
+      // Call the callback to refresh data from server
+      if (onStatusUpdate) {
+        onStatusUpdate();
       }
+      
     } catch (e) {
       console.error("Failed to update nomination", e);
       const msg = (e as any)?.response?.data?.message || (e as any)?.message || "Failed to update nomination status";
       alert(msg);
+      
+      // Revert local state if API call fails
+      setLocalStatus(rowData.status);
     } finally {
+      setIsUpdating(false);
       setIsOpen(false);
     }
   };
 
   const handleAction = (action: string) => {
+    if (isUpdating) return;
+    
     setIsOpen(false);
     if (action === 'complete') updateStatus('Complete');
     if (action === 'withdraw') updateStatus('Withdraw');
@@ -51,12 +67,23 @@ const ActionDropdown = ({ rowId, rowData, onDeleted }: { rowId: string; rowData:
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this nomination?")) return;
+    
     try {
       setIsDeleting(true);
       await deleteNomination(rowId);
-      onDeleted && onDeleted();
-    } catch (e) {
+      
+      // Show success message
+      alert("Nomination deleted successfully!");
+      
+      // Immediately call the onDeleted callback to refresh the table
+      if (onDeleted) {
+        onDeleted();
+      }
+      
+    } catch (e: any) {
       console.error("Failed to delete nomination", e);
+      const errorMessage = e?.response?.data?.message || e?.message || "Failed to delete nomination";
+      alert(errorMessage);
     } finally {
       setIsDeleting(false);
       setIsOpen(false);
@@ -69,6 +96,7 @@ const ActionDropdown = ({ rowId, rowData, onDeleted }: { rowId: string; rowData:
         <button
           className="cursor-pointer"
           onClick={() => setIsOpen(!isOpen)}
+          disabled={isUpdating || isDeleting}
         >
           <Dot3Icon />
         </button>
@@ -81,7 +109,7 @@ const ActionDropdown = ({ rowId, rowData, onDeleted }: { rowId: string; rowData:
               onClick={() => setIsOpen(false)}
             />
             
-            {/* Dropdown menu with responsive positioning */}
+            {/* Dropdown menu */}
             <div className="fixed z-[9999] w-36 sm:w-40 bg-white border border-gray-200 rounded-md shadow-lg"
                  style={{
                    top: (() => {
@@ -115,27 +143,30 @@ const ActionDropdown = ({ rowId, rowData, onDeleted }: { rowId: string; rowData:
                  }}>
               <div className="py-1">
                 <button
-                  className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150"
+                  className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150 disabled:opacity-50"
                   onClick={() => handleAction('complete')}
+                  disabled={isUpdating || isDeleting}
                 >
-                  Complete
+                  {isUpdating ? 'Updating...' : 'Complete'}
                 </button>
                 <button
-                  className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150"
+                  className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150 disabled:opacity-50"
                   onClick={() => handleAction('withdraw')}
+                  disabled={isUpdating || isDeleting}
                 >
-                  Withdraw
+                  {isUpdating ? 'Updating...' : 'Withdraw'}
                 </button>
                 <button
-                  className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150"
+                  className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150 disabled:opacity-50"
                   onClick={() => handleAction('submitted')}
+                  disabled={isUpdating || isDeleting}
                 >
-                  Submitted
+                  {isUpdating ? 'Updating...' : 'Submitted'}
                 </button>
                 <button
-                  className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150"
+                  className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150 disabled:opacity-50"
                   onClick={handleDelete}
-                  disabled={isDeleting}
+                  disabled={isDeleting || isUpdating}
                 >
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </button>
@@ -148,7 +179,11 @@ const ActionDropdown = ({ rowId, rowData, onDeleted }: { rowId: string; rowData:
   );
 };
 
-export const nominationColumn = (handleOpenModal: (row: any) => void, onDeleted?: () => void) => [
+export const nominationColumn = (
+  handleOpenModal: (row: any) => void, 
+  onDeleted?: () => void, 
+  onStatusUpdate?: () => void
+) => [
   {
     label: "Subscriber",
     accessor: "subscriber",
@@ -251,8 +286,10 @@ export const nominationColumn = (handleOpenModal: (row: any) => void, onDeleted?
     label: "Status",
     accessor: "status",
     width: "8.88%",
-    formatter: (item: string) => {
-      const normalized = (item || "").toLowerCase();
+    formatter: (item: string, row: any) => {
+      // Use localStatus if available from ActionDropdown, otherwise use the original status
+      const statusToShow = row.localStatus || item;
+      const normalized = (statusToShow || "").toLowerCase();
       const classes =
         normalized === "complete"
           ? "bg-green-100 text-green-700"
@@ -263,7 +300,7 @@ export const nominationColumn = (handleOpenModal: (row: any) => void, onDeleted?
           : "bg-gray-100 text-gray-700";
       return (
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${classes}`}>
-          {item}
+          {statusToShow}
         </span>
       );
     },
@@ -280,7 +317,12 @@ export const nominationColumn = (handleOpenModal: (row: any) => void, onDeleted?
         >
           <EyeIcon />
         </button>
-        <ActionDropdown rowId={row.id || item} rowData={row} onDeleted={onDeleted} />
+        <ActionDropdown 
+          rowId={row.id || item} 
+          rowData={row} 
+          onDeleted={onDeleted} 
+          onStatusUpdate={onStatusUpdate}
+        />
       </div>
     ),
   },
