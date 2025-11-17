@@ -501,9 +501,9 @@ export default function EventDashboard() {
                 </div>
                 <button
                   onClick={testApiCall}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+                  className="px-4 py-2 bg-primary cursor-pointer text-white rounded-lg text-sm font-medium  transition-colors"
                 >
-                  Test API
+                Apply filter
                 </button>
               </div>
             </div>

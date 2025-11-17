@@ -4,11 +4,8 @@ import rightArrow from "@/public/nominations/Frame.svg";
 import EyeIcon from "@/public/nominations/icons/EyeIcon";
 import Dot3Icon from "@/public/nominations/icons/Dot3Icon";
  
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircleIcon } from "lucide-react";
-import LocationIcon from "@/public/nominations/icons/LocationIcon";
-import CalenderIcon from "@/public/nominations/icons/CalenderIcon";
-import BoxIcon from "@/public/nominations/icons/BoxIcon";
+ 
+ 
 import { updateNominationStatus } from "@/services/nominationService";
 
 // Dropdown component for the action menu

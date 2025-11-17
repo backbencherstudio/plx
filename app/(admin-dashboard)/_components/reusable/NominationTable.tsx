@@ -63,10 +63,11 @@ export default function NominationTable({
   const [totalItems, setTotalItems] = useState(0);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [filtersApplied, setFiltersApplied] = useState(false);
   const hasPrevPage = currentPage > 1;
   const hasNextPage = currentPage < totalPages;
 
-  // Transform API data to match table structure
+ 
   const transformNominationData = (apiData: NominationResponse[]): TransformedNomination[] => {
     return apiData.map((item) => ({
       id: item.id,
@@ -94,7 +95,7 @@ export default function NominationTable({
     }));
   };
 
-  // Fetch nominations from API
+  // Fetch nominations  
   const fetchNominations = async () => {
     try {
       setLoading(true);
@@ -105,8 +106,9 @@ export default function NominationTable({
         limit: itemsPerPage,
       };
       
-      if (fromDate) params.startDate = fromDate;
-      if (toDate) params.endDate = toDate;
+      // Only apply date filters if they are set and filters are applied
+      if (filtersApplied && fromDate) params.startDate = fromDate;
+      if (filtersApplied && toDate) params.endDate = toDate;
 
       const response: GetNominationsResponse = await getAllNominations(params);
       
@@ -128,7 +130,15 @@ export default function NominationTable({
 
   useEffect(() => {
     fetchNominations();
-  }, [currentPage, itemsPerPage, fromDate, toDate]);
+  }, [currentPage, itemsPerPage, filtersApplied]); // filtersApplied add kora hoyeche
+
+  // Separate useEffect for date filter changes
+  useEffect(() => {
+    if (filtersApplied && (fromDate || toDate)) {
+      setCurrentPage(1);
+      fetchNominations();
+    }
+  }, [fromDate, toDate]); // Only run when date filters change
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -136,64 +146,81 @@ export default function NominationTable({
 
   const handleItemsPerPageChange = (value: string) => {
     setItemsPerPage(Number(value));
-    setCurrentPage(1); // Reset to first page when changing items per page
+    setCurrentPage(1);
   };
 
   const handleDateFilterChange = () => {
-    setCurrentPage(1); // Reset to first page when applying filters
-    fetchNominations();
+    setFiltersApplied(true);
+  };
+
+  const handleClearFilters = () => {
+    setFromDate("");
+    setToDate("");
+    setFiltersApplied(false);
+    setCurrentPage(1);
+    // fetchNominations() ekhon automatic call hobe useEffect er maddhome
   };
 
   const columns = nominationColumn(handleOpenModal, onDeleted);
 
   return (
     <div>
-      {/* Filters */}
-      {showFilters && (
-        <div className="bg-white rounded-2xl p-6 mb-6">
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex justify-start items-center gap-2">
-              <div className="justify-start text-Text-Secondary text-xs font-medium font-['Roboto'] leading-none">
-                From
+      {/* Table Container */}
+      <div className="bg-white rounded-2xl mt-6">
+        {/* Date Filter Header - Above the table header */}
+        {showFilters && (
+          <div className="flex justify-between items-center px-6 py-4 border-b border-[#E7ECF4]">
+            <h2 className="text-lg font-medium">Nominations</h2>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="text-Text-Secondary text-xs font-medium font-['Roboto'] leading-none">
+                  From
+                </div>
+                <div className="h-8 px-4 py-1.5 bg-slate-50 rounded-[10px] outline-1 outline-slate-200 flex items-center gap-6">
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className="text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none  "
+                    placeholder="mm/dd/yyyy"
+                  />
+                </div>
               </div>
-              <div className="h-8 px-4 py-1.5 bg-slate-50 rounded-[10px] outline-1 outline-slate-200 flex justify-start items-center gap-6">
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  className="justify-start text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none [&::-webkit-calendar-picker-indicator]:hidden"
-                  placeholder="mm/dd/yyyy"
-                />
-                <Calendar className="w-4 h-4 text-zinc-500 cursor-pointer" />
+              <div className="flex items-center gap-2">
+                <div className="text-Text-Secondary text-xs font-medium font-['Roboto'] leading-none">
+                  To
+                </div>
+                <div className="h-8 px-4 py-1.5 bg-slate-50 rounded-[10px] outline-1 outline-slate-200 flex items-center gap-6">
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    className="text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none "
+                    placeholder="mm/dd/yyyy"
+                  />
+                </div>
               </div>
+              <button
+                onClick={handleDateFilterChange}
+                className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                disabled={loading}
+              >
+                {loading ? "Applying..." : "Apply Filters"}
+              </button>
+              {(fromDate || toDate || filtersApplied) && (
+                <button
+                  onClick={handleClearFilters}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors"
+                  disabled={loading}
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
-            <div className="flex justify-start items-center gap-2">
-              <div className="justify-start text-Text-Secondary text-xs font-medium font-['Roboto'] leading-none">
-                To
-              </div>
-              <div className="h-8 px-4 py-1.5 bg-slate-50 rounded-[10px] outline-1 outline-slate-200 flex justify-start items-center gap-6">
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  className="justify-start text-Text-Secondary text-xs font-normal font-['Roboto'] leading-none bg-transparent border-none outline-none [&::-webkit-calendar-picker-indicator]:hidden"
-                  placeholder="mm/dd/yyyy"
-                />
-                <Calendar className="w-4 h-4 text-zinc-500 cursor-pointer" />
-              </div>
-            </div>
-            <button
-              onClick={handleDateFilterChange}
-              className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              Apply Filters
-            </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl">
+        {/* Table Content */}
         {loading ? (
           <div className="flex justify-center items-center py-8">
             <div className="text-gray-500">Loading nominations...</div>
