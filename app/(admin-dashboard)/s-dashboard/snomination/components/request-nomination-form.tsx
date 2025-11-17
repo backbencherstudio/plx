@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { ChevronDown, Package, MapPin, Calendar, Plus } from "lucide-react"
 import { userData } from "../../../../lib/userdata"
-import axios from "axios"
+import { createNomination } from "@/services/subscriberService"
 
 interface FormData {
   assetGroup: string
@@ -85,13 +85,10 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
       setSubmitError(null)
       setDebugSteps([])
       
-      const token = localStorage.getItem('token')
-      
       setDebugSteps(prev => [...prev, '1. Starting nomination submission...'])
-      setDebugSteps(prev => [...prev, `2. Token retrieved: ${token ? 'Present' : 'Not found'}`])
-      setDebugSteps(prev => [...prev, '3. Preparing request payload...'])
+      setDebugSteps(prev => [...prev, '2. Preparing request payload...'])
       
-      // Prepare API payload matching the Postman structure
+      // Prepare API payload matching the service structure
       const apiPayload = {
         commodityType: data.commodityType,
         assetGroup: data.assetGroup,
@@ -106,23 +103,17 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
         connection: data.connection
       }
       
-      setDebugSteps(prev => [...prev, '4. Making POST request to nomination API...'])
-      setDebugSteps(prev => [...prev, `5. Payload: ${JSON.stringify(apiPayload, null, 2)}`])
+      setDebugSteps(prev => [...prev, '3. Making POST request via service...'])
+      setDebugSteps(prev => [...prev, `4. Payload: ${JSON.stringify(apiPayload, null, 2)}`])
       
-      const response = await axios.post(`http://192.168.7.12:4001/api/v1/nomination/create`, apiPayload, {
-        headers: {
-          'Authorization': token,
-          'Content-Type': 'application/json'
-        }
-      })
+      const response = await createNomination(apiPayload)
       
-      setDebugSteps(prev => [...prev, '6. API call successful!'])
-      setDebugSteps(prev => [...prev, `7. Response status: ${response.status}`])
-      setDebugSteps(prev => [...prev, '8. Processing response data...'])
+      setDebugSteps(prev => [...prev, '5. API call successful!'])
+      setDebugSteps(prev => [...prev, '6. Processing response data...'])
       
-      console.log('API Response:', response.data)
-      setDebugData(response.data)
-      setDebugSteps(prev => [...prev, '9. Nomination submitted successfully!'])
+      console.log('API Response:', response)
+      setDebugData(response)
+      setDebugSteps(prev => [...prev, '7. Nomination submitted successfully!'])
       
       setSubmitSuccess(true)
       
@@ -151,7 +142,7 @@ export function RequestNominationForm({ isOpen, onToggle }: RequestNominationFor
     } catch (error: any) {
       console.error('API Error:', error)
       setDebugSteps(prev => [...prev, `Error: ${error.response?.data?.message || error.message}`])
-      setSubmitError(error.response?.data?.message || 'Failed to submit nomination. Please try again.')
+      setSubmitError(error.response?.data?.message || error.message || 'Failed to submit nomination. Please try again.')
     } finally {
       setIsSubmitting(false)
     }

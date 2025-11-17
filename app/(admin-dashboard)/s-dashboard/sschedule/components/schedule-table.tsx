@@ -3,7 +3,7 @@
 import { ChevronDown, Download, FileText, Eye, Bug } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEffect, useMemo, useState } from "react"
-import { getMySchedules } from "@/services/scheduleService"
+import { getMySchedules } from "@/services/subscriberService"
 import axiosClient from "@/lib/axiosclient"
 
 interface SchedulesTableProps {

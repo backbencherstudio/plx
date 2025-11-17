@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react'
-import { getMyNominations } from '../../../../../services/nominationService'
+import { getMyNominations } from '@/services/subscriberService'
 
 export default function TokenTest() {
   const [testResult, setTestResult] = useState<string>('')

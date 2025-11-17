@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { Eye, ArrowRight, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import { userData } from '@/app/lib/userdata'
 import { NominationDetailsModal } from './nomination-details-modal'
-import axiosClient from '@/lib/axiosclient'
+import { getMyNominations } from '@/services/subscriberService'
 
 // API data will be used instead of static data
 
@@ -28,7 +28,6 @@ export default function Previousnnomination() {
   const [apiData, setApiData] = useState<any[]>([])
   const [apiPagination, setApiPagination] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [authToken, setAuthToken] = useState<string | null>(null)
 
   // Refs for date inputs
   const fromDateRef = useRef<HTMLInputElement>(null)
@@ -54,53 +53,44 @@ export default function Previousnnomination() {
   }
 
 
-  // Safely hydrate token on client only
+  // Fetch nominations from API
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setAuthToken(localStorage.getItem('token'))
-    }
-  }, [])
-
-  const test = async (tokenParam?: string | null) => {
-    try {
-      setIsLoading(true)
-      setDebugSteps(prev => [...prev, '1. Starting API call...'])
-      const headerToken = typeof window !== 'undefined' ? (tokenParam ?? authToken ?? localStorage.getItem('token')) : tokenParam ?? authToken
-      setDebugSteps(prev => [...prev, `2. Token retrieved: ${headerToken ? 'Present' : 'Not found'}`])
-      setDebugSteps(prev => [...prev, '3. Making GET request to nomination API...'])
-      
-      const res = await axiosClient.get(`/api/v1/nomination/my`)
-      
-      setDebugSteps(prev => [...prev, '4. API call successful!'])
-      setDebugSteps(prev => [...prev, `5. Response status: ${res.status}`])
-      setDebugSteps(prev => [...prev, '6. Processing response data...'])
-      
-      console.log(res.data)
-      setDebugData(res.data)
-      
-      // Store API data for table
-      if (res.data && res.data.data) {
-        setApiData(res.data.data)
-        setApiPagination(res.data.pagination)
-        setDebugSteps(prev => [...prev, '7. API data stored for table display'])
+    const fetchNominations = async () => {
+      try {
+        setIsLoading(true)
+        setDebugSteps(prev => [...prev, '1. Starting API call...'])
+        setDebugSteps(prev => [...prev, '2. Fetching nominations from service...'])
+        
+        const response = await getMyNominations({ page: currentPage, limit: itemsPerPage })
+        
+        setDebugSteps(prev => [...prev, '3. API call successful!'])
+        setDebugSteps(prev => [...prev, '4. Processing response data...'])
+        
+        console.log('Nominations response:', response)
+        setDebugData(response)
+        
+        // Store API data for table
+        if (response && response.data) {
+          setApiData(response.data)
+          setApiPagination(response.pagination)
+          setDebugSteps(prev => [...prev, '5. API data stored for table display'])
+        }
+        
+        setDebugSteps(prev => [...prev, '6. Data stored in state'])
+      } catch (error: any) {
+        setDebugSteps(prev => [...prev, `Error: ${error.message || error}`])
+        console.error('API Error:', error)
+      } finally {
+        setIsLoading(false)
       }
-      
-      setDebugSteps(prev => [...prev, '8. Data stored in debug state'])
-    } catch (error) {
-      setDebugSteps(prev => [...prev, `Error: ${error}`])
-      console.error('API Error:', error)
-    } finally {
-      setIsLoading(false)
     }
-  }
  
-  useEffect(() => {
     // Trigger API only after token is available (or at least once on client)
     if (typeof window !== 'undefined') {
-      test(authToken)
+      fetchNominations()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authToken])
+  }, [currentPage])
 
 
 
