@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { getInitials, getGradientBackground } from "@/utils/avatarUtils";
 
 interface ChatData {
@@ -57,11 +58,23 @@ export default function ChatCard({
       onClick={() => handleChatClick(data.user_id)}
     >
       <div className="rounded-full relative">
-        <div className={`w-[60px] h-[60px] ${getGradientBackground(data.user_id)} rounded-full flex items-center justify-center shadow-lg`}>
-          <span className="text-gray-700 text-lg font-semibold">
-            {getInitials(data.customer_name)}
-          </span>
-        </div>
+        {data.customer_image ? (
+          <div className="w-[60px] h-[60px] rounded-full overflow-hidden bg-white flex items-center justify-center">
+            <Image
+              src={data.customer_image}
+              alt={data.customer_name}
+              width={60}
+              height={60}
+              className="object-contain w-full h-full"
+            />
+          </div>
+        ) : (
+          <div className={`w-[60px] h-[60px] ${getGradientBackground(data.user_id)} rounded-full flex items-center justify-center shadow-lg`}>
+            <span className="text-gray-700 text-lg font-semibold">
+              {getInitials(data.customer_name)}
+            </span>
+          </div>
+        )}
         {/* Active dot removed */}
       </div>
 
