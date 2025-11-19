@@ -95,10 +95,10 @@ const handlePermissionChange = async (permissionType: keyof PermissionsData, new
 
     console.log('Sending permissions update:', updatedPermissions);
     const response = await updatePermissions(updatedPermissions);
-    console.log("Permissions updated successfully:", response);
+    console.log(" messageeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee:", response.message);
     
   } catch (error: any) {
-    console.error("Full error details:", error);
+    console.log("errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr:", error);
     
     //   local state on error
     setPermissions(prev => ({
@@ -106,24 +106,7 @@ const handlePermissionChange = async (permissionType: keyof PermissionsData, new
       [permissionType]: !newValue
     }));
 
-    // if (error.code === 'ERR_NETWORK') {
-    //   alert("Network error: Please check your internet connection and try again.");
-    //   console.log('network errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr');
-      
-    // } else if (error.response) {
-    //   // Server responded with error status
-    //   alert(`Error: ${error.response.data?.message || "Failed to update settings"}`);
-    //   console.log('update faileddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd');
-      
-    // } else if (error.request) {
-    //   // Request was made but no response received
-    //   alert("Network error: Could not reach the server. Please try again.");
-    //   console.log('could not reach serverrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr');
-      
-    // } else {
-    //   alert("An unexpected error occurred. Please try again.");
-    //   console.log('an unexpected error occurreeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
-    // }
+ 
   }
 };
 

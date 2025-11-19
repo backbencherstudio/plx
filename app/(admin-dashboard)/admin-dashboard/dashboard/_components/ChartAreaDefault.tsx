@@ -1,12 +1,11 @@
 "use client";
 
 import { CartesianGrid, XAxis, YAxis, AreaChart, Area, Line } from "recharts";
+import { useEffect, useState } from "react";
 
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -25,55 +24,84 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+import { getScheduleStatistics, ScheduleStatisticsData } from "@/services/AdminDashboard";
+ 
 export const description = "A line chart";
 
-const chartData = [
-  { y:0,month: "January", desktop: 100 },
-  { y:10,month: "February", desktop: 1000 },
-  { y:20,month: "March", desktop: 1500 },
-  { y:30,month: "April", desktop: 900 },
-  { y:40,month: "May", desktop: 500 },
-  { y:50,month: "June", desktop: 1100 },
-  { y:60,month: "July", desktop: 450 },
-  { y:70,month: "August", desktop: 1000 },
-  { y:80,month: "September", desktop: 500 },
-  { y:90,month: "October", desktop: 300 },
-  { y:100,month: "November", desktop: 1150 },
-  { y:110,month: "December", desktop: 2000 },
-];
-
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
+  schedules: {
+    label: "Schedules",
     color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
 
 export function ChartAreaDefault() {
+  const [chartData, setChartData] = useState<ScheduleStatisticsData[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<string>("11");
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const fetchScheduleData = async (month: number) => {
+    try {
+      setLoading(true);
+      console.log('Fetching data for month:', month);
+      const response = await getScheduleStatistics(month);
+      console.log('API Response:', response);
+      console.log('Response data:', response.data);
+      
+      // Use the data directly from API (no transformation needed if interface matches)
+      setChartData(response.data);
+    } catch (error) {
+      console.error('Error fetching schedule statistics:', error);
+      setChartData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchScheduleData(parseInt(selectedMonth));
+  }, [selectedMonth]);
+
+  const handleMonthChange = (value: string) => {
+    console.log('Month changed to:', value);
+    setSelectedMonth(value);
+  };
+
+  if (loading) {
+    return (
+      <Card className="border-none shadow-none">
+        <CardContent className="h-[400px] flex items-center justify-center">
+          <div>Loading schedule statistics...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  console.log('Chart data to render:', chartData);
+
   return (
     <Card className="border-none shadow-none">
       <CardHeader className="flex justify-between">
         <CardTitle>Schedule Statistics</CardTitle>
-        <Select>
+        <Select value={selectedMonth} onValueChange={handleMonthChange}>
           <SelectTrigger className="shadow-none rounded-full">
             <SelectValue placeholder="Month" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Select Month</SelectLabel>
-              <SelectItem value="january">January</SelectItem>
-              <SelectItem value="february">February</SelectItem>
-              <SelectItem value="march">March</SelectItem>
-              <SelectItem value="april">April</SelectItem>
-              <SelectItem value="may">May</SelectItem>
-              <SelectItem value="june">June</SelectItem>
-              <SelectItem value="july">July</SelectItem>
-              <SelectItem value="august">August</SelectItem>
-              <SelectItem value="september">September</SelectItem>
-              <SelectItem value="october">October</SelectItem>
-              <SelectItem value="november">November</SelectItem>
-              <SelectItem value="december">December</SelectItem>
+              <SelectItem value="1">January</SelectItem>
+              <SelectItem value="2">February</SelectItem>
+              <SelectItem value="3">March</SelectItem>
+              <SelectItem value="4">April</SelectItem>
+              <SelectItem value="5">May</SelectItem>
+              <SelectItem value="6">June</SelectItem>
+              <SelectItem value="7">July</SelectItem>
+              <SelectItem value="8">August</SelectItem>
+              <SelectItem value="9">September</SelectItem>
+              <SelectItem value="10">October</SelectItem>
+              <SelectItem value="11">November</SelectItem>
+              <SelectItem value="12">December</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -105,19 +133,16 @@ export function ChartAreaDefault() {
               stroke="#A5A5AB"
             />
             <XAxis
-              dataKey="y"
+              dataKey="day"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              // tickFormatter={(value) => value.slice(0, 3)}
             />
             <YAxis
-              domain={[0, "dataMax"]} // Dynamic Y-axis scaling
-              ticks={[0, 100, 500, 1000, 1500, 2000]} // Custom ticks
-              tickCount={7}
+              domain={[0, "dataMax + 1"]} // Added buffer for better visibility
               axisLine={false}
               tickLine={false}
-              tickFormatter={(value) => value.toLocaleString()} // Adds commas to numbers
+              tickFormatter={(value) => value.toLocaleString()}
             />
             <ChartTooltip
               cursor={false}
@@ -127,15 +152,15 @@ export function ChartAreaDefault() {
             {/* The area with gradient under the line */}
             <Area
               type="monotone"
-              dataKey="desktop"
-              stroke="#123F93" // Line color
-              fill="url(#gradientUnderLine)" // Gradient below the line
-              fillOpacity={0.3} // Adjust opacity for a subtle effect
+              dataKey="schedules" // Make sure this matches your API response key
+              stroke="#123F93"
+              fill="url(#gradientUnderLine)"
+              fillOpacity={0.3}
             />
             <Line
-              dataKey="desktop"
-              type="monotone" // Smooth curve for a wave-like effect
-              stroke="#123F93" // Same line color as above
+              dataKey="schedules" // Make sure this matches your API response key
+              type="monotone"
+              stroke="#123F93"
               strokeWidth={2}
               dot={false}
             />
