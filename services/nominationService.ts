@@ -152,7 +152,7 @@ export const updateNomination = async (id: string, payload: Partial<CreateNomina
 // *** Update Nomination Status ***
 export const updateNominationStatus = async (subscriberId: string, status: "Submitted" | "Complete" | "Withdraw") => {
   try {
-    const response = await axiosClient.patch(`/nomination/status/${subscriberId}`, {
+    const response = await axiosClient.patch(`api/v1/nomination/status/${subscriberId}`, {
       status: status
     });
     return response.data;

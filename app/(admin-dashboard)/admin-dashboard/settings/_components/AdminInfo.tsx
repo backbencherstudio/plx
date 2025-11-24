@@ -7,13 +7,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import EditIcon from "@/public/commonIcons/EditIcon";
 import { getUserProfile, updateProfile, UserData, UpdateProfileData } from "@/services/AdminSettings";
 import React, { useEffect, useState } from "react";
+import toast from 'react-hot-toast';
 
 export default function AdminInfo() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -44,9 +48,9 @@ export default function AdminInfo() {
   // Fetch user data
   useEffect(() => {
     const fetchUserProfile = async () => {
+      setLoading(true);
       try {
         const response = await getUserProfile();
-        console.log(response);
         
         setUserData(response.data);
         setFormData({
@@ -57,8 +61,16 @@ export default function AdminInfo() {
           timezone: response.data.timezone || "UTC+00:00",
           dateFormat: response.data.dateFormat || "MM/DD/YYYY"
         });
-      } catch (error) {
+
+        toast.success('Profile loaded successfully!');
+      } catch (error: any) {
         console.error("Error fetching user profile:", error);
+        toast.error(
+          error.response?.data?.message || 
+          'Failed to load profile. Please try again.'
+        );
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -76,26 +88,32 @@ export default function AdminInfo() {
     }));
   };
 
-  const handleSave = async () => {
+  const handleSaveClick = () => {
+    // Validate form before showing confirmation
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmSave = async () => {
+    setLoading(true);
+    setShowConfirmation(false);
+    
     try {
-       
       const updateData: UpdateProfileData = {
-        firstName: formData.firstName || undefined,
-        lastName: formData.lastName || undefined,
-        phone: formData.phone || undefined,
+        firstName: formData.firstName.trim() || undefined,
+        lastName: formData.lastName.trim() || undefined,
+        phone: formData.phone.trim() || undefined,
         timezone: formData.timezone || undefined,
         dateFormat: formData.dateFormat || undefined
       };
 
-      // call update api
       const response = await updateProfile(updateData);
-
-      console.log("Profile updated successfully:", response);
-      
-      // Update local user data with the response
+ 
       setUserData(response.data);
       
-      // Update form data with the new values
       setFormData({
         firstName: response.data.firstName || "",
         lastName: response.data.lastName || "",
@@ -105,18 +123,49 @@ export default function AdminInfo() {
         dateFormat: response.data.dateFormat || "MM/DD/YYYY"
       });
       
-      // Show success message
-      alert("Profile updated successfully!");
-      
       setIsEditing(false);
+      
+      // Success toast
+         toast.success( response.message, {
+       duration: 3000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     });
       
     } catch (error: any) {
       console.error("Error updating profile:", error);
-      alert(
-        error.response?.data?.message ||
-          "Failed to update profile. Please try again."
-      );
+      
+      // Error toast with detailed message
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          'Failed to update profile. Please try again.';
+      
+      toast.error(errorMessage);
+      
+      // Revert form data on error
+      if (userData) {
+        setFormData({
+          firstName: userData.firstName || "",
+          lastName: userData.lastName || "",
+          email: userData.email || "",
+          phone: userData.phone || "",
+          timezone: userData.timezone || "UTC+00:00",
+          dateFormat: userData.dateFormat || "MM/DD/YYYY"
+        });
+      }
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCancelSave = () => {
+    setShowConfirmation(false);
+    toast('Changes were not saved', {
+      icon: 'ℹ️',
+      duration: 3000,
+    });
   };
 
   const handleCancel = () => {
@@ -131,14 +180,55 @@ export default function AdminInfo() {
       });
     }
     setIsEditing(false);
+    toast('Editing cancelled', {
+      icon: '↩️',
+      duration: 3000,
+    });
   };
 
   if (!userData) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="flex items-center gap-2">
+          <Spinner className="animate-spin-slow text-[#123F93]" size={30} />
+          <span className="text-gray-600">Loading profile...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div>
+      {/* Confirmation Modal */}
+      {showConfirmation && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+          <div className="bg-white rounded-[12px] p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-[#4A4C56] mb-2">
+              Confirm Changes
+            </h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to save these changes to your profile?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCancelSave}
+                disabled={loading}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-[10px] text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSave}
+                disabled={loading}
+                className="px-4 py-2 bg-primary text-white rounded-[10px] text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Saving...' : 'Yes, Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Admin Information */}
       <div className="bg-white px-6 pt-6 pb-10 rounded-[12px]">
         {/* header */}
@@ -148,7 +238,8 @@ export default function AdminInfo() {
           </h3>
           <button 
             className="flex items-center gap-2 cursor-pointer"
-            onClick={isEditing ? handleSave : handleEditToggle}
+            onClick={isEditing ? handleSaveClick : handleEditToggle}
+            disabled={loading}
           >
             <EditIcon />
             <p className="text-primary text-xs font-medium underline">
@@ -163,14 +254,14 @@ export default function AdminInfo() {
           <div className="flex-2 space-y-7">
             <div className="flex flex-col">
               <label htmlFor="firstName" className="text-xs text-[#4A4C56]">
-                First Name
+                First Name *
               </label>
               <input
                 type="text"
                 id="firstName"
                 value={formData.firstName}
                 onChange={(e) => handleInputChange("firstName", e.target.value)}
-                disabled={!isEditing}
+                disabled={!isEditing || loading}
                 placeholder="Enter first name"
                 className="border border-[#E6E8EA] py-3 px-4 rounded-[10px] placeholder:text-xs placeholder:text-[#4A4C56] placeholder:font-medium mt-1.5 disabled:bg-gray-50 disabled:cursor-not-allowed"
               />
@@ -178,14 +269,14 @@ export default function AdminInfo() {
             
             <div className="flex flex-col">
               <label htmlFor="lastName" className="text-xs text-[#4A4C56]">
-                Last Name
+                Last Name *
               </label>
               <input
                 type="text"
                 id="lastName"
                 value={formData.lastName}
                 onChange={(e) => handleInputChange("lastName", e.target.value)}
-                disabled={!isEditing}
+                disabled={!isEditing || loading}
                 placeholder="Enter last name"
                 className="border border-[#E6E8EA] py-3 px-4 rounded-[10px] placeholder:text-xs placeholder:text-[#4A4C56] placeholder:font-medium mt-1.5 disabled:bg-gray-50 disabled:cursor-not-allowed"
               />
@@ -231,7 +322,7 @@ export default function AdminInfo() {
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
-                disabled={!isEditing}
+                disabled={!isEditing || loading}
                 placeholder="Enter phone number"
                 className="border border-[#E6E8EA] py-3 px-4 rounded-[10px] placeholder:text-xs placeholder:text-[#4A4C56] placeholder:font-medium mt-1.5 disabled:bg-gray-50 disabled:cursor-not-allowed"
               />
@@ -240,14 +331,16 @@ export default function AdminInfo() {
             {isEditing && (
               <div className="flex gap-3 pt-4">
                 <button
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-primary text-white rounded-[10px] text-sm font-medium"
+                  onClick={handleSaveClick}
+                  disabled={loading}
+                  className="px-4 py-2 bg-primary text-white rounded-[10px] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
                 >
                   Save Changes
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-[10px] text-sm font-medium"
+                  disabled={loading}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-[10px] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
@@ -267,7 +360,7 @@ export default function AdminInfo() {
             <Select 
               value={formData.timezone} 
               onValueChange={(value) => handleInputChange("timezone", value)}
-              disabled={!isEditing}
+              disabled={!isEditing || loading}
             >
               <SelectTrigger className={`w-full py-6 shadow-none ${!isEditing ? 'bg-gray-50 cursor-not-allowed' : ''}`}>
                 <SelectValue placeholder="Select timezone" />
@@ -290,7 +383,7 @@ export default function AdminInfo() {
             <Select 
               value={formData.dateFormat} 
               onValueChange={(value) => handleInputChange("dateFormat", value)}
-              disabled={!isEditing}
+              disabled={!isEditing || loading}
             >
               <SelectTrigger className={`w-full py-6 shadow-none ${!isEditing ? 'bg-gray-50 cursor-not-allowed' : ''}`}>
                 <SelectValue placeholder="Select date format" />
@@ -308,6 +401,13 @@ export default function AdminInfo() {
           </div>
         </div>
       </div>
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+          <Spinner className="animate-spin-slow text-[#123F93]" size={50} />
+        </div>
+      )}
     </div>
   );
 }

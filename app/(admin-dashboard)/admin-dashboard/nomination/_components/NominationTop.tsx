@@ -135,6 +135,14 @@ export default function NominationTop() {
     setLoading(false);
    
     toast.success('Nomination submitted successfully!')
+
+        toast.success('Nomination submitted successfully!', {
+       duration: 3000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     });
     
     // Optionally reset form here
     // resetForm();
