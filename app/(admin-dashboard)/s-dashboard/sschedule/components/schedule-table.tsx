@@ -345,14 +345,14 @@ export function SchedulesTable({ onViewDetail }: SchedulesTableProps) {
                   {/* Actions Column */}
                   <td className="h-20 px-4 py-3">
                     <div className="flex items-center gap-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 hover:bg-slate-100"
-                        onClick={() => onViewDetail(item.id)}
-                      >
-                        <Eye className="w-4 h-4 text-neutral-600" />
-                      </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-slate-100"
+                onClick={() => item.scheduleFile && window.open(item.scheduleFile, "_blank")}
+              >
+                <Eye className="w-4 h-4 text-neutral-600" />
+              </Button>
                       <Button
                         variant="ghost"
                         size="sm"
