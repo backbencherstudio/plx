@@ -21,6 +21,7 @@ export const getCalculation = async ( ) => {
   return res.data;
 };
 
+
 export const getScheduleStatistics = async (month: number): Promise<ScheduleStatisticsResponse> => {
   const res = await axiosClient.get<ScheduleStatisticsResponse>(`/api/v1/dashboard/schedule-statistics?month=${month}`);
   return res.data;
