@@ -22,10 +22,6 @@ export default function AdminLogin() {
   const [loading,setLoading]=useState(false);
   const router = useRouter();
 
-  // handleShowPassword = () => {
-  //   setShowPassword(!showPassword);
-  // }
-
   const handleAdminLogin = async () => {
     try {
       setLoading(true)
@@ -38,14 +34,11 @@ export default function AdminLogin() {
          secondary: "#FFFFFF", 
        },
      });
-      // alert("succcessfully logged in ");
-      // redirect after login
       router.push("/admin-dashboard");
     } catch (err: any) {
       setLoading(false)
       const message =err?.response?.data?.message || err?.message || "Something went wrong!";
         toast.error(message);
-      
     }
   };
 
@@ -151,14 +144,11 @@ export default function AdminLogin() {
         </div>
       )}
        
-            {
-              loading &&(
-                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
-                 <Spinner className=" animate-spin-slow text-[#123F93]" size={50}  />
-      
-                </div>
-              )
-            }
+      {loading &&(
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+          <Spinner className=" animate-spin-slow text-[#123F93]" size={50}  />
+        </div>
+      )}
     </>
   );
 }
