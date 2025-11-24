@@ -16,7 +16,7 @@ type RawMessage = {
 };
 
 type Message = RawMessage & { isRead: boolean };
-type ChatTab = "all" | "unread" | "allUsers";
+type ChatTab = "all" | "allUsers";
 
 function parseDateFlexible(input: string) {
   if (!input) return new Date(0);
@@ -73,31 +73,46 @@ export default function MessagesSidebar2() {
     fetchData();
   }, []);
 
-  // Convert chat rooms to chat list
+  // Convert chat rooms to chat list (for All Chats tab)
+  // Only include rooms that have actual messages (lastMessage with content exists)
   const chatData = useMemo<Message[]>(() => {
-    return chatRooms.map((room) => ({
-      user_id: room.user.id,
-      customer_name: room.user.fullName || "User",
-      customer_image: room.user.avatar || "/sidebar/images/logo.png",
-      last_seen: room.updatedAt,
-      last_message: room.lastMessage?.content || "No messages yet",
-      isRead: room.unreadCount === 0,
-      isActive: true,
-    }));
+    return chatRooms
+      .filter((room) => {
+        // Only include rooms that have a lastMessage with actual content
+        return room.lastMessage !== null && 
+               room.lastMessage !== undefined && 
+               room.lastMessage.content && 
+               room.lastMessage.content.trim() !== "";
+      })
+      .map((room) => ({
+        user_id: room.user.id,
+        customer_name: room.user.fullName || "User",
+        customer_image: room.user.avatar || "/sidebar/images/logo.png",
+        last_seen: room.updatedAt,
+        last_message: room.lastMessage?.content || "",
+        isRead: room.unreadCount === 0,
+        isActive: true,
+      }));
   }, [chatRooms]);
 
-  const unreadData = useMemo(
-    () => chatData.filter((chat) => !chat.isRead),
-    [chatData]
-  );
-  const repliedChatsData = useMemo(
-    () => chatData.filter((chat) => chat.isRead),
-    [chatData]
-  );
-
-  // All active users list
+  // All Users tab: Only users who have NEVER had a conversation (no chat room OR no messages)
   const allUsersData = useMemo<Message[]>(() => {
-    return users.map((user) => ({
+    // Get all user IDs who have chat rooms WITH actual messages
+    const usersWithMessages = new Set(
+      chatRooms
+        .filter(room => room.lastMessage && room.lastMessage.content && room.lastMessage.content.trim() !== "")
+        .map(room => room.user.id)
+    );
+    
+    console.log("🔍 Users with messages:", Array.from(usersWithMessages));
+    console.log("📊 Total users:", users.length);
+    console.log("📊 Total chat rooms:", chatRooms.length);
+    
+    // Filter users who DON'T have messages (never had conversation)
+    const filteredUsers = users.filter(user => !usersWithMessages.has(user.id));
+    console.log("👥 Users without messages (All Users tab):", filteredUsers.length);
+    
+    return filteredUsers.map((user) => ({
       user_id: user.id,
       customer_name: user.fullName || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
       customer_image: user.avatar || "/sidebar/images/logo.png",
@@ -106,19 +121,25 @@ export default function MessagesSidebar2() {
       isRead: true,
       isActive: user.active,
     }));
-  }, [users]);
+  }, [users, chatRooms]);
+
+  // All Chats tab: Only users who HAVE had conversations (have chat rooms with messages)
+  const allChatsData = useMemo<Message[]>(() => {
+    console.log("💬 All Chats data:", chatData.length, "chats with messages");
+    return chatData;
+  }, [chatData]);
 
   const tabData = useMemo(() => {
     switch (tab) {
-      case "unread":
-        return unreadData;
       case "allUsers":
+        // All Users tab: Show all users (from users API)
         return allUsersData;
       case "all":
       default:
-        return repliedChatsData;
+        // All Chats tab: Show only users who have chat rooms (from chatRooms API)
+        return allChatsData;
     }
-  }, [tab, unreadData, allUsersData, repliedChatsData]);
+  }, [tab, allUsersData, allChatsData]);
 
   // Get selected room ID from URL
   const selectedRoomIdFromUrl = useMemo(() => {
@@ -188,10 +209,10 @@ export default function MessagesSidebar2() {
       <div className="space-y-5 w-full md:max-w-[400px] hidden md:block">
         {/* tabs */}
         <div className="flex gap-3 px-6">
-          {(["all", "unread", "allUsers"] as ChatTab[]).map((t) => {
+          {(["all", "allUsers"] as ChatTab[]).map((t) => {
             const isOn = tab === t;
             const label =
-              t === "all" ? "All Chats" : t === "unread" ? "Unread" : "All Users";
+              t === "all" ? "All Chats" : "All Users";
             return (
               <button
                 key={t}

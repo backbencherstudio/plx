@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Dot3Icon from "@/public/nominations/icons/Dot3Icon";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
-import { getRoomMessages, sendMessage, Message, SendMessageRequest, getMyChatRoom } from "@/services/subscriberService";
+import { getRoomMessages, sendMessage, Message, SendMessageRequest, getMyChatRoom, markRoomAsRead } from "@/services/subscriberService";
 import { getInitials, getGradientBackground } from "@/utils/avatarUtils";
 import SendIcon from "@/public/commonIcons/SendIcon";
 import { useCurrentUser } from "@/utils/useCurrentUser";
