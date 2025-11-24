@@ -125,7 +125,14 @@ export const googleLogin =async (email:string,name:string,image:string)=>{
 export const logout = () => {
  
   localStorage.removeItem("token");
-  toast.success('successfully logged out')
+ 
+      toast.success('successfully logged out', {
+       duration: 3000,  
+       iconTheme: {
+         primary: "#123F93",  
+         secondary: "#FFFFFF", 
+       },
+     });
 
    
 };

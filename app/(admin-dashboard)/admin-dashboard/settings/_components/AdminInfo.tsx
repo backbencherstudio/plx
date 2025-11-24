@@ -62,7 +62,7 @@ export default function AdminInfo() {
           dateFormat: response.data.dateFormat || "MM/DD/YYYY"
         });
 
-        toast.success('Profile loaded successfully!');
+     
       } catch (error: any) {
         console.error("Error fetching user profile:", error);
         toast.error(
