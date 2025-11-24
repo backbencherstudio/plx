@@ -55,6 +55,26 @@ export default function NominationTop() {
     setIsExpanded(!isExpanded);
   };
 
+  // Reset form function
+  const resetForm = () => {
+    setSubscriberQuery("");
+    setSelectedSubscriber(null);
+    setCommodityType("");
+    setCrudeSubType("");
+    setAssetGroup("");
+    setVolume("");
+    setUnit("bbls");
+    setOrigin("");
+    setDestination("");
+    setTransportMode("");
+    setConnection("");
+    setBeginningDate("");
+    setEndDate("");
+    setNotes("");
+    setShowCommodityPanel(false);
+    setShowSubscriberDropdown(false);
+  };
+
   // fetch subscribers by first letters (debounced)
   useEffect(() => {
     const controller = new AbortController();
@@ -134,7 +154,7 @@ export default function NominationTop() {
     await axiosClient.post('/api/v1/nomination/create', payload);
     setLoading(false);
    
-    toast.success('Nomination submitted successfully!')
+ 
 
         toast.success('Nomination submitted successfully!', {
        duration: 3000,  
@@ -144,8 +164,8 @@ export default function NominationTop() {
        },
      });
     
-    // Optionally reset form here
-    // resetForm();
+    // Reset form after successful submission
+    resetForm();
     
   } catch (e: any) {
     setLoading(false);
@@ -370,7 +390,7 @@ export default function NominationTop() {
                   </div>
                   <div>
                     <p className="  text-xs text-graytext mb-2">Unit</p>
-                    <Select onValueChange={(v) => setUnit(v)}>
+                    <Select onValueChange={(v) => setUnit(v)} value={unit}>
                       <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
                         <SelectValue placeholder={unit} className=" " />
                       </SelectTrigger>
@@ -380,8 +400,6 @@ export default function NominationTop() {
                           <SelectItem value="gallons">gallons</SelectItem>
                           <SelectItem value="mcf">MCF</SelectItem>
                           <SelectItem value="tons">tons</SelectItem>
-                          {/* <SelectItem value="grapes">type D</SelectItem>
-                          <SelectItem value="pineapple">type E</SelectItem> */}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -426,7 +444,7 @@ export default function NominationTop() {
                     <p className="  text-xs text-graytext mb-2">
                       Transport Mode
                     </p>
-                    <Select onValueChange={(v) => setTransportMode(v)}>
+                    <Select onValueChange={(v) => setTransportMode(v)} value={transportMode}>
                       <SelectTrigger className="w-full py-5 shadow-none text-[#4A4C56] text-sm font-medium">
                         <SelectValue
                           placeholder={transportMode || "Select transport mode"}
@@ -440,7 +458,6 @@ export default function NominationTop() {
                           <SelectItem value="Trucking">Trucking</SelectItem>
                           <SelectItem value="Railcar">Railcar</SelectItem>
                           <SelectItem value="Marine">Marine</SelectItem>
-                          {/* <SelectItem value="pineapple">type E</SelectItem> */}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -506,7 +523,10 @@ export default function NominationTop() {
             </div>
             {/* buttons  */}
             <div className=" flex justify-end gap-4">
-              <button className=" text-[#1D1F2C] bg-[#E6E6E6]   text-sm font-medium py-3 px-12 rounded-xl cursor-pointer">
+              <button 
+                className=" text-[#1D1F2C] bg-[#E6E6E6]   text-sm font-medium py-3 px-12 rounded-xl cursor-pointer"
+                onClick={resetForm}
+              >
                 Cancel
               </button>
               <button
