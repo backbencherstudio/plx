@@ -138,7 +138,8 @@ export default function ChatPage() {
         
         // Get messages for this user using the user ID from URL
         console.log("🔍 API Debug: Fetching messages...");
-        const messagesResponse = await getAdminUserMessages(roomIdFromUrl!);
+        // Use a high limit to fetch all messages
+        const messagesResponse = await getAdminUserMessages(roomIdFromUrl!, 1, 1000);
         
         // Update debug info for messages API
         setDebugInfo(prev => ({
@@ -184,20 +185,23 @@ export default function ChatPage() {
             console.log("📨 Admin messages array:", messagesArray);
             
             // For admin view: customer messages appear on left (with customer profile), admin messages appear on right (with admin profile)
-            const convertedMessages: ChatMessage[] = messagesArray.map((msg: AdminMessage) => ({
-              id: msg.id,
-              content: msg.content,
-              timestamp: msg.createdAt,
-              senderId: msg.sender.id,
-              senderName: msg.sender.fullName,
-              senderType: msg.sender.type, // Store sender type to determine which profile to show
-              type: "text",
-              status: "sent",
-              isFromUser: msg.sender.type === "admin", // Admin messages on right, customer messages on left
-              timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
-            }));
+            const convertedMessages: ChatMessage[] = messagesArray
+              .map((msg: AdminMessage) => ({
+                id: msg.id,
+                content: msg.content,
+                timestamp: msg.createdAt,
+                senderId: msg.sender.id,
+                senderName: msg.sender.fullName,
+                senderType: msg.sender.type, // Store sender type to determine which profile to show
+                type: "text",
+                status: "sent",
+                isFromUser: msg.sender.type === "admin", // Admin messages on right, customer messages on left
+                timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
+              }))
+              .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Sort by timestamp
             
             console.log("✅ Converted admin messages:", convertedMessages);
+            console.log("✅ Converted admin messages length:", convertedMessages.length);
             setMessages(convertedMessages);
             
             // Use user info if available, otherwise use API response data
@@ -293,23 +297,62 @@ export default function ChatPage() {
       console.log("📨 Admin send response:", response);
       
       if (response.success) {
-        // Add the new message to the messages list
-        const newMsg: ChatMessage = {
-          id: response.data.id,
-          content: response.data.content,
-          timestamp: response.data.createdAt,
-          senderId: response.data.sender.id,
-          senderName: response.data.sender.fullName,
-          senderType: response.data.sender.type, // Store sender type
-          type: "text",
-          status: "sent",
-          isFromUser: response.data.sender.type === "admin",
-          timeAgo: "now"
-        };
-
-        setMessages(prev => [...prev, newMsg]);
+        // Clear input immediately for better UX
         setNewMessage("");
-        console.log("✅ Admin message sent successfully");
+        
+        // Fetch fresh messages from API to ensure all messages are displayed
+        try {
+          // Use a high limit to fetch all messages
+          const messagesResponse = await getAdminUserMessages(actualRoomId, 1, 1000);
+          console.log("📨 Fresh admin messages after send:", messagesResponse);
+          
+          if (messagesResponse.success) {
+            let messagesArray: AdminMessage[] = [];
+            
+            if (messagesResponse.messages && Array.isArray(messagesResponse.messages)) {
+              messagesArray = messagesResponse.messages;
+            } else if (messagesResponse.data && (messagesResponse.data as any).messages && Array.isArray((messagesResponse.data as any).messages)) {
+              messagesArray = (messagesResponse.data as any).messages;
+            }
+            
+            // Convert API messages to ChatMessage format
+            const convertedMessages: ChatMessage[] = messagesArray
+              .map((msg: AdminMessage) => ({
+                id: msg.id,
+                content: msg.content,
+                timestamp: msg.createdAt,
+                senderId: msg.sender.id,
+                senderName: msg.sender.fullName,
+                senderType: msg.sender.type,
+                type: "text",
+                status: "sent",
+                isFromUser: msg.sender.type === "admin",
+                timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
+              }))
+              .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Sort by timestamp
+            
+            console.log("✅ Fresh converted admin messages after send:", convertedMessages);
+            console.log("✅ Fresh converted admin messages length:", convertedMessages.length);
+            setMessages(convertedMessages);
+            console.log("✅ Admin messages refreshed successfully");
+          }
+        } catch (fetchError) {
+          console.error("❌ Error fetching fresh admin messages:", fetchError);
+          // Fallback: Add the new message to the list if fetch fails
+          const newMsg: ChatMessage = {
+            id: response.data.id,
+            content: response.data.content,
+            timestamp: response.data.createdAt,
+            senderId: response.data.sender.id,
+            senderName: response.data.sender.fullName,
+            senderType: response.data.sender.type,
+            type: "text",
+            status: "sent",
+            isFromUser: response.data.sender.type === "admin",
+            timeAgo: "now"
+          };
+          setMessages(prev => [...prev, newMsg]);
+        }
       } else {
         setError(response.message);
         console.error("❌ Admin send error:", response.message);

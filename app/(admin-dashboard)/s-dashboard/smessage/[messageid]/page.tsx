@@ -102,7 +102,8 @@ export default function ChatPage() {
           }
           
           // Now get messages for this room using the actual room ID
-          const messagesResponse = await getRoomMessages(room.id);
+          // Use a high limit to fetch all messages
+          const messagesResponse = await getRoomMessages(room.id, 1, 1000);
           console.log("Messages response:", messagesResponse);
           console.log("Messages response structure:", {
             success: messagesResponse.success,
@@ -129,6 +130,7 @@ export default function ChatPage() {
               }
               
               console.log("Messages array:", messagesArray);
+              console.log("Messages array length:", messagesArray.length);
               
               // Extract admin profile from messages if room data didn't have it
               // Admin messages have sender.type === "admin"
@@ -143,20 +145,25 @@ export default function ChatPage() {
               }
               
               // For customer view: admin messages on left (under admin profile), customer messages on right (under customer profile)
-              const convertedMessages: ChatMessage[] = messagesArray.map((msg: Message) => ({
-                id: msg.id,
-                content: msg.content,
-                timestamp: msg.createdAt,
-                senderId: msg.sender.id,
-                senderName: msg.sender.fullName,
-                type: "text",
-                status: "sent",
-                isFromUser: msg.sender.type === "user", // Customer messages on right, admin messages on left
-                timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
-              }));
+              const convertedMessages: ChatMessage[] = messagesArray
+                .map((msg: Message) => ({
+                  id: msg.id,
+                  content: msg.content,
+                  timestamp: msg.createdAt,
+                  senderId: msg.sender.id,
+                  senderName: msg.sender.fullName,
+                  type: "text",
+                  status: "sent",
+                  isFromUser: msg.sender.type === "user", // Customer messages on right, admin messages on left
+                  timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
+                }))
+                .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Sort by timestamp
               
               console.log("Converted messages:", convertedMessages);
+              console.log("Converted messages length:", convertedMessages.length);
+              console.log("Setting messages state...");
               setMessages(convertedMessages);
+              console.log("Messages state set. Current messages count:", convertedMessages.length);
             } catch (msgError) {
               console.error("Error processing messages:", msgError);
               setError(`Error processing messages: ${msgError}`);
@@ -210,21 +217,59 @@ export default function ChatPage() {
 
       const response = await sendMessage(messageData);
       if (response.success) {
-        // Add the new message to the messages list
-        const newMsg: ChatMessage = {
-          id: response.data.id,
-          content: response.data.content,
-          timestamp: response.data.createdAt,
-          senderId: response.data.sender.id,
-          senderName: response.data.sender.fullName,
-          type: "text",
-          status: "sent",
-          isFromUser: response.data.sender.type === "user",
-          timeAgo: "now"
-        };
-
-        setMessages(prev => [...prev, newMsg]);
+        // Clear input immediately for better UX
         setNewMessage("");
+        
+        // Fetch fresh messages from API to ensure all messages are displayed
+        try {
+          // Use a high limit to fetch all messages
+          const messagesResponse = await getRoomMessages(actualRoomId, 1, 1000);
+          console.log("Fresh messages after send:", messagesResponse);
+          
+          if (messagesResponse.success) {
+            let messagesArray: Message[] = [];
+            
+            if (messagesResponse.messages && Array.isArray(messagesResponse.messages)) {
+              messagesArray = messagesResponse.messages;
+            } else if (messagesResponse.data && messagesResponse.data.messages && Array.isArray(messagesResponse.data.messages)) {
+              messagesArray = messagesResponse.data.messages;
+            }
+            
+            // Convert API messages to ChatMessage format
+            const convertedMessages: ChatMessage[] = messagesArray
+              .map((msg: Message) => ({
+                id: msg.id,
+                content: msg.content,
+                timestamp: msg.createdAt,
+                senderId: msg.sender.id,
+                senderName: msg.sender.fullName,
+                type: "text",
+                status: "sent",
+                isFromUser: msg.sender.type === "user",
+                timeAgo: formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })
+              }))
+              .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Sort by timestamp
+            
+            console.log("Fresh converted messages after send:", convertedMessages);
+            console.log("Fresh converted messages length:", convertedMessages.length);
+            setMessages(convertedMessages);
+          }
+        } catch (fetchError) {
+          console.error("Error fetching fresh messages:", fetchError);
+          // Fallback: Add the new message to the list if fetch fails
+          const newMsg: ChatMessage = {
+            id: response.data.id,
+            content: response.data.content,
+            timestamp: response.data.createdAt,
+            senderId: response.data.sender.id,
+            senderName: response.data.sender.fullName,
+            type: "text",
+            status: "sent",
+            isFromUser: response.data.sender.type === "user",
+            timeAgo: "now"
+          };
+          setMessages(prev => [...prev, newMsg]);
+        }
       } else {
         setError(response.message);
       }
@@ -311,6 +356,11 @@ export default function ChatPage() {
 
       {/* Chat Messages - Only this part scrolls **/}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide min-h-0">
+        {(() => {
+          console.log("Rendering messages. Messages count:", messages.length);
+          console.log("Messages array:", messages);
+          return null;
+        })()}
         {messages.length > 0 ? (
           messages.map((msg) => (
             <div
