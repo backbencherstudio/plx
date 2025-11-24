@@ -177,6 +177,9 @@ export interface UserProfile {
   phone: string | null;
   timezone: string | null;
   dateFormat: string | null;
+  emailAccess: boolean;
+  phoneAccess: boolean;
+  pushAccess: boolean;
 }
 
 export interface UpdateProfileData {
